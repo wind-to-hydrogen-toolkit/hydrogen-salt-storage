@@ -1,7 +1,7 @@
 flake8
 geopandas
-gspy
 jupyterlab
 pylint
 mapclassify
 cartopy
+pooch
