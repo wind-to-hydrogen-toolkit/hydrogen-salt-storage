@@ -1,7 +1,5 @@
-flake8
 geopandas
 jupyterlab
-pylint
 mapclassify
 cartopy
 pooch

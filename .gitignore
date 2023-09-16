@@ -1,5 +1,6 @@
-*.dat
 *.csv
+*.dat
 *.zip
 .venv/
 data/
+notebooks/
