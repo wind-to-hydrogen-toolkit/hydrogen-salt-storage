@@ -1,5 +1,7 @@
-*.dat
 *.csv
+*.dat
+*.py
 *.zip
 .venv/
 data/
+scripts/
