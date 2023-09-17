@@ -12,6 +12,6 @@ done
 black -l 79 */*.py
 
 # move files to scripts directory
-mkdir -p scripts
-rm -r scripts/*
-mv */*.py scripts
+mkdir -p temp
+rm -r temp/*
+mv */*.py temp
