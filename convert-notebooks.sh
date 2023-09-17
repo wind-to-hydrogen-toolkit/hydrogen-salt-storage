@@ -12,4 +12,5 @@ done
 black -l 79 */*.py
 
 # move files to scripts directory
-mv notebooks/*.py scripts
+mkdir -p scripts
+mv */*.py scripts
