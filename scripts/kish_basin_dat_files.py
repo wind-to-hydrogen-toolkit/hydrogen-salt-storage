@@ -9,7 +9,6 @@ import os
 from zipfile import BadZipFile, ZipFile
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import rioxarray as rxr
 import pandas as pd
 import xarray as xr
 import cartopy.crs as ccrs
