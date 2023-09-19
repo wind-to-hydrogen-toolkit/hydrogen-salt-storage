@@ -1,8 +1,11 @@
+black
+cartopy
 flake8
+geocube
 geopandas
 jupyterlab
-pylint
 mapclassify
-cartopy
+netcdf4
 pooch
-black
+pylint
+rioxarray
