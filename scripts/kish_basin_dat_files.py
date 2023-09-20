@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Kish Bank Halite
+# # Kish Basin Halite Data
 #
-# https://hyss.ie/
+# <https://hyss.ie/>
 
 import os
 from zipfile import BadZipFile, ZipFile
@@ -16,6 +16,9 @@ import pooch
 import glob
 from datetime import datetime, timezone
 from shapely.geometry import Polygon
+import rioxarray as rxr
+from geocube.api.core import make_geocube
+from textwrap import wrap
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -29,8 +32,7 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 # boundary data
 ie = gpd.read_file(
-    os.path.join("data", "boundaries", "ref-nuts-2021-01m.gpkg"),
-    layer="NUTS_RG_01M_2021_4326_IE",
+    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
 )
 
 # download data if necessary
@@ -47,6 +49,7 @@ if not os.path.isfile(DATA_FILE):
 
 ZipFile(DATA_FILE).namelist()
 
+# extract archive
 try:
     z = ZipFile(DATA_FILE)
     z.extractall(DATA_DIR)
@@ -58,6 +61,9 @@ except BadZipFile:
 with open(os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv")) as f:
     print(f.read())
 
+crs = 23029
+
+# create extent polygon
 extent = pd.read_csv(
     os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"), skiprows=2
 )
@@ -70,22 +76,12 @@ extent = gpd.GeoSeries(
             (extent[" X"][3], extent[" Y"][3]),
         ]
     ),
-    crs=23029,
+    crs=crs,
 )
 
-# extent = pd.read_csv(
-#     os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"), skiprows=2
-# )
-# extent["wkt"] = (
-#     "POINT (" + extent[" X"].astype(str) + " " +
-#     extent[" Y"].astype(str) + ")"
-# )
-# extent = gpd.GeoDataFrame(
-#     extent, geometry=gpd.GeoSeries.from_wkt(extent["wkt"]), crs=23029
-# )
-# extent.drop(columns=["wkt"], inplace=True)
+extent.crs
 
-ax = ie.to_crs(23029).plot(
+ax = ie.to_crs(crs).plot(
     color="navajowhite",
     figsize=(7, 7),
     edgecolor="darkslategrey",
@@ -106,80 +102,83 @@ plt.show()
 # ## XYZ data
 
 
-def read_dat_file(dat_path: str, crs: int = 23029):
-    ds = {}
+def read_dat_file(dat_path: str, dat_crs):
+    """
+    Read XYZ data layers into an Xarray dataset
+    """
+
+    gdf = {}
     for dat_file in glob.glob(dat_path):
-        dat = pd.read_fwf(dat_file, header=None, names=["X", "Y", "Z"])
-        dat["wkt"] = (
-            "POINT ("
-            + dat["X"].astype(str)
-            + " "
-            + dat["Y"].astype(str)
-            + " "
-            + dat["Z"].astype(str)
-            + ")"
-        )
-        dat = gpd.GeoDataFrame(
-            dat, geometry=gpd.GeoSeries.from_wkt(dat["wkt"]), crs=crs
-        )
-        dat.drop(columns=["wkt"], inplace=True)
-
-        ds[os.path.split(dat_file)[1][:-4]] = (
-            dat[["X", "Y", "Z"]].set_index(["X", "Y"]).to_xarray()
-        )
-        ds[os.path.split(dat_file)[1][:-4]] = (
-            ds[os.path.split(dat_file)[1][:-4]]
-            .assign_coords(
-                data=(
-                    os.path.split(dat_file)[1][:-4]
-                    .replace(" XYZ ", "\n")
-                    .replace(" -\n", "\n")
-                )
-            )
-            .expand_dims(dim="data")
+        # read each layer as individual dataframes into a dictionary
+        gdf[os.path.split(dat_file)[1][:-4]] = pd.read_fwf(
+            dat_file, header=None, names=["X", "Y", "Z"]
         )
 
-    ds = xr.combine_by_coords(ds.values(), combine_attrs="override")
-    ds.rio.write_crs(crs, inplace=True)
+        # assign layer name to a column
+        gdf[os.path.split(dat_file)[1][:-4]]["data"] = os.path.split(dat_file)[
+            1
+        ][:-4]
 
-    return ds
+    # combine dataframes
+    gdf = pd.concat(gdf.values())
+
+    # convert dataframe to geodataframe
+    gdf["wkt"] = (
+        "POINT (" + gdf["X"].astype(str) + " " + gdf["Y"].astype(str) + ")"
+    )
+    gdf = gpd.GeoDataFrame(
+        gdf, geometry=gpd.GeoSeries.from_wkt(gdf["wkt"]), crs=dat_crs
+    )
+    gdf.drop(columns=["wkt", "X", "Y"], inplace=True)
+
+    # convert to Xarray dataset
+    gdf = make_geocube(
+        vector_data=gdf, resolution=(200, -200), group_by="data"
+    )
+
+    return gdf
 
 
-ds = read_dat_file(os.path.join(DATA_DIR, "*.dat"))
+ds = read_dat_file(os.path.join(DATA_DIR, "*.dat"), dat_crs=crs)
 
 ds
 
+ds.rio.crs
+
 
 def plot_maps(plot_data):
+    """
+    Create facet contour plots of the Xarray dataset
+    """
+
     fig = plot_data["Z"].plot.contourf(
-        x="X",
-        y="Y",
+        # x="x", y="y",
         col="data",
         cmap="jet",
         col_wrap=2,
         robust=True,
         levels=15,
-        subplot_kws={"projection": ccrs.epsg(23029)},
-        transform=ccrs.epsg(23029),
+        subplot_kws={"projection": ccrs.epsg(crs)},
+        transform=ccrs.epsg(crs),
         xlim=(687000, 742000),
         ylim=(5888000, 5937000),
         cbar_kwargs={"aspect": 20, "pad": 0.02},
     )
     for axis in fig.axs.flat:
-        ie.to_crs(23029).boundary.plot(
+        ie.to_crs(crs).boundary.plot(
             ax=axis, edgecolor="darkslategrey", linewidth=0.5
         )
     # fig.set_titles("{value}", fontsize=10)
+    # assign titles this way to prevent truncation/overflow
     for ax, title in zip(fig.axs.flat, plot_data["data"].values):
-        ax.set_title(title, fontsize=10)
+        # ax.set_title(title, fontsize=10, wrap=True)
+        ax.set_title("\n".join(wrap(title, 34)), fontsize=10)
     plt.show()
 
 
 # ### Halite thickness
 
-plot_maps(
-    ds.sel(data=[x for x in ds["data"].values if "Thickness\nMeters" in x])
-)
+plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
 
 # ### Halite thickness - zone of interest
 
@@ -197,6 +196,7 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Millisecond" in x]))
 
+# to create a 3D plot (triangular surface)
 # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 # ds = ds.isel(data=0)
 # ax.plot_trisurf(ds.X, ds.Y, ds.Z, cmap="Spectral_r")

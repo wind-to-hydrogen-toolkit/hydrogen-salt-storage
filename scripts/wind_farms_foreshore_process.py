@@ -3,7 +3,7 @@
 
 # # Wind Farms (Foreshore Process)
 #
-# https://data.gov.ie/dataset/wind-farms-foreshore-process
+# <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
 # import libraries
 import os
@@ -29,8 +29,7 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 # boundary data
 ie = gpd.read_file(
-    os.path.join("data", "boundaries", "ref-nuts-2021-01m.gpkg"),
-    layer="NUTS_RG_01M_2021_4326_IE",
+    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
 )
 
 # download data if necessary

@@ -24,8 +24,8 @@ URL = (
 KNOWN_HASH = None
 FILE_NAME = "ref-nuts-2021-01m.shp.zip"
 
-# file name for the GeoPackage where the boundary vector layers will be saved
-GPKG_BOUNDARY = os.path.join("data", "boundaries", "ref-nuts-2021-01m.gpkg")
+# file name for the GeoPackage where the boundary vector layer will be saved
+GPKG_BOUNDARY = os.path.join("data", "boundaries.gpkg")
 
 DATA_DIR_TEMP = os.path.join(DATA_DIR, "temp")
 
@@ -54,21 +54,25 @@ try:
 except BadZipFile:
     print("There were issues with the file", DATA_FILE)
 
-DATA_FILE = os.path.join(DATA_DIR_TEMP, "NUTS_RG_01M_2021_4326_LEVL_2.shp.zip")
+DATA_FILE = os.path.join(DATA_DIR_TEMP, "NUTS_RG_01M_2021_4326_LEVL_1.shp.zip")
 
-nuts2 = gpd.read_file(f"zip://{DATA_FILE}!NUTS_RG_01M_2021_4326_LEVL_2.shp")
+ZipFile(DATA_FILE).namelist()
 
-nuts2.head()
+nuts = gpd.read_file(f"zip://{DATA_FILE}!NUTS_RG_01M_2021_4326_LEVL_1.shp")
 
-nuts2 = nuts2[nuts2["NUTS_ID"].str.contains("IE|UKN")]
+nuts.head()
 
-nuts2
+nuts.crs
 
-nuts2.total_bounds.round(2)
+nuts = nuts[nuts["NUTS_ID"].str.contains("IE0|UKN")]
+
+nuts
+
+nuts.total_bounds.round(2)
 
 # ## Island of Ireland boundary
 
-ie = nuts2.copy()
+ie = nuts.copy()
 
 ie = ie.dissolve(by="LEVL_CODE", as_index=False)
 
@@ -99,17 +103,3 @@ plt.tight_layout()
 plt.show()
 
 ie.to_file(GPKG_BOUNDARY, layer="NUTS_RG_01M_2021_4326_IE")
-
-# ## Island of Ireland boundary in Irish transverse mercator
-#
-# Useful for plotting
-#
-# EPSG:2157
-#
-# See <https://www.gov.uk/government/publications/uk-geospatial-data-standards-register/national-geospatial-data-standards-register#standards-for-coordinate-reference-systems>
-
-ie.to_crs(2157, inplace=True)
-
-ie
-
-ie.to_file(GPKG_BOUNDARY, layer="NUTS_RG_01M_2021_2157_IE")
