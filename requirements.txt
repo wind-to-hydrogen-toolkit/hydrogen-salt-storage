@@ -1,5 +1,7 @@
+cartopy
+geocube
 geopandas
 jupyterlab
 mapclassify
-cartopy
 pooch
+rioxarray
