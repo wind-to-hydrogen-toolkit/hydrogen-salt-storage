@@ -5,20 +5,20 @@
 #
 # <https://hyss.ie/>
 
+import glob
 import os
+from datetime import datetime, timezone
+from textwrap import wrap
 from zipfile import BadZipFile, ZipFile
+
+import cartopy.crs as ccrs
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
-import xarray as xr
-import cartopy.crs as ccrs
 import pooch
-import glob
-from datetime import datetime, timezone
-from shapely.geometry import Polygon
 import rioxarray as rxr
 from geocube.api.core import make_geocube
-from textwrap import wrap
+from shapely.geometry import Polygon
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -78,6 +78,8 @@ extent = gpd.GeoSeries(
     ),
     crs=crs,
 )
+
+extent
 
 extent.crs
 
@@ -152,26 +154,22 @@ def plot_maps(plot_data):
     """
 
     fig = plot_data["Z"].plot.contourf(
-        # x="x", y="y",
         col="data",
         cmap="jet",
         col_wrap=2,
         robust=True,
         levels=15,
         subplot_kws={"projection": ccrs.epsg(crs)},
-        transform=ccrs.epsg(crs),
-        xlim=(687000, 742000),
-        ylim=(5888000, 5937000),
+        xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
+        ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
         cbar_kwargs={"aspect": 20, "pad": 0.02},
     )
     for axis in fig.axs.flat:
         ie.to_crs(crs).boundary.plot(
             ax=axis, edgecolor="darkslategrey", linewidth=0.5
         )
-    # fig.set_titles("{value}", fontsize=10)
     # assign titles this way to prevent truncation/overflow
     for ax, title in zip(fig.axs.flat, plot_data["data"].values):
-        # ax.set_title(title, fontsize=10, wrap=True)
         ax.set_title("\n".join(wrap(title, 34)), fontsize=10)
     plt.show()
 
@@ -180,7 +178,7 @@ def plot_maps(plot_data):
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
 
-# ### Halite thickness - zone of interest
+# ### Halite thickness - zones of interest
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Zone" in x]))
 
@@ -195,11 +193,3 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
 # ### Halite top TWT (two-way thickness)
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Millisecond" in x]))
-
-# to create a 3D plot (triangular surface)
-# fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-# ds = ds.isel(data=0)
-# ax.plot_trisurf(ds.X, ds.Y, ds.Z, cmap="Spectral_r")
-# plt.axis("equal")
-# plt.tight_layout()
-# plt.show()

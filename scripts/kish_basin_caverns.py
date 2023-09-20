@@ -5,23 +5,18 @@
 #
 # <https://hyss.ie/>
 
+import glob
+import itertools
 import os
-from zipfile import BadZipFile, ZipFile
+
+import cartopy.crs as ccrs
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import pandas as pd
-import xarray as xr
-import cartopy.crs as ccrs
-import pooch
-import glob
-from datetime import datetime, timezone
-from shapely.geometry import Polygon
-import rioxarray as rxr
-from geocube.api.core import make_geocube
-from textwrap import wrap
 import numpy as np
+import pandas as pd
+import rioxarray as rxr
 import shapely
-import itertools
+from geocube.api.core import make_geocube
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -69,15 +64,14 @@ def read_dat_file(dat_path: str, dat_crs):
     gdf.drop(columns=["wkt", "X", "Y"], inplace=True)
 
     # convert to Xarray dataset
-    ds = make_geocube(vector_data=gdf, resolution=(200, -200), group_by="data")
+    gdf = make_geocube(
+        vector_data=gdf, resolution=(200, -200), group_by="data"
+    )
 
-    # keep only zones of interest in the dataframe
-    gdf = gdf.loc[gdf["data"].str.contains("Zone")]
-
-    return gdf, ds
+    return gdf
 
 
-gdf, ds = read_dat_file(os.path.join(DATA_DIR, "*.dat"), dat_crs=crs)
+ds = read_dat_file(os.path.join(DATA_DIR, "*.dat"), dat_crs=crs)
 
 # ### Map extent
 
@@ -86,7 +80,7 @@ extent = pd.read_csv(
     os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"), skiprows=2
 )
 extent = gpd.GeoSeries(
-    Polygon(
+    shapely.geometry.Polygon(
         [
             (extent[" X"][0], extent[" Y"][0]),
             (extent[" X"][1], extent[" Y"][1]),
@@ -109,7 +103,7 @@ ds.rio.resolution()
 
 ds.rio.bounds()
 
-# ### Zone of interest boundaries
+# ### Zones of interest boundaries
 
 zones = ds.sel(data=[x for x in ds["data"].values if "Zone" in x])
 
@@ -117,6 +111,7 @@ zones
 
 zones.rio.bounds()
 
+# create gridded layer
 xmin, ymin, xmax, ymax = zones.rio.bounds()
 
 cell_size = 200
@@ -136,16 +131,15 @@ grid_centroids = {"wkt": [], "x": [], "y": []}
 for x, y in itertools.product(
     range(len(zones.coords["x"])), range(len(zones.coords["y"]))
 ):
-    data__ = zones.isel(x=x, y=y)
+    data = zones.isel(x=x, y=y)
 
     # ignore null cells
-    if not data__["Z"].isnull().all():
+    if not data["Z"].isnull().all():
         grid_centroids["wkt"].append(
-            f"POINT ({float(data__['x'].values)} "
-            f"{float(data__['y'].values)})"
+            f"POINT ({float(data['x'].values)} " f"{float(data['y'].values)})"
         )
-        grid_centroids["x"].append(float(data__["x"].values))
-        grid_centroids["y"].append(float(data__["y"].values))
+        grid_centroids["x"].append(float(data["x"].values))
+        grid_centroids["y"].append(float(data["y"].values))
 
 grid_centroids = gpd.GeoDataFrame(
     grid_centroids,
@@ -153,45 +147,18 @@ grid_centroids = gpd.GeoDataFrame(
 )
 
 zones = gpd.sjoin(grid_cells, grid_centroids)
-
 zones.drop(columns=["wkt", "index_right", "x", "y"], inplace=True)
-
 zones["index_"] = "0"
 
+# convert gridded data to polygon
 zones = zones.dissolve(by="index_").reset_index().drop(columns=["index_"])
 
 zones
 
-ax = zones.boundary.plot(linewidth=0.5)
+ax = zones.plot(linewidth=0.5)
 extent.boundary.plot(ax=ax, color="darkslategrey")
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
-
-# ### Zone of interest points
-
-gdf.shape
-
-gdf.head()
-
-ax = gdf.plot(markersize=0.25)
-extent.boundary.plot(ax=ax, color="darkslategrey")
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
-
-# ### Zone of interest boundaries
-
-zones = gpd.GeoSeries(gdf["geometry"].buffer(200).unary_union, crs=crs)
-
-zones
-
-zones.bounds
-
-ax = zones.boundary.plot(linewidth=1)
-extent.boundary.plot(ax=ax, color="darkslategrey")
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
 
 # ### Cavern specifications
 
@@ -202,11 +169,6 @@ separation = diameter * 4
 separation
 
 # ### Generate salt cavern grid using extent
-
-# xmin, ymin, xmax, ymax = (
-#     extent.bounds["minx"][0], extent.bounds["miny"][0],
-#     extent.bounds["maxx"][0], extent.bounds["maxy"][0]
-# )
 
 # create the cells in a loop
 grid_cells = []
@@ -225,13 +187,13 @@ grid_cells.head()
 
 grid_cells.shape
 
-ax = grid_cells.boundary.plot(linewidth=0.5)
-zones.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
+ax = grid_cells.boundary.plot(linewidth=0.5, color="darkslategrey")
+zones.plot(ax=ax, linewidth=1)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
-# ### Caverns in zone of interest
+# ### Caverns in zones of interest
 
 caverns = gpd.GeoDataFrame(
     geometry=grid_cells.centroid.buffer(diameter / 2)
@@ -239,7 +201,7 @@ caverns = gpd.GeoDataFrame(
 
 caverns.head()
 
-caverns.shape
+caverns.shape[0]
 
 ax = caverns.centroid.plot(markersize=1)
 zones.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
@@ -252,64 +214,51 @@ ax = plt.axes(projection=ccrs.epsg(crs))
 ds.sel(data="Rossall Halite Thickness - Zone Of Interest - XYZ Meters")[
     "Z"
 ].plot.contourf(
-    ax=ax,
     cmap="jet",
     alpha=0.25,
-    robust=True,
     levels=[300 + 30 * n for n in range(15)],
-    transform=ccrs.epsg(crs),
-    xlim=(687000, 742000),
-    ylim=(5888000, 5937000),
+    xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
+    ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
     extend="max",
+    cbar_kwargs={"label": "Halite Thickness (m)"},
 )
 ds.sel(
     data="Presall Halite Thickness - Zone Of Interest - XYZ Meters-corrected"
 )["Z"].plot.contourf(
-    ax=ax,
     cmap="jet",
     alpha=0.25,
-    robust=True,
     levels=[300 + 30 * n for n in range(15)],
-    transform=ccrs.epsg(crs),
-    xlim=(687000, 742000),
-    ylim=(5888000, 5937000),
     extend="max",
     add_colorbar=False,
 )
 ds.sel(data="Flyde Halite Thickness - Zone Of Interest - XYZ Meters")[
     "Z"
 ].plot.contourf(
-    ax=ax,
     cmap="jet",
     alpha=0.25,
-    robust=True,
     levels=[300 + 30 * n for n in range(15)],
-    transform=ccrs.epsg(crs),
-    xlim=(687000, 742000),
-    ylim=(5888000, 5937000),
     extend="max",
     add_colorbar=False,
 )
 caverns.centroid.plot(ax=ax, markersize=2, marker=".", color="black")
 ie.to_crs(crs).boundary.plot(ax=ax, edgecolor="darkslategrey", linewidth=0.5)
-plt.title("")
+plt.title("Kish Basin Caverns within Halite Zones of Interest")
 plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(9, 7))
 ax = plt.axes(projection=ccrs.epsg(crs))
 ds.sel(data="Rossall Halite Thickness XYZ Meters")["Z"].plot.contourf(
-    ax=ax,
     cmap="jet",
     alpha=0.25,
     robust=True,
     levels=15,
-    transform=ccrs.epsg(crs),
-    xlim=(687000, 742000),
-    ylim=(5888000, 5937000),
+    xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
+    ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
+    cbar_kwargs={"label": "Halite Thickness (m)"},
 )
 caverns.centroid.plot(ax=ax, markersize=2, marker=".", color="black")
 ie.to_crs(crs).boundary.plot(ax=ax, edgecolor="darkslategrey", linewidth=0.5)
-plt.title("")
+plt.title("Kish Basin Caverns within Rossall Halite")
 plt.tight_layout()
 plt.show()
