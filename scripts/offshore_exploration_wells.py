@@ -5,7 +5,6 @@
 #
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
 
-# import libraries
 import os
 from datetime import datetime, timezone
 from zipfile import ZipFile

@@ -5,7 +5,6 @@
 #
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
-# import libraries
 import os
 from datetime import datetime, timezone
 from zipfile import ZipFile

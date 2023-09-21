@@ -81,6 +81,8 @@ extent = gpd.GeoSeries(
 
 extent
 
+extent.bounds
+
 extent.crs
 
 ax = ie.to_crs(crs).plot(
@@ -110,7 +112,7 @@ def read_dat_file(dat_path: str, dat_crs):
     """
 
     gdf = {}
-    for dat_file in glob.glob(dat_path):
+    for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
         # read each layer as individual dataframes into a dictionary
         gdf[os.path.split(dat_file)[1][:-4]] = pd.read_fwf(
             dat_file, header=None, names=["X", "Y", "Z"]
@@ -120,6 +122,13 @@ def read_dat_file(dat_path: str, dat_crs):
         gdf[os.path.split(dat_file)[1][:-4]]["data"] = os.path.split(dat_file)[
             1
         ][:-4]
+
+    # find data resolution
+    gdf_xr = (
+        gdf[os.path.split(dat_file)[1][:-4]].set_index(["X", "Y"]).to_xarray()
+    )
+    resx = gdf_xr["X"][1] - gdf_xr["X"][0]
+    resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
 
     # combine dataframes
     gdf = pd.concat(gdf.values())
@@ -135,17 +144,24 @@ def read_dat_file(dat_path: str, dat_crs):
 
     # convert to Xarray dataset
     gdf = make_geocube(
-        vector_data=gdf, resolution=(200, -200), group_by="data"
+        vector_data=gdf,
+        resolution=(abs(resy), abs(resx)),
+        align=(abs(resy / 2), abs(resx / 2)),
+        group_by="data",
     )
 
     return gdf
 
 
-ds = read_dat_file(os.path.join(DATA_DIR, "*.dat"), dat_crs=crs)
+ds = read_dat_file(DATA_DIR, dat_crs=crs)
 
 ds
 
 ds.rio.crs
+
+ds.rio.resolution()
+
+ds.rio.bounds()
 
 
 def plot_maps(plot_data):

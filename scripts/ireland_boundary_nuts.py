@@ -5,7 +5,6 @@
 #
 # <https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts>
 
-# import libraries
 import os
 from datetime import datetime, timezone
 from zipfile import BadZipFile, ZipFile
