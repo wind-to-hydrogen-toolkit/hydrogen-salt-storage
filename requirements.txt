@@ -1,10 +1,12 @@
 black
 cartopy
+contextily
 flake8
 geocube
 geopandas
 jupyterlab
 mapclassify
+matplotlib-scalebar
 pooch
 pylint
 rioxarray
