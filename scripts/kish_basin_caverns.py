@@ -10,6 +10,7 @@ import itertools
 import os
 
 import cartopy.crs as ccrs
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,17 +18,13 @@ import pandas as pd
 import rioxarray as rxr
 import shapely
 from geocube.api.core import make_geocube
+from matplotlib_scalebar.scalebar import ScaleBar
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
 FILE_NAME = "Kish-Basin-dat-files.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
-
-# boundary data
-ie = gpd.read_file(
-    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
-)
 
 crs = 23029
 
@@ -73,7 +70,7 @@ def read_dat_file(dat_path: str, dat_crs):
     # convert to Xarray dataset
     ds = make_geocube(
         vector_data=gdf,
-        resolution=(abs(resy), abs(resx)),
+        resolution=(-abs(resy), abs(resx)),
         align=(abs(resy / 2), abs(resx / 2)),
         group_by="data",
     )
@@ -153,57 +150,44 @@ ds.sel(data="Flyde Halite Thickness - Zone Of Interest - XYZ Meters")[
 plt.title(None)
 plt.tight_layout()
 
-# ### Cavern specifications
+# ### Generate potential salt cavern locations
 
-# cavern specifications
-diameter = 84
-separation = diameter * 4
 
-separation
+def generate_caverns(diameter, separation):
+    """
+    Generate salt caverns using a regular grid within the zones of interest
+    """
 
-# ### Generate salt cavern grid
+    # use data bounds
+    # xmin, ymin, xmax, ymax = ds.rio.bounds()
+    xmin, ymin, xmax, ymax = zones.bounds.values[0]
+    # create the cells in a loop
+    grid_cells = []
+    for x0 in np.arange(xmin, xmax + separation, separation):
+        for y0 in np.arange(ymin, ymax + separation, separation):
+            # bounds
+            x1 = x0 - separation
+            y1 = y0 + separation
+            grid_cells.append(shapely.geometry.box(x0, y0, x1, y1))
+    grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=crs)
 
-# use data bounds
-# xmin, ymin, xmax, ymax = ds.rio.bounds()
-xmin, ymin, xmax, ymax = zones.bounds.values[0]
-# create the cells in a loop
-grid_cells = []
-for x0 in np.arange(xmin, xmax + separation, separation):
-    for y0 in np.arange(ymin, ymax + separation, separation):
-        # bounds
-        x1 = x0 - separation
-        y1 = y0 + separation
-        grid_cells.append(shapely.geometry.box(x0, y0, x1, y1))
-grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=crs)
+    # verify separation distance
+    x0 - x1 == y1 - y0
 
-# verify separation distance
-x0 - x1, y1 - y0
+    caverns = gpd.sjoin(
+        gpd.GeoDataFrame(geometry=grid_cells.centroid.buffer(diameter / 2)),
+        zones,
+        predicate="within",
+    )
 
-grid_cells.head()
+    return caverns
 
-ax = grid_cells.boundary.plot(linewidth=0.5, color="darkslategrey")
-zones.plot(ax=ax, linewidth=1)
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
 
-# ### Caverns in zones of interest
+# #### 84 m diameter, separation distance of 4 times the diameter
 
-caverns = gpd.sjoin(
-    gpd.GeoDataFrame(geometry=grid_cells.centroid.buffer(diameter / 2)),
-    zones,
-    predicate="within",
-)
-
-caverns.head()
+caverns = generate_caverns(84, 84 * 4)
 
 len(caverns)
-
-ax = caverns.centroid.plot(markersize=1)
-zones.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
 
 plt.figure(figsize=(12, 9))
 ax = plt.axes(projection=ccrs.epsg(crs))
@@ -239,9 +223,19 @@ ds.sel(data="Flyde Halite Thickness - Zone Of Interest - XYZ Meters")[
 caverns.centroid.plot(
     ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
 )
-ie.to_crs(crs).boundary.plot(ax=ax, edgecolor="darkslategrey", linewidth=0.5)
-ax.gridlines(draw_labels={"bottom": "x", "left": "y"}, alpha=0.5)
-plt.legend(loc="lower right")
+cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
+)
+ax.add_artist(
+    ScaleBar(
+        1,
+        box_alpha=0,  # font_properties={"size": "large"},
+        location="lower right",
+        color="darkslategrey",
+    )
+)
+plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
 plt.title("Kish Basin Caverns within Halite Zones of Interest")
 plt.tight_layout()
 plt.show()
@@ -250,19 +244,35 @@ plt.figure(figsize=(12, 9))
 ax = plt.axes(projection=ccrs.epsg(crs))
 ds.sel(data="Rossall Halite Thickness XYZ Meters")["Z"].plot.contourf(
     cmap="jet",
-    alpha=0.5,
+    alpha=0.65,
     robust=True,
     levels=15,
     xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
     ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
     cbar_kwargs={"label": "Halite Thickness (m)"},
 )
-ax.gridlines(draw_labels={"bottom": "x", "left": "y"}, alpha=0.5)
 caverns.centroid.plot(
     ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
 )
-ie.to_crs(crs).boundary.plot(ax=ax, edgecolor="darkslategrey", linewidth=0.5)
-plt.legend(loc="lower right")
+cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
+)
+ax.add_artist(
+    ScaleBar(
+        1,
+        box_alpha=0,  # font_properties={"size": "large"},
+        location="lower right",
+        color="darkslategrey",
+    )
+)
+plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
 plt.title("Kish Basin Caverns within Rossall Halite")
 plt.tight_layout()
 plt.show()
+
+# #### 85 m diameter, 330 m separation (used in initial calculations by HYSS)
+
+caverns = generate_caverns(85, 330)
+
+len(caverns)

@@ -44,6 +44,9 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
+with open(f"{DATA_FILE[:-4]}.txt") as f:
+    print(f.read())
+
 ZipFile(DATA_FILE).namelist()
 
 wind_farms = gpd.read_file(

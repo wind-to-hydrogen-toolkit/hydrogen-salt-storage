@@ -1,7 +1,9 @@
 cartopy
+contextily
 geocube
 geopandas
 jupyterlab
 mapclassify
+matplotlib-scalebar
 pooch
 rioxarray
