@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pooch
@@ -26,10 +27,8 @@ FILE_NAME = "Exploration_Wells_Irish_Offshore.shapezip.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
-# boundary data
-ie = gpd.read_file(
-    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
-)
+# basemap cache directory
+cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # download data if necessary
 if not os.path.isfile(DATA_FILE):
@@ -58,29 +57,20 @@ wells.head()
 
 wells.crs
 
-ax = ie.plot(
-    color="navajowhite",
-    figsize=(7.5, 7.5),
-    edgecolor="darkslategrey",
-    linewidth=0.4,
-)
-wells.plot(
-    ax=ax,
+ax = wells.to_crs(3857).plot(
     column="AREA",
     legend=True,
-    cmap="tab20",
-    marker=".",
-    legend_kwds={"loc": "upper right", "bbox_to_anchor": (1.375, 0.725)},
+    cmap="tab20b",
+    figsize=(7.5, 7.5),
+    legend_kwds={"loc": "upper right"},
+    linewidth=0.5,
+    edgecolor="darkslategrey",
 )
+plt.xlim(-1.6e6, -0.2e6)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=6)
 
 plt.title("Exploration Wells in the Irish Offshore (1970-2019)")
 
-plt.text(
-    -10.5,
-    49.4,
-    "© EuroGeographics for the administrative boundaries\n"
-    "© Petroleum Affairs Division",
-)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()

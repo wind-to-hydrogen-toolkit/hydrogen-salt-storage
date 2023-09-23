@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pooch
@@ -27,10 +28,8 @@ FILE_NAME = "wind-farms-foreshore-process.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
-# boundary data
-ie = gpd.read_file(
-    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
-)
+# basemap cache directory
+cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # download data if necessary
 if not os.path.isfile(DATA_FILE):
@@ -61,21 +60,24 @@ wind_farms.columns
 
 wind_farms[["Name", "Type", "MDM_Catego"]]
 
-ax = ie.plot(
-    color="navajowhite",
-    figsize=(7.5, 7.5),
+wind_farms.at[1, "Name"] = "Kilmichael Point"
+
+ax = wind_farms.to_crs(3857).plot(
+    column="Name",
+    cmap="tab20",
+    alpha=0.5,
+    figsize=(10, 10),
+    legend=True,
+    legend_kwds={"loc": "upper right"},
+    linewidth=0.5,
     edgecolor="darkslategrey",
-    linewidth=0.4,
 )
-wind_farms.boundary.plot(ax=ax)
+plt.xlim(-1.2e6, -0.3e6)
+plt.ylim(6.65e6, 7.475e6)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 
 plt.title("Wind Farms (Foreshore Process)")
-plt.text(
-    -8.75,
-    51.275,
-    "© EuroGeographics for the administrative boundaries\n"
-    "© Dept. of Housing, Local Government, and Heritage",
-)
+
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()

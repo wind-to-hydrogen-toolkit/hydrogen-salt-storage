@@ -85,14 +85,13 @@ extent.bounds
 
 extent.crs
 
-ax = plt.axes(
-    projection=ccrs.epsg(crs), xlim=(3.75e5, 7.5e5), ylim=(5.68e6, 6.15e6)
-)
-extent.boundary.plot(ax=ax, color="darkslategrey")
-cx.add_basemap(ax, crs=crs, source=cx.providers.Stamen.Terrain, zoom=7)
-
+plt.figure(figsize=(7, 7))
+ax = plt.axes(projection=ccrs.epsg(3857))
+plt.xlim(-1.2e6, -0.55e6)
+plt.ylim(6.65e6, 7.475e6)
+extent.to_crs(3857).boundary.plot(ax=ax, color="darkslategrey")
+cx.add_basemap(ax, source=cx.providers.Stamen.Terrain, zoom=7)
 plt.title("Kish GIS Map Extent")
-plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
