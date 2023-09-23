@@ -28,6 +28,9 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 crs = 23029
 
+# basemap cache directory
+cx.set_cache_dir(os.path.join("data", "basemaps"))
+
 # ## Read data layers
 
 
@@ -118,37 +121,26 @@ zones
 
 zones.bounds
 
+# use extent bounds
+xmin, ymin, xmax, ymax = extent.total_bounds
+
 ax = plt.axes(projection=ccrs.epsg(crs))
 zones.boundary.plot(color="darkslategrey", linewidth=1, ax=ax)
-ds.sel(data="Rossall Halite Thickness - Zone Of Interest - XYZ Meters")[
+ds.sel(data=[x for x in ds["data"].values if "Zone" in x]).max(dim="data")[
     "Z"
 ].plot(
     cmap="jet",
     alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    extend="max",
+    levels=15,
+    robust=True,
     cbar_kwargs={"label": "Halite Thickness (m)"},
+    xlim=(xmin, xmax),
+    ylim=(ymin, ymax),
 )
-ds.sel(
-    data="Presall Halite Thickness - Zone Of Interest - XYZ Meters-corrected"
-)["Z"].plot(
-    cmap="jet",
-    alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    extend="max",
-    add_colorbar=False,
-)
-ds.sel(data="Flyde Halite Thickness - Zone Of Interest - XYZ Meters")[
-    "Z"
-].plot(
-    cmap="jet",
-    alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    extend="max",
-    add_colorbar=False,
-)
+cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
 plt.title(None)
 plt.tight_layout()
+plt.show()
 
 # ### Generate potential salt cavern locations
 
@@ -156,11 +148,9 @@ plt.tight_layout()
 def generate_caverns(diameter, separation):
     """
     Generate salt caverns using a regular grid within the zones of interest
+    based on the methodology by Caglayan et al. (2020)
     """
 
-    # use data bounds
-    # xmin, ymin, xmax, ymax = ds.rio.bounds()
-    xmin, ymin, xmax, ymax = zones.bounds.values[0]
     # create the cells in a loop
     grid_cells = []
     for x0 in np.arange(xmin, xmax + separation, separation):
@@ -174,105 +164,87 @@ def generate_caverns(diameter, separation):
     # verify separation distance
     x0 - x1 == y1 - y0
 
+    # generate caverns within the zones of interest
     caverns = gpd.sjoin(
         gpd.GeoDataFrame(geometry=grid_cells.centroid.buffer(diameter / 2)),
         zones,
         predicate="within",
     )
 
+    # estimations based on Caglayan et al. (2020)
+    print("Number of potential caverns:", len(caverns))
+    print(
+        "Total volume:",
+        "{:.2E}".format(len(caverns) * 5e5),
+        f"m\N{SUPERSCRIPT THREE}",
+    )
+    print(
+        "Estimated storage capacity:",
+        "{:.2f}".format(len(caverns) * 146.418),
+        "GWh",
+    )
+
     return caverns
 
 
-# #### 84 m diameter, separation distance of 4 times the diameter
+def plot_map(data, cbar_label):
+    """
+    Plot halite layer and caverns within the zones of interest
+    """
+
+    plt.figure(figsize=(12, 9))
+    ax = plt.axes(projection=ccrs.epsg(crs))
+
+    data["Z"].plot.contourf(
+        cmap="jet",
+        alpha=0.65,
+        robust=True,
+        levels=15,
+        xlim=(xmin, xmax),
+        ylim=(ymin, ymax),
+        cbar_kwargs={"label": cbar_label},
+    )
+    caverns.centroid.plot(
+        ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
+    )
+    cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+    ax.gridlines(
+        draw_labels={"bottom": "x", "left": "y"},
+        alpha=0.25,
+        color="darkslategrey",
+    )
+    ax.add_artist(
+        ScaleBar(
+            1,
+            box_alpha=0,  # font_properties={"size": "large"},
+            location="lower right",
+            color="darkslategrey",
+        )
+    )
+    plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
+    plt.title("Potential Kish Basin Caverns within Zones of Interest")
+    plt.tight_layout()
+    plt.show()
+
+
+# #### 84 m diameter, separation distance of 4 times the diameter (Caglayan et al., 2020)
 
 caverns = generate_caverns(84, 84 * 4)
 
-len(caverns)
+plot_map(
+    ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]).max(
+        dim="data"
+    ),
+    "Maximum Halite Thickness (m)",
+)
 
-plt.figure(figsize=(12, 9))
-ax = plt.axes(projection=ccrs.epsg(crs))
-ds.sel(data="Rossall Halite Thickness - Zone Of Interest - XYZ Meters")[
-    "Z"
-].plot.contourf(
-    cmap="jet",
-    alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
-    ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
-    extend="max",
-    cbar_kwargs={"label": "Halite Thickness (m)"},
+plot_map(
+    ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]).max(
+        dim="data"
+    ),
+    "Maximum Halite Top Depth (m)",
 )
-ds.sel(
-    data="Presall Halite Thickness - Zone Of Interest - XYZ Meters-corrected"
-)["Z"].plot.contourf(
-    cmap="jet",
-    alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    extend="max",
-    add_colorbar=False,
-)
-ds.sel(data="Flyde Halite Thickness - Zone Of Interest - XYZ Meters")[
-    "Z"
-].plot.contourf(
-    cmap="jet",
-    alpha=0.5,
-    levels=[300 + 30 * n for n in range(15)],
-    extend="max",
-    add_colorbar=False,
-)
-caverns.centroid.plot(
-    ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
-)
-cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
-ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
-)
-ax.add_artist(
-    ScaleBar(
-        1,
-        box_alpha=0,  # font_properties={"size": "large"},
-        location="lower right",
-        color="darkslategrey",
-    )
-)
-plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
-plt.title("Kish Basin Caverns within Halite Zones of Interest")
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(12, 9))
-ax = plt.axes(projection=ccrs.epsg(crs))
-ds.sel(data="Rossall Halite Thickness XYZ Meters")["Z"].plot.contourf(
-    cmap="jet",
-    alpha=0.65,
-    robust=True,
-    levels=15,
-    xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
-    ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
-    cbar_kwargs={"label": "Halite Thickness (m)"},
-)
-caverns.centroid.plot(
-    ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
-)
-cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
-ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
-)
-ax.add_artist(
-    ScaleBar(
-        1,
-        box_alpha=0,  # font_properties={"size": "large"},
-        location="lower right",
-        color="darkslategrey",
-    )
-)
-plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
-plt.title("Kish Basin Caverns within Rossall Halite")
-plt.tight_layout()
-plt.show()
 
 # #### 85 m diameter, 330 m separation (used in initial calculations by HYSS)
 
 caverns = generate_caverns(85, 330)
-
-len(caverns)

@@ -12,6 +12,7 @@ from textwrap import wrap
 from zipfile import BadZipFile, ZipFile
 
 import cartopy.crs as ccrs
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -30,10 +31,8 @@ FILE_NAME = "Kish-Basin-dat-files.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
-# boundary data
-ie = gpd.read_file(
-    os.path.join("data", "boundaries.gpkg"), layer="NUTS_RG_01M_2021_4326_IE"
-)
+# basemap cache directory
+cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # download data if necessary
 if not os.path.isfile(DATA_FILE):
@@ -82,26 +81,17 @@ extent = gpd.GeoSeries(
     crs=crs,
 )
 
-extent
-
 extent.bounds
 
 extent.crs
 
-ax = ie.to_crs(crs).plot(
-    color="navajowhite",
-    figsize=(7, 7),
-    edgecolor="darkslategrey",
-    linewidth=0.4,
+ax = plt.axes(
+    projection=ccrs.epsg(crs), xlim=(3.75e5, 7.5e5), ylim=(5.68e6, 6.15e6)
 )
-extent.boundary.plot(ax=ax)
+extent.boundary.plot(ax=ax, color="darkslategrey")
+cx.add_basemap(ax, crs=crs, source=cx.providers.Stamen.Terrain, zoom=7)
 
 plt.title("Kish GIS Map Extent")
-plt.text(
-    500000,
-    5.68e6,
-    "© EuroGeographics for the administrative boundaries\n" "© HYSS",
-)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
@@ -166,6 +156,8 @@ ds.rio.resolution()
 
 ds.rio.bounds()
 
+xmin, ymin, xmax, ymax = extent.total_bounds
+
 
 def plot_maps(plot_data):
     """
@@ -179,17 +171,22 @@ def plot_maps(plot_data):
         robust=True,
         levels=15,
         subplot_kws={"projection": ccrs.epsg(crs)},
-        xlim=(extent.bounds["minx"][0], extent.bounds["maxx"][0]),
-        ylim=(extent.bounds["miny"][0], extent.bounds["maxy"][0]),
+        xlim=(xmin, xmax),
+        ylim=(ymin, ymax),
         cbar_kwargs={"aspect": 20, "pad": 0.02},
     )
-    for axis in fig.axs.flat:
-        ie.to_crs(crs).boundary.plot(
-            ax=axis, edgecolor="darkslategrey", linewidth=0.5
-        )
+
+    # add a basemap
+    basemap = cx.providers.CartoDB.PositronNoLabels
+    for n, axis in enumerate(fig.axs.flat):
+        cx.add_basemap(axis, crs=crs, source=basemap, attribution=False)
+        # add attribution for basemap tiles
+        if n == 2:
+            axis.text(xmin, ymin - 2500, basemap["attribution"], fontsize=8)
+
     # assign titles this way to prevent truncation/overflow
-    for ax, title in zip(fig.axs.flat, plot_data["data"].values):
-        ax.set_title("\n".join(wrap(title, 34)), fontsize=10)
+    for axis, title in zip(fig.axs.flat, plot_data["data"].values):
+        axis.set_title("\n".join(wrap(title, 34)), fontsize=10)
     plt.show()
 
 

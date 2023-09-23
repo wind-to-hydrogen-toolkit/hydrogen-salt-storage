@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # NUTS (Nomenclature of territorial units for statistics)
-#
-# <https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts>
+# # Ireland basemaps and boundaries
 
 import os
 from datetime import datetime, timezone
 from zipfile import BadZipFile, ZipFile
 
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pooch
+
+# ## NUTS Island of Ireland boundary
+#
+# <https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts>
 
 # base data download directory
 DATA_DIR = os.path.join("data", "boundaries", "NUTS2021")
@@ -25,13 +28,18 @@ KNOWN_HASH = None
 FILE_NAME = "ref-nuts-2021-01m.shp.zip"
 
 # file name for the GeoPackage where the boundary vector layer will be saved
-GPKG_BOUNDARY = os.path.join("data", "boundaries.gpkg")
+OUT_DIR = os.path.join("data", "basemaps")
+os.makedirs(OUT_DIR, exist_ok=True)
+GPKG_BOUNDARY = os.path.join(OUT_DIR, "ref-nuts-2021-01m.gpkg")
 
 DATA_DIR_TEMP = os.path.join(DATA_DIR, "temp")
 
 os.makedirs(DATA_DIR_TEMP, exist_ok=True)
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
+
+# basemap cache directory
+cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # download data if necessary
 if not os.path.isfile(DATA_FILE):
@@ -71,10 +79,6 @@ nuts = nuts[nuts["NUTS_ID"].str.contains("IE0|UKN")]
 
 nuts
 
-nuts.total_bounds.round(2)
-
-# ## Island of Ireland boundary
-
 ie = nuts.copy()
 
 ie = ie.dissolve(by="LEVL_CODE", as_index=False)
@@ -92,6 +96,8 @@ ie = ie.assign(DESCRIPTION=DESCRIPTION)
 
 ie
 
+ie.bounds
+
 ie.plot(
     color="navajowhite",
     figsize=(7.5, 7.5),
@@ -106,3 +112,45 @@ plt.tight_layout()
 plt.show()
 
 ie.to_file(GPKG_BOUNDARY, layer="NUTS_RG_01M_2021_4326_IE")
+
+# ## Basemaps from xyzservices
+#
+# <https://xyzservices.readthedocs.io/en/stable/gallery.html>
+
+# bounding box limits with a ~50000 m buffer
+bbox = ie.to_crs(3857).buffer(5e4).envelope
+xmin, ymin, xmax, ymax = bbox.total_bounds
+
+ax = ie.plot(
+    color="navajowhite",
+    figsize=(7.5, 7.5),
+    edgecolor="darkslategrey",
+    linewidth=0.4,
+)
+bbox.to_crs(ie.crs).envelope.boundary.plot(ax=ax)
+plt.title("Boundary of the Island of Ireland")
+plt.text(-8.75, 51.275, "© EuroGeographics for the administrative boundaries")
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
+
+
+def download_basemap(source, zoom):
+    OUT_FILE = os.path.join(OUT_DIR, f"Ireland.{source['name']}.{zoom}.tif")
+    if not os.path.isfile(OUT_FILE):
+        irl = cx.bounds2raster(
+            xmin, ymin, xmax, ymax, path=OUT_FILE, zoom=zoom, source=source
+        )
+
+    ax = bbox.boundary.plot(linewidth=0.5)
+    cx.add_basemap(ax, source=OUT_FILE)
+    plt.tick_params(labelbottom=False, labelleft=False)
+    plt.tight_layout()
+    plt.show()
+
+
+download_basemap(cx.providers.CartoDB.Voyager, 6)
+
+download_basemap(cx.providers.Stamen.Terrain, 6)
+
+download_basemap(cx.providers.USGS.USImagery, 6)
