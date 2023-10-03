@@ -11,6 +11,9 @@ done
 # format scripts
 black -l 79 */*.py
 
-# move files to scripts directory
+# move files to temporary directory
 mkdir -p temp
 mv */*.py temp
+
+# sort imports
+isort temp/
