@@ -3,6 +3,7 @@
 *.py
 *.zip
 .venv/
+.vscode/
 data/
 scripts/
 temp/

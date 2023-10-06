@@ -1,19 +1,19 @@
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script */*.ipynb
 
+# move files to temporary directory
+mkdir -p temp
+mv */*.py temp
+
 # remove "# In []" and multiple blank lines
-for f in */*.py;
+for f in temp/*.py;
 do sed -i -e '/^# In\[/d' $f
 cat -s $f > $f.txt
 mv $f.txt $f
 done
 
 # format scripts
-black -l 79 */*.py
-
-# move files to temporary directory
-mkdir -p temp
-mv */*.py temp
+black -l 79 temp/*.py
 
 # sort imports
-isort temp/
+isort temp/*.py
