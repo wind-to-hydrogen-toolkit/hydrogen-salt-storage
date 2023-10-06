@@ -20,11 +20,8 @@ import shapely
 from geocube.api.core import make_geocube
 from matplotlib_scalebar.scalebar import ScaleBar
 
-# base data download directory
+# base data directory
 DATA_DIR = os.path.join("data", "kish-basin")
-FILE_NAME = "Kish-Basin-dat-files.zip"
-
-DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 crs = 23029
 
@@ -137,18 +134,25 @@ ds.sel(data=[x for x in ds["data"].values if "Zone" in x]).max(dim="data")[
     xlim=(xmin, xmax),
     ylim=(ymin, ymax),
 )
-cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager, zoom=10)
 plt.title(None)
 plt.tight_layout()
 plt.show()
 
-# ### Generate potential salt cavern locations
+# ## Generate potential salt cavern locations
+
+# ### Caglayan *et al.* (2020)
+#
+# <https://doi.org/10.1016/j.ijhydene.2019.12.161>
 
 
-def generate_caverns(diameter, separation):
+def generate_caverns_caglayan_etal(diameter, separation):
     """
     Generate salt caverns using a regular grid within the zones of interest
-    based on the methodology by Caglayan et al. (2020)
+    based on the methodology by Caglayan et al. (2020):
+    https://doi.org/10.1016/j.ijhydene.2019.12.161.
+    Gridding method based on
+    https://james-brennan.github.io/posts/fast_gridding_geopandas/.
     """
 
     # create the cells in a loop
@@ -162,27 +166,31 @@ def generate_caverns(diameter, separation):
     grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=crs)
 
     # verify separation distance
-    x0 - x1 == y1 - y0
+    if x0 - x1 == y1 - y0:
+        # generate caverns within the zones of interest
+        caverns = gpd.sjoin(
+            gpd.GeoDataFrame(
+                geometry=grid_cells.centroid.buffer(diameter / 2)
+            ),
+            zones,
+            predicate="within",
+        )
 
-    # generate caverns within the zones of interest
-    caverns = gpd.sjoin(
-        gpd.GeoDataFrame(geometry=grid_cells.centroid.buffer(diameter / 2)),
-        zones,
-        predicate="within",
-    )
+        # estimations based on Caglayan et al. (2020)
+        print("Number of potential caverns:", len(caverns))
+        print(
+            "Total volume:",
+            "{:.2E}".format(len(caverns) * 5e5),
+            f"m\N{SUPERSCRIPT THREE}",
+        )
+        print(
+            "Estimated storage capacity:",
+            "{:.2f}".format(len(caverns) * 146.418),
+            "GWh",
+        )
 
-    # estimations based on Caglayan et al. (2020)
-    print("Number of potential caverns:", len(caverns))
-    print(
-        "Total volume:",
-        "{:.2E}".format(len(caverns) * 5e5),
-        f"m\N{SUPERSCRIPT THREE}",
-    )
-    print(
-        "Estimated storage capacity:",
-        "{:.2f}".format(len(caverns) * 146.418),
-        "GWh",
-    )
+    else:
+        print("x and y separation distances do not match!")
 
     return caverns
 
@@ -229,7 +237,7 @@ def plot_map(data, cbar_label):
 
 # #### 84 m diameter, separation distance of 4 times the diameter (Caglayan et al., 2020)
 
-caverns = generate_caverns(84, 84 * 4)
+caverns = generate_caverns_caglayan_etal(84, 84 * 4)
 
 plot_map(
     ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]).max(
@@ -247,4 +255,4 @@ plot_map(
 
 # #### 85 m diameter, 330 m separation (used in initial calculations by HYSS)
 
-caverns = generate_caverns(85, 330)
+caverns = generate_caverns_caglayan_etal(85, 330)

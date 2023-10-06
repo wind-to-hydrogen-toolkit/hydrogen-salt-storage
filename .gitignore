@@ -2,6 +2,7 @@
 *.dat
 *.zip
 .venv/
+.vscode/
 data/
 notebooks/
 temp/
