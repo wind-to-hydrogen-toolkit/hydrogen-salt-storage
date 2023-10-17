@@ -20,7 +20,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 # data directory
 DATA_DIR = os.path.join("data", "kish-basin")
 
-crs = 23029
+CRS = 23029
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -31,6 +31,11 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 def read_dat_file(dat_path: str, dat_crs):
     """
     Read XYZ data layers into an Xarray dataset
+
+    Parameters
+    ----------
+    dat_path : path to the .dat files
+    dat_crs : CRS
     """
 
     gdf = {}
@@ -38,7 +43,7 @@ def read_dat_file(dat_path: str, dat_crs):
     for dat_file in [
         x
         for x in glob.glob(os.path.join(dat_path, "*.dat"))
-        if not "Zone" in x
+        if "Zone" not in x
     ]:
         # read each layer as individual dataframes into a dictionary
         gdf[os.path.split(dat_file)[-1][:-4]] = pd.read_fwf(
@@ -51,9 +56,7 @@ def read_dat_file(dat_path: str, dat_crs):
         )[-1][:-4]
 
     # find data resolution
-    gdf_xr = (
-        gdf[os.path.split(dat_file)[-1][:-4]].set_index(["X", "Y"]).to_xarray()
-    )
+    gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
     resx = gdf_xr["X"][1] - gdf_xr["X"][0]
     resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
 
@@ -66,7 +69,7 @@ def read_dat_file(dat_path: str, dat_crs):
     gdf.drop(columns=["X", "Y"], inplace=True)
 
     # convert to Xarray dataset
-    ds = make_geocube(
+    xds = make_geocube(
         vector_data=gdf,
         resolution=(-abs(resy), abs(resx)),
         align=(abs(resy / 2), abs(resx / 2)),
@@ -74,25 +77,25 @@ def read_dat_file(dat_path: str, dat_crs):
     )
 
     # split variables and halite members
-    ds_ = {}
-    for dat in ds["data"].values:
-        halite_member = dat.split(" ")[0]
+    xds_ = {}
+    for d in xds["data"].values:
+        halite_member = d.split(" ")[0]
         if halite_member == "Presall":
             halite_member = "Preesall"
-        unit = dat.split(" ")[-1]
-        zvar = dat.split("Halite ")[-1].split(" XYZ")[0]
-        ds_[dat] = (
-            ds.sel(data=dat)
+        unit = d.split(" ")[-1]
+        zvar = d.split("Halite ")[-1].split(" XYZ")[0]
+        xds_[d] = (
+            xds.sel(data=d)
             .assign_coords(halite=halite_member)
             .expand_dims(dim="halite")
             .drop_vars("data")
         )
-        ds_[dat] = ds_[dat].rename({"Z": zvar.replace(" ", "")})
-        ds_[dat][zvar.replace(" ", "")] = ds_[dat][
+        xds_[d] = xds_[d].rename({"Z": zvar.replace(" ", "")})
+        xds_[d][zvar.replace(" ", "")] = xds_[d][
             zvar.replace(" ", "")
         ].assign_attrs(units=unit, long_name=zvar)
 
-    ds = xr.combine_by_coords(ds_.values(), combine_attrs="override")
+    xds = xr.combine_by_coords(xds_.values(), combine_attrs="override")
 
     # # keep only points corresponding to zones of interest in the dataframe
     # zones = gdf.loc[gdf["data"].str.contains("Zone")]
@@ -101,58 +104,66 @@ def read_dat_file(dat_path: str, dat_crs):
     # zones = gpd.GeoDataFrame(geometry=zones.buffer(100).envelope).dissolve()
 
     # create extent polygon
-    extent = pd.read_csv(
+    dat_extent = pd.read_csv(
         os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"), skiprows=2
     )
-    extent = gpd.GeoSeries(
+    dat_extent = gpd.GeoSeries(
         shapely.geometry.Polygon(
             [
-                (extent[" X"][0], extent[" Y"][0]),
-                (extent[" X"][1], extent[" Y"][1]),
-                (extent[" X"][2], extent[" Y"][2]),
-                (extent[" X"][3], extent[" Y"][3]),
+                (dat_extent[" X"][0], dat_extent[" Y"][0]),
+                (dat_extent[" X"][1], dat_extent[" Y"][1]),
+                (dat_extent[" X"][2], dat_extent[" Y"][2]),
+                (dat_extent[" X"][3], dat_extent[" Y"][3]),
             ]
         ),
-        crs=crs,
+        crs=dat_crs,
     )
 
     return (
-        ds,
-        extent,
+        xds,
+        dat_extent,
     )  # zones
 
 
-ds, extent = read_dat_file(DATA_DIR, dat_crs=crs)
+ds, extent = read_dat_file(DATA_DIR, CRS)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 
-def plot_facet_maps(ds, extent, crs):
+def plot_facet_maps(dat_xr, dat_extent, dat_crs):
     """
     Helper function to plot facet maps of the halite layers
+
+    Parameters
+    ----------
+    dat_xr : Xarray dataset of the halite data
+    dat_extent : extent of the data
+    dat_crs : CRS
     """
 
-    xmin, ymin, xmax, ymax = extent.total_bounds
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
-    for v in ds.data_vars:
-        fig = ds[v].plot.contourf(
+    for v in dat_xr.data_vars:
+        fig = dat_xr[v].plot.contourf(
             col="halite",
             robust=True,
             levels=15,
             cmap="jet",
             col_wrap=2,
-            subplot_kws={"projection": ccrs.epsg(crs)},
-            xlim=(xmin, xmax),
-            ylim=(ymin, ymax),
+            subplot_kws={"projection": ccrs.epsg(dat_crs)},
+            xlim=(xmin_, xmax_),
+            ylim=(ymin_, ymax_),
         )
         # add a basemap
         basemap = cx.providers.CartoDB.PositronNoLabels
         for n, axis in enumerate(fig.axs.flat):
-            cx.add_basemap(axis, crs=crs, source=basemap, attribution=False)
+            cx.add_basemap(
+                axis, crs=dat_crs, source=basemap, attribution=False
+            )
             # add attribution for basemap tiles
             if n == 2:
                 axis.text(
-                    xmin, ymin - 2500, basemap["attribution"], fontsize=8
+                    xmin_, ymin_ - 2500, basemap["attribution"], fontsize=8
                 )
         fig.set_titles("{value}", weight="semibold")
         plt.show()
@@ -166,7 +177,7 @@ ds.rio.resolution()
 
 ds.rio.bounds()
 
-plot_facet_maps(ds, extent, crs)
+plot_facet_maps(ds, extent, CRS)
 
 # compare depths
 (ds["BaseDepth"] - ds["TopDepth"]).plot.contourf(
@@ -174,7 +185,7 @@ plot_facet_maps(ds, extent, crs)
     col_wrap=2,
     levels=15,
     extend="both",
-    subplot_kws={"projection": ccrs.epsg(crs)},
+    subplot_kws={"projection": ccrs.epsg(CRS)},
 )
 plt.show()
 
@@ -185,16 +196,18 @@ max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 # ## Zones of interest
 
 
-def zones_of_interest(ds, extent, crs, min_thickness, min_depth, max_depth):
+def zones_of_interest(
+    dat_xr, dat_extent, dat_crs, min_thickness, min_depth, max_depth
+):
     """
     Generate a (multi)polygon of the zones of interest by applying thickness
     and depth constraints.
 
     Parameters
     ----------
-    ds : Xarray dataset of the halite data
-    extent : extent of the data
-    crs : CRS
+    dat_xr : Xarray dataset of the halite data
+    dat_extent : extent of the data
+    dat_crs : CRS
     min_thickness : minimum halite thickness [m]
     min_depth : minimum halite top depth [m]
     max_depth : maximum halite top depth [m]
@@ -204,13 +217,13 @@ def zones_of_interest(ds, extent, crs, min_thickness, min_depth, max_depth):
     - A (multi)polygon geodataframe of the zones of interest
     """
 
-    xmin, ymin, xmax, ymax = extent.total_bounds
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
-    zdf = ds.where(
+    zdf = dat_xr.where(
         (
-            (ds.Thickness >= min_thickness)
-            & (ds.TopDepth >= min_depth)
-            & (ds.TopDepth <= max_depth)
+            (dat_xr.Thickness >= min_thickness)
+            & (dat_xr.TopDepth >= min_depth)
+            & (dat_xr.TopDepth <= max_depth)
         ),
         drop=True,
     )
@@ -226,14 +239,16 @@ def zones_of_interest(ds, extent, crs, min_thickness, min_depth, max_depth):
         geometry=gpd.GeoSeries(gpd.points_from_xy(zdf.x, zdf.y))
         .buffer(100)
         .envelope,
-        crs=crs,
+        crs=dat_crs,
     ).dissolve()
 
-    ax = plt.axes(projection=ccrs.epsg(crs))
+    ax = plt.axes(projection=ccrs.epsg(dat_crs))
     zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
-    plt.xlim(xmin, xmax)
-    plt.ylim(ymin, ymax)
-    cx.add_basemap(ax, source=cx.providers.CartoDB.PositronNoLabels, crs=crs)
+    plt.xlim(xmin_, xmax_)
+    plt.ylim(ymin_, ymax_)
+    cx.add_basemap(
+        ax, source=cx.providers.CartoDB.PositronNoLabels, crs=dat_crs
+    )
     plt.title("Zones of interest")
     plt.tight_layout()
     plt.show()
@@ -243,32 +258,43 @@ def zones_of_interest(ds, extent, crs, min_thickness, min_depth, max_depth):
 
 # recommendations from the Hystories project
 # salt thickness >= 300 m, top depth >= 1000 m and <= 1500 m
-zdf = zones_of_interest(ds, extent, crs, 300, 1000, 1500)
+zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 
 # ## Generate potential salt cavern locations
 
 
-def plot_map(data, extent, crs, var, stat):
+def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
+
+    Parameters
+    ----------
+    dat_xr : Xarray dataset of the halite data
+    dat_extent : extent of the data
+    dat_crs : CRS
+    cavern_df : cavern distribution
+    var : variable
+    stat : statistic (max / min / mean)
     """
 
-    xmin, ymin, xmax, ymax = extent.total_bounds
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
     plt.figure(figsize=(12, 9))
-    ax = plt.axes(projection=ccrs.epsg(crs))
+    ax = plt.axes(projection=ccrs.epsg(dat_crs))
 
-    cbar_label = f"{data[var].attrs['long_name']} [{data[var].attrs['units']}]"
+    cbar_label = (
+        f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
+    )
 
     if stat == "max":
-        plot_data = data.max(dim="halite", skipna=True)
+        plot_data = dat_xr.max(dim="halite", skipna=True)
         cbar_label = f"Maximum {cbar_label}"
     elif stat == "min":
-        plot_data = data.min(dim="halite", skipna=True)
+        plot_data = dat_xr.min(dim="halite", skipna=True)
         cbar_label = f"Minimum {cbar_label}"
     elif stat == "mean":
-        plot_data = data.mean(dim="halite", skipna=True)
+        plot_data = dat_xr.mean(dim="halite", skipna=True)
         cbar_label = f"Mean {cbar_label}"
 
     plot_data[var].plot.contourf(
@@ -276,14 +302,14 @@ def plot_map(data, extent, crs, var, stat):
         alpha=0.65,
         robust=True,
         levels=15,
-        xlim=(xmin, xmax),
-        ylim=(ymin, ymax),
+        xlim=(xmin_, xmax_),
+        ylim=(ymin_, ymax_),
         cbar_kwargs={"label": cbar_label},
     )
-    caverns.centroid.plot(
+    cavern_df.centroid.plot(
         ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
     )
-    cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+    cx.add_basemap(ax, crs=dat_crs, source=cx.providers.CartoDB.Voyager)
     ax.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -298,7 +324,6 @@ def plot_map(data, extent, crs, var, stat):
         )
     )
     plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
-    # plt.title("Potential Kish Basin Caverns within the Zones of Interest")
     plt.title(None)
     plt.tight_layout()
     plt.show()
@@ -311,7 +336,9 @@ def plot_map(data, extent, crs, var, stat):
 # #### Cavern distribution function
 
 
-def generate_caverns_caglayan_etal(extent, crs, diameter, separation):
+def generate_caverns_caglayan_etal(
+    dat_extent, dat_crs, zones_df, diameter, separation
+):
     """
     Generate salt caverns using a regular square grid within the zones of
     interest based on the methodology by Caglayan et al. (2020):
@@ -321,8 +348,9 @@ def generate_caverns_caglayan_etal(extent, crs, diameter, separation):
 
     Parameters
     ----------
-    extent : extent of the data
-    crs : CRS
+    dat_extent : extent of the data
+    dat_crs : CRS
+    zones_df : zones of interest
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
 
@@ -331,53 +359,42 @@ def generate_caverns_caglayan_etal(extent, crs, diameter, separation):
     - A polygon geodataframe of potential caverns
     """
 
-    xmin, ymin, xmax, ymax = extent.total_bounds
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
     # create the cells in a loop
     grid_cells = []
-    for x0 in np.arange(xmin, xmax + separation, separation):
-        for y0 in np.arange(ymin, ymax + separation, separation):
+    for x0 in np.arange(xmin_, xmax_ + separation, separation):
+        for y0 in np.arange(ymin_, ymax_ + separation, separation):
             # bounds
             x1 = x0 - separation
             y1 = y0 + separation
             grid_cells.append(shapely.geometry.box(x0, y0, x1, y1))
-    grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=crs)
+    grid_cells = gpd.GeoDataFrame(
+        grid_cells, columns=["geometry"], crs=dat_crs
+    )
 
-    # verify separation distance
-    if x0 - x1 == y1 - y0:
-        # generate caverns within the zones of interest
-        caverns = gpd.sjoin(
-            gpd.GeoDataFrame(
-                geometry=grid_cells.centroid.buffer(diameter / 2)
-            ).drop_duplicates(),
-            zdf,
-            predicate="within",
-        )
+    # generate caverns within the zones of interest
+    cavern_df = gpd.sjoin(
+        gpd.GeoDataFrame(
+            geometry=grid_cells.centroid.buffer(diameter / 2)
+        ).drop_duplicates(),
+        zones_df,
+        predicate="within",
+    )
 
-        # estimates
-        print("Number of potential caverns:", len(caverns))
-        print(
-            "Total volume:",
-            "{:.2E}".format(len(caverns) * 5e5),
-            f"m\N{SUPERSCRIPT THREE}",
-        )
-        print(
-            "Estimated storage capacity:",
-            "{:.2f}".format(len(caverns) * 146.418 / 1e3),
-            "TWh",
-        )
+    # estimates
+    print("Number of potential caverns:", len(cavern_df))
+    print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
+    print(f"Storage capacity: {len(cavern_df) * 146.418 / 1e3:.2f} TWh")
 
-    else:
-        print("x and y separation distances do not match!")
-
-    return caverns
+    return cavern_df
 
 
 # #### Cavern capacity calculations
 
 
 def cavern_capacity_caglayan_etal(
-    depth, m, z, v_cavern, lhv_gas, cavern_height=120
+    depth, rho_rock, m, z, v_cavern, lhv_gas, cavern_height=120
 ):
     """
     t_avg : average gas temperature [K]
@@ -423,12 +440,12 @@ def cavern_capacity_caglayan_etal(
 
 # max 80 m diameter based on Hystories
 # separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns_caglayan_etal(extent, crs, 80, 80 * 4)
+caverns = generate_caverns_caglayan_etal(extent, CRS, zones, 80, 80 * 4)
 
 # 85 m diameter and 330 m separation distance as used by HYSS
-caverns = generate_caverns_caglayan_etal(extent, crs, 85, 330)
+caverns = generate_caverns_caglayan_etal(extent, CRS, zones, 85, 330)
 
-plot_map(ds, extent, crs, "Thickness", "max")
+plot_map(ds, extent, CRS, caverns, "Thickness", "max")
 
 # ### Cavern calculations based on Williams *et al.* (2022)
 #
@@ -437,7 +454,9 @@ plot_map(ds, extent, crs, "Thickness", "max")
 # #### Cavern distribution function
 
 
-def generate_caverns_williams_etal(extent, crs, diameter, separation):
+def generate_caverns_williams_etal(
+    dat_extent, dat_crs, zones_df, diameter, separation
+):
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
     et al. (2022): https://doi.org/10.1016/j.est.2022.105109.
@@ -446,8 +465,9 @@ def generate_caverns_williams_etal(extent, crs, diameter, separation):
 
     Parameters
     ----------
-    extent : extent of the data
-    crs : CRS
+    dat_extent : extent of the data
+    dat_crs : CRS
+    zones_df : zones of interest
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
 
@@ -456,14 +476,14 @@ def generate_caverns_williams_etal(extent, crs, diameter, separation):
     - A polygon geodataframe of potential caverns
     """
 
-    xmin, ymin, xmax, ymax = extent.total_bounds
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
     a = np.sin(np.pi / 3)
-    cols = np.arange(np.floor(xmin), np.ceil(xmax), 3 * separation)
-    rows = np.arange(np.floor(ymin) / a, np.ceil(ymax) / a, separation)
+    cols = np.arange(np.floor(xmin_), np.ceil(xmax_), 3 * separation)
+    rows = np.arange(np.floor(ymin_) / a, np.ceil(ymax_) / a, separation)
 
     hexagons = []
-    caverns = []
+    cavern_df = []
     for x in cols:
         for i, y in enumerate(rows):
             if i % 2 == 0:
@@ -484,62 +504,54 @@ def generate_caverns_williams_etal(extent, crs, diameter, separation):
                 )
             )
 
-            caverns.append(shapely.geometry.Point(x0, y * a))
-            caverns.append(shapely.geometry.Point(x0 + separation, y * a))
-            caverns.append(
+            cavern_df.append(shapely.geometry.Point(x0, y * a))
+            cavern_df.append(shapely.geometry.Point(x0 + separation, y * a))
+            cavern_df.append(
                 shapely.geometry.Point(
                     x0 + (1.5 * separation), (y + separation) * a
                 )
             )
-            caverns.append(
+            cavern_df.append(
                 shapely.geometry.Point(
                     x0 + separation, (y + (2 * separation)) * a
                 )
             )
-            caverns.append(
+            cavern_df.append(
                 shapely.geometry.Point(x0, (y + (2 * separation)) * a)
             )
-            caverns.append(
+            cavern_df.append(
                 shapely.geometry.Point(
                     x0 - (0.5 * separation), (y + separation) * a
                 )
             )
 
-    hexagons = gpd.GeoDataFrame(geometry=hexagons, crs=crs)
+    hexagons = gpd.GeoDataFrame(geometry=hexagons, crs=dat_crs)
 
     # generate caverns using hexagon vertices and centroids
-    caverns = pd.concat(
+    cavern_df = pd.concat(
         [
-            gpd.GeoDataFrame(geometry=caverns, crs=crs),
-            gpd.GeoDataFrame(geometry=hexagons.centroid, crs=crs),
+            gpd.GeoDataFrame(geometry=cavern_df, crs=dat_crs),
+            gpd.GeoDataFrame(geometry=hexagons.centroid, crs=dat_crs),
         ]
     ).drop_duplicates()
-    caverns = gpd.GeoDataFrame(geometry=caverns.buffer(diameter / 2))
+    cavern_df = gpd.GeoDataFrame(geometry=cavern_df.buffer(diameter / 2))
 
     # clip caverns to the zones of interest
-    caverns = gpd.sjoin(caverns, zdf, predicate="within")
+    cavern_df = gpd.sjoin(cavern_df, zones_df, predicate="within")
 
     # estimates
-    print("Number of potential caverns:", len(caverns))
-    print(
-        "Total volume:",
-        "{:.2E}".format(len(caverns) * 5e5),
-        f"m\N{SUPERSCRIPT THREE}",
-    )
-    print(
-        "Estimated storage capacity:",
-        "{:.2f}".format(len(caverns) * 105.074 / 1e3),
-        "TWh",
-    )
+    print("Number of potential caverns:", len(cavern_df))
+    print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
+    print(f"Storage capacity: {len(cavern_df) * 105.074 / 1e3:.2f} TWh")
 
-    return caverns
+    return cavern_df
 
 
 # max 80 m diameter based on Hystories
 # separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns_williams_etal(extent, crs, 80, 80 * 4)
+caverns = generate_caverns_williams_etal(extent, CRS, zones, 80, 80 * 4)
 
 # 85 m diameter and 330 m separation distance as used by HYSS
-caverns = generate_caverns_williams_etal(extent, crs, 85, 330)
+caverns = generate_caverns_williams_etal(extent, CRS, zones, 85, 330)
 
-plot_map(ds, extent, crs, "Thickness", "max")
+plot_map(ds, extent, CRS, caverns, "Thickness", "max")
