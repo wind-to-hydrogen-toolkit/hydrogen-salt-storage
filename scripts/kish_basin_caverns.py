@@ -4,7 +4,6 @@
 # # Kish Basin Salt Caverns
 
 import glob
-import itertools
 import os
 
 import cartopy.crs as ccrs
@@ -13,13 +12,12 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import rioxarray as rxr
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
 from matplotlib_scalebar.scalebar import ScaleBar
 
-# base data directory
+# data directory
 DATA_DIR = os.path.join("data", "kish-basin")
 
 crs = 23029
@@ -63,13 +61,9 @@ def read_dat_file(dat_path: str, dat_crs):
     gdf = pd.concat(gdf.values())
 
     # convert dataframe to geodataframe
-    gdf["wkt"] = (
-        "POINT (" + gdf["X"].astype(str) + " " + gdf["Y"].astype(str) + ")"
-    )
-    gdf = gpd.GeoDataFrame(
-        gdf, geometry=gpd.GeoSeries.from_wkt(gdf["wkt"]), crs=dat_crs
-    )
-    gdf.drop(columns=["wkt", "X", "Y"], inplace=True)
+    gdf["geometry"] = gpd.points_from_xy(gdf.X, gdf.Y, crs=dat_crs)
+    gdf = gpd.GeoDataFrame(gdf)
+    gdf.drop(columns=["X", "Y"], inplace=True)
 
     # convert to Xarray dataset
     ds = make_geocube(
@@ -133,10 +127,12 @@ ds, extent = read_dat_file(DATA_DIR, dat_crs=crs)
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 
-def plot_facet_maps(ds):
+def plot_facet_maps(ds, extent, crs):
     """
     Helper function to plot facet maps of the halite layers
     """
+
+    xmin, ymin, xmax, ymax = extent.total_bounds
 
     for v in ds.data_vars:
         fig = ds[v].plot.contourf(
@@ -170,7 +166,7 @@ ds.rio.resolution()
 
 ds.rio.bounds()
 
-plot_facet_maps(ds)
+plot_facet_maps(ds, extent, crs)
 
 # compare depths
 (ds["BaseDepth"] - ds["TopDepth"]).plot.contourf(
@@ -186,41 +182,79 @@ min(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 
 max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 
-# <!-- ### Zones of interest boundaries -->
+# ## Zones of interest
 
-# zones
 
-# zones.bounds
+def zones_of_interest(ds, extent, crs, min_thickness, min_depth, max_depth):
+    """
+    Generate a (multi)polygon of the zones of interest by applying thickness
+    and depth constraints.
 
-# # use extent bounds
-# xmin, ymin, xmax, ymax = extent.total_bounds
+    Parameters
+    ----------
+    ds : Xarray dataset of the halite data
+    extent : extent of the data
+    crs : CRS
+    min_thickness : minimum halite thickness [m]
+    min_depth : minimum halite top depth [m]
+    max_depth : maximum halite top depth [m]
 
-# ax = plt.axes(projection=ccrs.epsg(crs))
-# zones.boundary.plot(color="darkslategrey", linewidth=1, ax=ax)
-# ds.sel(
-#     data=[x for x in ds["data"].values if "Zone" in x]
-# ).max(dim="data")["Z"].plot(
-#     cmap="jet",
-#     alpha=.5,
-#     levels=15,
-#     robust=True,
-#     cbar_kwargs={"label": "Halite Thickness (m)"},
-#     xlim=(xmin, xmax),
-#     ylim=(ymin, ymax)
-# )
-# cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager, zoom=10)
-# plt.title(None)
-# plt.tight_layout()
-# plt.show()
+    Returns
+    -------
+    - A (multi)polygon geodataframe of the zones of interest
+    """
+
+    xmin, ymin, xmax, ymax = extent.total_bounds
+
+    zdf = ds.where(
+        (
+            (ds.Thickness >= min_thickness)
+            & (ds.TopDepth >= min_depth)
+            & (ds.TopDepth <= max_depth)
+        ),
+        drop=True,
+    )
+
+    # zones of interest polygon
+    zdf = (
+        zdf.max(dim="halite")["Thickness"]
+        .to_dataframe()
+        .dropna()
+        .reset_index()
+    )
+    zdf = gpd.GeoDataFrame(
+        geometry=gpd.GeoSeries(gpd.points_from_xy(zdf.x, zdf.y))
+        .buffer(100)
+        .envelope,
+        crs=crs,
+    ).dissolve()
+
+    ax = plt.axes(projection=ccrs.epsg(crs))
+    zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
+    plt.xlim(xmin, xmax)
+    plt.ylim(ymin, ymax)
+    cx.add_basemap(ax, source=cx.providers.CartoDB.PositronNoLabels, crs=crs)
+    plt.title("Zones of interest")
+    plt.tight_layout()
+    plt.show()
+
+    return zdf
+
+
+# recommendations from the Hystories project
+# salt thickness >= 300 m, top depth >= 1000 m and <= 1500 m
+zdf = zones_of_interest(ds, extent, crs, 300, 1000, 1500)
 
 # ## Generate potential salt cavern locations
 
 
-def plot_map(data, var, stat):
+def plot_map(data, extent, crs, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
     """
+
+    xmin, ymin, xmax, ymax = extent.total_bounds
 
     plt.figure(figsize=(12, 9))
     ax = plt.axes(projection=ccrs.epsg(crs))
@@ -264,69 +298,11 @@ def plot_map(data, var, stat):
         )
     )
     plt.legend(loc="lower right", bbox_to_anchor=(1, 0.05), markerscale=1.75)
-    plt.title("Potential Kish Basin Caverns within Zones of Interest")
+    # plt.title("Potential Kish Basin Caverns within the Zones of Interest")
+    plt.title(None)
     plt.tight_layout()
     plt.show()
 
-
-# ### Zones of interest
-
-
-def zones_of_interest(ds, min_thickness, min_depth, max_depth):
-    """
-    Generate a (multi)polygon of the zones of interest by applying thickness
-    and depth constraints.
-
-    Parameters
-    ----------
-    ds : xarray dataset of the halite data
-    min_thickness : minimum halite thickness [m]
-    min_depth : minimum halite top depth [m]
-    max_depth : maximum halite top depth [m]
-
-    Returns
-    -------
-    - A (multi)polygon geodataframe of the zones of interest
-    """
-
-    zdf = ds.where(
-        (
-            (ds.Thickness >= min_thickness)
-            & (ds.TopDepth >= min_depth)
-            & (ds.TopDepth <= max_depth)
-        ),
-        drop=True,
-    )
-
-    # zones of interest polygon
-    zdf = (
-        zdf.max(dim="halite")["Thickness"]
-        .to_dataframe()
-        .dropna()
-        .reset_index()
-    )
-    zdf = gpd.GeoDataFrame(
-        geometry=gpd.GeoSeries(gpd.points_from_xy(zdf.x, zdf.y))
-        .buffer(100)
-        .envelope,
-        crs=crs,
-    ).dissolve()
-
-    ax = plt.axes(projection=ccrs.epsg(crs))
-    zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
-    plt.xlim(xmin, xmax)
-    plt.ylim(ymin, ymax)
-    cx.add_basemap(ax, source=cx.providers.CartoDB.PositronNoLabels, crs=crs)
-    plt.title("Zones of interest")
-    plt.tight_layout()
-    plt.show()
-
-    return zdf
-
-
-# recommendations from the Hystories project
-# salt thickness >= 300 m, top depth >= 1000 m and <= 1500 m
-zdf = zones_of_interest(ds, 300, 1000, 1500)
 
 # ### Cavern calculations based on Caglayan *et al.* (2020)
 #
@@ -335,7 +311,7 @@ zdf = zones_of_interest(ds, 300, 1000, 1500)
 # #### Cavern distribution function
 
 
-def generate_caverns_caglayan_etal(diameter, separation):
+def generate_caverns_caglayan_etal(extent, crs, diameter, separation):
     """
     Generate salt caverns using a regular square grid within the zones of
     interest based on the methodology by Caglayan et al. (2020):
@@ -345,6 +321,8 @@ def generate_caverns_caglayan_etal(diameter, separation):
 
     Parameters
     ----------
+    extent : extent of the data
+    crs : CRS
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
 
@@ -352,6 +330,8 @@ def generate_caverns_caglayan_etal(diameter, separation):
     -------
     - A polygon geodataframe of potential caverns
     """
+
+    xmin, ymin, xmax, ymax = extent.total_bounds
 
     # create the cells in a loop
     grid_cells = []
@@ -396,7 +376,9 @@ def generate_caverns_caglayan_etal(diameter, separation):
 # #### Cavern capacity calculations
 
 
-def cavern_capacity_caglayan_etal(caverns, depth, m, z, v_cavern, lhv_gas):
+def cavern_capacity_caglayan_etal(
+    depth, m, z, v_cavern, lhv_gas, cavern_height=120
+):
     """
     t_avg : average gas temperature [K]
     depth : depth of the bottom tip of the salt cavern [m]
@@ -418,12 +400,11 @@ def cavern_capacity_caglayan_etal(caverns, depth, m, z, v_cavern, lhv_gas):
     """
 
     # eq. (1)
-    # t_avg = 288 + 0.025 (depth - cavern_height / 2)
-    t_avg = 288 + 0.025 * (depth - 120 / 2)
+    t_avg = 288 + 0.025 * (depth - cavern_height / 2)
 
     # eq. (2)
     # p_overburden = rho_rock * g * (depth - cavern_height)
-    p_overburden = rho_rock * 9.81 * (depth - 120)
+    p_overburden = rho_rock * 9.81 * (depth - cavern_height)
 
     # eq. (3)
     # rho_h2 = (p * m) / (z * r * t)
@@ -440,14 +421,14 @@ def cavern_capacity_caglayan_etal(caverns, depth, m, z, v_cavern, lhv_gas):
 
 # #### Generate caverns
 
-# max 80 m diameter based in Hystories
+# max 80 m diameter based on Hystories
 # separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns_caglayan_etal(80, 80 * 4)
+caverns = generate_caverns_caglayan_etal(extent, crs, 80, 80 * 4)
 
 # 85 m diameter and 330 m separation distance as used by HYSS
-caverns = generate_caverns_caglayan_etal(85, 330)
+caverns = generate_caverns_caglayan_etal(extent, crs, 85, 330)
 
-plot_map(ds, "Thickness", "max")
+plot_map(ds, extent, crs, "Thickness", "max")
 
 # ### Cavern calculations based on Williams *et al.* (2022)
 #
@@ -456,15 +437,17 @@ plot_map(ds, "Thickness", "max")
 # #### Cavern distribution function
 
 
-def generate_caverns_williams_etal(diameter, separation):
+def generate_caverns_williams_etal(extent, crs, diameter, separation):
     """
-    Generate caverns in a hexagonal grid as proposed by Williams et al. (2022):
-    https://doi.org/10.1016/j.est.2022.105109.
+    Generate caverns in a regular hexagonal grid as proposed by Williams
+    et al. (2022): https://doi.org/10.1016/j.est.2022.105109.
     Hexagonal gridding method based on
     https://sabrinadchan.github.io/data-blog/building-a-hexagonal-cartogram.html.
 
     Parameters
     ----------
+    extent : extent of the data
+    crs : CRS
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
 
@@ -472,6 +455,8 @@ def generate_caverns_williams_etal(diameter, separation):
     -------
     - A polygon geodataframe of potential caverns
     """
+
+    xmin, ymin, xmax, ymax = extent.total_bounds
 
     a = np.sin(np.pi / 3)
     cols = np.arange(np.floor(xmin), np.ceil(xmax), 3 * separation)
@@ -531,7 +516,7 @@ def generate_caverns_williams_etal(diameter, separation):
     ).drop_duplicates()
     caverns = gpd.GeoDataFrame(geometry=caverns.buffer(diameter / 2))
 
-    # generate caverns within the zones of interest
+    # clip caverns to the zones of interest
     caverns = gpd.sjoin(caverns, zdf, predicate="within")
 
     # estimates
@@ -547,20 +532,14 @@ def generate_caverns_williams_etal(diameter, separation):
         "TWh",
     )
 
-    # ax = hexagons.boundary.plot(linewidth=.25)
-    # caverns.plot(ax=ax, color="crimson")
-    # cx.add_basemap(ax, source=cx.providers.CartoDB.PositronNoLabels, crs=crs)
-    # plt.tight_layout()
-    # plt.show()
-
     return caverns
 
 
-# max 80 m diameter based in Hystories
+# max 80 m diameter based on Hystories
 # separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns_williams_etal(80, 80 * 4)
+caverns = generate_caverns_williams_etal(extent, crs, 80, 80 * 4)
 
 # 85 m diameter and 330 m separation distance as used by HYSS
-caverns = generate_caverns_williams_etal(85, 330)
+caverns = generate_caverns_williams_etal(extent, crs, 85, 330)
 
-plot_map(ds, "Thickness", "max")
+plot_map(ds, extent, crs, "Thickness", "max")
