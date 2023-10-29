@@ -4,6 +4,7 @@
 *.zip
 .venv/
 .vscode/
-data/
+data/*
 scripts/
 temp/
+!data/README.md
