@@ -263,7 +263,7 @@ zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 # ## Generate potential salt cavern locations
 
 
-def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat, halite=True):
+def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -297,14 +297,13 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat, halite=True):
         plot_data = dat_xr.mean(dim="halite", skipna=True)
         cbar_label = f"Mean {cbar_label}"
 
-    if halite:
-        plot_data[var].plot.contourf(
-            cmap="jet",
-            alpha=0.65,
-            robust=True,
-            levels=15,
-            cbar_kwargs={"label": cbar_label},
-        )
+    plot_data[var].plot.contourf(
+        cmap="jet",
+        alpha=0.65,
+        robust=True,
+        levels=15,
+        cbar_kwargs={"label": cbar_label},
+    )
     plt.xlim(xmin_, xmax_)
     plt.ylim(ymin_, ymax_)
     cavern_df.centroid.plot(
@@ -483,7 +482,6 @@ def generate_caverns_williams_etal(
     cols = np.arange(np.floor(xmin_), np.ceil(xmax_), 3 * separation)
     rows = np.arange(np.floor(ymin_) / a, np.ceil(ymax_) / a, separation)
 
-    hexagons = []
     cavern_df = []
     for x in cols:
         for i, y in enumerate(rows):
@@ -546,5 +544,3 @@ caverns = generate_caverns_williams_etal(extent, CRS, zones, 80, 80 * 4)
 caverns = generate_caverns_williams_etal(extent, CRS, zones, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
-
-plot_map(ds, extent, CRS, caverns, "Thickness", "max", halite=False)
