@@ -26,19 +26,24 @@ See <https://www.marineplan.ie>
 1. Renewables
     - offshore wind farms
 
+Other constraints as stated in the Draft OREDP II:
+
+1. Interconnectors
+1. Cables - electricity, telecoms, new cables from wind farms
+1. Oil and gas pipelines (there is one intersecting with NISA)
+
 Boundaries for cropping:
 
 1. Land boundary
 1. Maritime boundary
 
-Others to consider:
+Other constraints to consider:
 
 1. Fisheries - effort, species, ports, harvesting, distribution
-1. Oil and gas - gas pipelines (there is one intersecting with NISA)
 1. Sport and recreation - sailing density
 1. Shipping - limits of harbours
 1. Heritage assets - shipwrecks
-1. Biodiversity - range and distribution
+1. Biodiversity - range, distribution
 1. Sea-floor - subtidal sandbank, estuary
 1. Renewables - buoys
 1. Protected marine sites
