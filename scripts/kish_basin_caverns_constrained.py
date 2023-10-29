@@ -172,14 +172,12 @@ def zones_of_interest(dat_xr, dat_crs, min_thickness, min_depth, max_depth):
 
 # recommendations from the Hystories project
 # salt thickness >= 300 m, top depth >= 1000 m and <= 1500 m
-zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
+zones = zones_of_interest(ds, CRS, 300, 1000, 1500)
 
 # ## Generate caverns in a regular hexagonal grid configuration
 
 
-def generate_caverns_williams_etal(
-    dat_extent, dat_crs, zones_df, diameter, separation
-):
+def generate_caverns(dat_extent, dat_crs, zones_df, diameter, separation):
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
     et al. (2022): https://doi.org/10.1016/j.est.2022.105109.
@@ -258,7 +256,7 @@ def generate_caverns_williams_etal(
 
 # max 80 m diameter based on Hystories
 # separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns_williams_etal(extent, CRS, zones, 80, 80 * 4)
+caverns = generate_caverns(extent, CRS, zones, 80, 80 * 4)
 
 # ## Constraints
 
@@ -279,7 +277,7 @@ wells = gpd.read_file(
 
 wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
 
-# 500 m buffer
+# 500 m buffer - suggested in draft OREDP II p. 108
 wells_b = gpd.GeoDataFrame(geometry=wells.buffer(500))
 
 caverns = caverns.overlay(wells_b, how="difference")
@@ -299,6 +297,8 @@ wind_farms = gpd.read_file(
 )
 
 # wind farms near Kish Basin
+# the shapes are used as is without a buffer - suggested for renewable energy
+# test site areas in draft OREDP II p. 109
 wind_farms = (
     wind_farms.to_crs(CRS)
     .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
@@ -324,10 +324,36 @@ biospheres = gpd.read_file(
 
 biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
 
-# 5 km buffer
+# 5 km buffer - suggested in draft OREDP II p. 58
 biospheres_b = gpd.GeoDataFrame(geometry=biospheres.buffer(5000))
 
 caverns = caverns.overlay(biospheres_b, how="difference")
+print("Number of potential caverns:", len(caverns))
+
+# ### Frequent shipping routes
+
+DATA_DIR = os.path.join(
+    "data", "shipping", "shipping_frequently_used_routes.zip"
+)
+
+shipping = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_DIR}!"
+        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
+    )
+)
+
+shipping = (
+    shipping.to_crs(CRS)
+    .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
+    .reset_index()
+)
+
+# routes near Kish Basin
+# 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
+shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
+
+caverns = caverns.overlay(shipping_b, how="difference")
 print("Number of potential caverns:", len(caverns))
 
 # ## Plot
@@ -355,7 +381,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(14, 12))
     ax = plt.axes(projection=ccrs.epsg(dat_crs))
 
     cbar_label = (
@@ -382,43 +408,36 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.xlim(xmin_, xmax_)
     plt.ylim(ymin_ - 4000, ymax_ + 4000)
 
-    buffercolor = "slategrey"
+    pd.concat([biospheres_b, wells_b, shipping_b]).dissolve().plot(
+        ax=ax, facecolor="none", edgecolor="slategrey", hatch="///"
+    )
 
     cavern_df.centroid.plot(
         ax=ax, markersize=7, color="black", edgecolor="none"
     )
 
-    wells_b.plot(ax=ax, facecolor="none", edgecolor=buffercolor, hatch="///")
     wells.centroid.plot(ax=ax, color="black", marker="x")
 
     wind_farms.plot(ax=ax, facecolor="none", hatch="///", edgecolor="black")
 
-    biospheres_b.plot(
-        ax=ax, facecolor="none", edgecolor=buffercolor, hatch="///"
+    biospheres.plot(
+        ax=ax, facecolor="none", edgecolor="forestgreen", hatch="xxx"
     )
-    biospheres.plot(ax=ax, facecolor="none", edgecolor="seagreen", hatch="///")
+
+    shipping.plot(ax=ax, color="crimson", linewidth=2)
 
     legend_handles = [
-        mpatches.Patch(
-            facecolor="none", hatch="///", edgecolor="black", label="Wind farm"
+        Line2D(
+            [0],
+            [0],
+            marker=".",
+            markersize=7,
+            markeredgecolor="none",
+            markerfacecolor="black",
+            linewidth=0,
+            label="Salt cavern",
         )
     ]
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            hatch="///",
-            edgecolor="seagreen",
-            label="Biosphere",
-        )
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            hatch="///",
-            edgecolor=buffercolor,
-            label="Buffer",
-        )
-    )
     legend_handles.append(
         Line2D(
             [0],
@@ -430,15 +449,27 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         )
     )
     legend_handles.append(
-        Line2D(
-            [0],
-            [0],
-            marker=".",
-            markersize=7,
-            linewidth=0,
-            markeredgecolor="none",
-            markerfacecolor="black",
-            label="Cavern",
+        Line2D([0], [0], color="crimson", label="Shipping route")
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none", hatch="///", edgecolor="black", label="Wind farm"
+        )
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            edgecolor="forestgreen",
+            hatch="xxx",
+            label="Biosphere",
+        )
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            hatch="///",
+            edgecolor="slategrey",
+            label="Exclusion buffer",
         )
     )
 

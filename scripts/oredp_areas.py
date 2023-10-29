@@ -18,11 +18,11 @@ import seaborn as sns
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2212>
 
 # base data download directory
-DATA_DIR = os.path.join("data", "oredp_zone")
+DATA_DIR = os.path.join("data", "oredp-zone")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
-    "http://atlas.marine.ie/midata/EnergyResourcesTidal/"
+    "https://atlas.marine.ie/midata/EnergyResourcesTidal/"
     "OREDP_Assessment_Zone.shapezip.zip"
 )
 KNOWN_HASH = None
@@ -50,7 +50,12 @@ with open(f"{DATA_FILE[:-13]}.txt") as f:
 
 ZipFile(DATA_FILE).namelist()
 
-data = gpd.read_file(os.path.join(f"zip://{DATA_FILE}!{FILE_NAME[:-13]}.shp"))
+data = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_FILE}!"
+        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
+    )
+)
 
 data
 
@@ -102,7 +107,12 @@ with open(f"{DATA_FILE[:-13]}.txt") as f:
 
 ZipFile(DATA_FILE).namelist()
 
-data2 = gpd.read_file(os.path.join(f"zip://{DATA_FILE}!{FILE_NAME[:-13]}.shp"))
+data2 = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_FILE}!"
+        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
+    )
+)
 
 data2
 

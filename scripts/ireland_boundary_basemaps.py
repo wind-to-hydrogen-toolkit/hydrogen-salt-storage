@@ -69,7 +69,14 @@ DATA_FILE = os.path.join(DATA_DIR_TEMP, "NUTS_RG_01M_2021_4326_LEVL_1.shp.zip")
 
 ZipFile(DATA_FILE).namelist()
 
-nuts = gpd.read_file(f"zip://{DATA_FILE}!NUTS_RG_01M_2021_4326_LEVL_1.shp")
+nuts = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_FILE}!"
+        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
+    )
+)
+
+nuts.shape
 
 nuts.head()
 

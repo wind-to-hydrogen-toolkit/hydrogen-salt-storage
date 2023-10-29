@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Exploration Wells in the Irish Offshore
-#
-# <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
+# # Heritage sites
 
 import os
 from datetime import datetime, timezone
@@ -14,16 +12,20 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pooch
 
+# ## UNESCO Sites in Ireland
+#
+# <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/69df8904-53df-4e1e-bddf-ab725a4060d4>
+
 # base data download directory
-DATA_DIR = os.path.join("data", "exploration-wells-irish-offshore")
+DATA_DIR = os.path.join("data", "heritage")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
-    "https://atlas.marine.ie/midata/EnergyResourcesExploration/"
-    "Exploration_Wells_Irish_Offshore.shapezip.zip"
+    "https://www.heritagecouncil.ie/content/files/"
+    "UNESCO-Sites-in-Ireland-Shapefiles.zip"
 )
 KNOWN_HASH = None
-FILE_NAME = "Exploration_Wells_Irish_Offshore.shapezip.zip"
+FILE_NAME = "UNESCO-Sites-in-Ireland-Shapefiles.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
@@ -36,43 +38,44 @@ if not os.path.isfile(DATA_FILE):
         url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
     )
 
-    with open(f"{DATA_FILE[:-13]}.txt", "w", encoding="utf-8") as outfile:
+    with open(f"{DATA_FILE[:-15]}.txt", "w", encoding="utf-8") as outfile:
         outfile.write(
             f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-13]}.txt") as f:
+with open(f"{DATA_FILE[:-15]}.txt") as f:
     print(f.read())
 
 ZipFile(DATA_FILE).namelist()
 
-wells = gpd.read_file(
+data = gpd.read_file(
     os.path.join(
         f"zip://{DATA_FILE}!"
         + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
     )
 )
 
-wells.shape
+data
 
-wells.head()
+data.shape
 
-wells.crs
+data.crs
 
-ax = wells.to_crs(3857).plot(
-    column="AREA",
+ax = data.to_crs(3857).plot(
+    column="Title",
     legend=True,
     cmap="tab20b",
-    figsize=(7.5, 7.5),
+    figsize=(9, 9),
     legend_kwds={"loc": "upper right"},
     linewidth=0.5,
     edgecolor="darkslategrey",
 )
-plt.xlim(-1.6e6, -0.2e6)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=6)
+plt.xlim(-1.25e6, -0.2e6)
+plt.ylim(6.6e6, 7.6e6)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 
-plt.title("Exploration Wells in the Irish Offshore (1970-2019)")
+plt.title("UNESCO Sites in Ireland")
 
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()

@@ -56,7 +56,10 @@ with open(f"{DATA_FILE[:-4]}.txt") as f:
 ZipFile(DATA_FILE).namelist()
 
 wind_farms = gpd.read_file(
-    os.path.join(f"zip://{DATA_FILE}!Energy_Offshore_Renewable.shp")
+    os.path.join(
+        f"zip://{DATA_FILE}!"
+        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
+    )
 )
 
 wind_farms.crs
