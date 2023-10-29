@@ -86,22 +86,7 @@ nuts = nuts[nuts["NUTS_ID"].str.contains("IE0|UKN")]
 
 nuts
 
-ie = nuts.copy()
-
-ie = ie.dissolve(by="LEVL_CODE", as_index=False)
-
-ie = ie[["geometry"]]
-
-ie = ie.assign(NAME="Ireland")
-
-DESCRIPTION = (
-    "Boundary for the Island of Ireland generated using NUTS 2021 Level 1 "
-    "boundaries"
-)
-
-ie = ie.assign(DESCRIPTION=DESCRIPTION)
-
-ie
+ie = nuts.dissolve()
 
 ie.bounds
 
@@ -118,7 +103,64 @@ plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
-ie.to_file(GPKG_BOUNDARY, layer="NUTS_RG_01M_2021_4326_IE")
+# ## Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised
+#
+# <https://data.gov.ie/dataset/provinces-osi-national-statutory-boundaries-2019>
+
+URL = (
+    "https://data-osi.opendata.arcgis.com/datasets/"
+    "559bc3300384413aa0fe93f0772cb7f1_0.zip?"
+    "outSR=%7B%22latestWkid%22%3A2157%2C%22wkid%22%3A2157%7D"
+)
+DATA_DIR = os.path.join("data", "boundaries")
+FILE_NAME = "osi-provinces-ungeneralised-2019.zip"
+DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
+
+# download data if necessary
+if not os.path.isfile(DATA_FILE):
+    pooch.retrieve(
+        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
+    )
+
+    with open(f"{DATA_FILE[:-4]}.txt", "w", encoding="utf-8") as outfile:
+        outfile.write(
+            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
+            f"Download URL: {URL}"
+        )
+
+with open(f"{DATA_FILE[:-4]}.txt") as f:
+    print(f.read())
+
+ZipFile(DATA_FILE).namelist()
+
+data = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_FILE}!"
+        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
+    )
+)
+
+data
+
+data.crs
+
+data.shape
+
+data = data.dissolve()
+
+data.bounds
+
+data.plot(
+    color="navajowhite",
+    figsize=(7.5, 7.5),
+    edgecolor="darkslategrey",
+    linewidth=0.4,
+)
+
+plt.title("Ireland boundary from OSi ungeneralised data")
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
 
 # ## Basemaps from xyzservices
 #

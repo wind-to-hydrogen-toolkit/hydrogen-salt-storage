@@ -309,7 +309,7 @@ wind_farms = (
 caverns = caverns.overlay(wind_farms, how="difference")
 print("Number of potential caverns:", len(caverns))
 
-# ### UNESCO Biosphere
+# ### Dublin Bay Biosphere
 
 DATA_DIR = os.path.join(
     "data", "heritage", "unesco-global-geoparks-and-biospheres.zip"
@@ -356,10 +356,38 @@ shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
 caverns = caverns.overlay(shipping_b, how="difference")
 print("Number of potential caverns:", len(caverns))
 
+# ## Crop data layers
+
+# land boundary
+DATA_DIR = os.path.join(
+    "data", "boundaries", "osi-provinces-ungeneralised-2019.zip"
+)
+
+land = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_DIR}!"
+        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
+    )
+)
+
+land = land.dissolve().to_crs(CRS)
+
+# crop land areas from biosphere
+biospheres = biospheres.overlay(land, how="difference")
+
+# create exclusion buffer
+buffer = pd.concat([biospheres_b, wells_b, shipping_b]).dissolve()
+
+# crop land areas from buffer
+buffer = buffer.overlay(land, how="difference")
+
+# crop constraints from buffer
+buffer = buffer.overlay(pd.concat([biospheres, wind_farms]), how="difference")
+
 # ## Plot
 
 
-def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
+def plot_map(dat_xr, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -367,22 +395,17 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     Parameters
     ----------
     dat_xr : Xarray dataset of the halite data
-    dat_extent : extent of the data
-    dat_crs : CRS
-    cavern_df : cavern distribution
     var : variable
     stat : statistic (max / min / mean)
     """
 
     # estimates
-    print("Number of potential caverns:", len(cavern_df))
-    print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    print(f"Storage capacity: {len(cavern_df) * 105.074 / 1e3:.2f} TWh")
+    print("Number of potential caverns:", len(caverns))
+    print(f"Total volume: {len(caverns) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
+    print(f"Storage capacity: {len(caverns) * 105.074 / 1e3:.2f} TWh")
 
-    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-
-    plt.figure(figsize=(14, 12))
-    ax = plt.axes(projection=ccrs.epsg(dat_crs))
+    plt.figure(figsize=(12, 9))
+    ax = plt.axes(projection=ccrs.epsg(CRS))
 
     cbar_label = (
         f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
@@ -405,26 +428,23 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         levels=15,
         cbar_kwargs={"label": cbar_label},
     )
-    plt.xlim(xmin_, xmax_)
-    plt.ylim(ymin_ - 4000, ymax_ + 4000)
+    plt.xlim(xmin, xmax)
+    # plt.ylim(ymin - 4000, ymax + 4000)
+    plt.ylim(ymin, ymax)
 
-    pd.concat([biospheres_b, wells_b, shipping_b]).dissolve().plot(
-        ax=ax, facecolor="none", edgecolor="slategrey", hatch="///"
-    )
+    buffer.plot(ax=ax, facecolor="none", edgecolor="slategrey", hatch="///")
 
-    cavern_df.centroid.plot(
-        ax=ax, markersize=7, color="black", edgecolor="none"
-    )
+    caverns.centroid.plot(ax=ax, markersize=7, color="black", edgecolor="none")
 
     wells.centroid.plot(ax=ax, color="black", marker="x")
 
     wind_farms.plot(ax=ax, facecolor="none", hatch="///", edgecolor="black")
 
     biospheres.plot(
-        ax=ax, facecolor="none", edgecolor="forestgreen", hatch="xxx"
+        ax=ax, facecolor="none", edgecolor="forestgreen", hatch="///"
     )
 
-    shipping.plot(ax=ax, color="crimson", linewidth=2)
+    shipping.plot(ax=ax, color="deeppink", linewidth=3)
 
     legend_handles = [
         Line2D(
@@ -449,7 +469,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         )
     )
     legend_handles.append(
-        Line2D([0], [0], color="crimson", label="Shipping route")
+        Line2D([0], [0], color="deeppink", label="Shipping route", linewidth=3)
     )
     legend_handles.append(
         mpatches.Patch(
@@ -460,7 +480,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         mpatches.Patch(
             facecolor="none",
             edgecolor="forestgreen",
-            hatch="xxx",
+            hatch="///",
             label="Biosphere",
         )
     )
@@ -473,7 +493,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         )
     )
 
-    cx.add_basemap(ax, crs=dat_crs, source=cx.providers.CartoDB.Voyager)
+    cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
     ax.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -490,4 +510,4 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.show()
 
 
-plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+plot_map(ds, "Thickness", "max")
