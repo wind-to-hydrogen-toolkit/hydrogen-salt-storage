@@ -118,8 +118,8 @@ ie.to_file(GPKG_BOUNDARY, layer="NUTS_RG_01M_2021_4326_IE")
 # <https://xyzservices.readthedocs.io/en/stable/gallery.html>
 
 # bounding box limits with a ~50000 m buffer
-bbox = ie.to_crs(3857).buffer(5e4).envelope
-xmin, ymin, xmax, ymax = bbox.total_bounds
+bbox = ie.to_crs(23029).buffer(5e4).envelope
+xmin, ymin, xmax, ymax = bbox.to_crs(3857).total_bounds
 
 ax = ie.plot(
     color="navajowhite",
@@ -142,7 +142,7 @@ def download_basemap(source, zoom):
             xmin, ymin, xmax, ymax, path=OUT_FILE, zoom=zoom, source=source
         )
 
-    ax = bbox.boundary.plot(linewidth=0.5)
+    ax = bbox.to_crs(3857).boundary.plot(linewidth=0)
     cx.add_basemap(ax, source=OUT_FILE)
     plt.tick_params(labelbottom=False, labelleft=False)
     plt.tight_layout()

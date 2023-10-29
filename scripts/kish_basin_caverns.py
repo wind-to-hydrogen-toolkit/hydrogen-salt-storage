@@ -263,7 +263,7 @@ zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 # ## Generate potential salt cavern locations
 
 
-def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
+def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat, halite=True):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -297,15 +297,16 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
         plot_data = dat_xr.mean(dim="halite", skipna=True)
         cbar_label = f"Mean {cbar_label}"
 
-    plot_data[var].plot.contourf(
-        cmap="jet",
-        alpha=0.65,
-        robust=True,
-        levels=15,
-        xlim=(xmin_, xmax_),
-        ylim=(ymin_, ymax_),
-        cbar_kwargs={"label": cbar_label},
-    )
+    if halite:
+        plot_data[var].plot.contourf(
+            cmap="jet",
+            alpha=0.65,
+            robust=True,
+            levels=15,
+            cbar_kwargs={"label": cbar_label},
+        )
+    plt.xlim(xmin_, xmax_)
+    plt.ylim(ymin_, ymax_)
     cavern_df.centroid.plot(
         ax=ax, markersize=7, color="black", label="Cavern", edgecolor="none"
     )
@@ -399,7 +400,7 @@ def cavern_capacity_caglayan_etal(
     """
     t_avg : average gas temperature [K]
     depth : depth of the bottom tip of the salt cavern [m]
-    cavern_height : height of the cavern [120 m]
+    cavern_height : height of the cavern [m]
     p_overburden : overburden / lithostatic pressure
     rho_rock : rock density [kg m-3]
     g : gravitational acceleration [9.81 m s-2]
@@ -491,19 +492,7 @@ def generate_caverns_williams_etal(
             else:
                 x0 = x + 1.5 * separation
 
-            hexagons.append(
-                shapely.geometry.Polygon(
-                    [
-                        (x0, y * a),
-                        (x0 + separation, y * a),
-                        (x0 + (1.5 * separation), (y + separation) * a),
-                        (x0 + separation, (y + (2 * separation)) * a),
-                        (x0, (y + (2 * separation)) * a),
-                        (x0 - (0.5 * separation), (y + separation) * a),
-                    ]
-                )
-            )
-
+            # hexagon vertices
             cavern_df.append(shapely.geometry.Point(x0, y * a))
             cavern_df.append(shapely.geometry.Point(x0 + separation, y * a))
             cavern_df.append(
@@ -524,17 +513,19 @@ def generate_caverns_williams_etal(
                     x0 - (0.5 * separation), (y + separation) * a
                 )
             )
-
-    hexagons = gpd.GeoDataFrame(geometry=hexagons, crs=dat_crs)
+            # hexagon centroid
+            cavern_df.append(
+                shapely.geometry.Point(
+                    x0 + (0.5 * separation), (y + separation) * a
+                )
+            )
 
     # generate caverns using hexagon vertices and centroids
-    cavern_df = pd.concat(
-        [
-            gpd.GeoDataFrame(geometry=cavern_df, crs=dat_crs),
-            gpd.GeoDataFrame(geometry=hexagons.centroid, crs=dat_crs),
-        ]
-    ).drop_duplicates()
-    cavern_df = gpd.GeoDataFrame(geometry=cavern_df.buffer(diameter / 2))
+    cavern_df = gpd.GeoDataFrame(
+        geometry=gpd.GeoDataFrame(geometry=cavern_df, crs=dat_crs)
+        .drop_duplicates()
+        .buffer(diameter / 2)
+    )
 
     # clip caverns to the zones of interest
     cavern_df = gpd.sjoin(cavern_df, zones_df, predicate="within")
@@ -555,3 +546,5 @@ caverns = generate_caverns_williams_etal(extent, CRS, zones, 80, 80 * 4)
 caverns = generate_caverns_williams_etal(extent, CRS, zones, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+
+plot_map(ds, extent, CRS, caverns, "Thickness", "max", halite=False)

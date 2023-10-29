@@ -74,3 +74,13 @@ plt.title("Exploration Wells in the Irish Offshore (1970-2019)")
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
+
+# ## Kish Basin wells with 500 m buffer exclusion
+
+wells_kish = wells[wells["AREA"].str.contains("Kish")]
+
+ax = wells_kish.to_crs(23029).plot(markersize=1, color="black")
+wells_kish.to_crs(23029).buffer(500).boundary.plot(ax=ax)
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
