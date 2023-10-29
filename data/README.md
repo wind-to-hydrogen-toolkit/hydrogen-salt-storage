@@ -3,15 +3,30 @@
 Dataset | Source | Metadata | Format | Version
 -- | -- | -- | -- | --
 Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [Link][owf] | Shapefile | 2023-09-11
-UNESCO Global Geoparks and Biospheres | Department of Housing, Local Government and Heritage | [Link][biospheres] | Shapefile | 2021-10-27
-Exploration Wells in the Irish Offshore | Petroleum Affairs Division | [Link][wells] | Shapefile | 2021-02-01
+UNESCO Global Geoparks and Biospheres | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere | [Link][biospheres] | Shapefile | 2021-10-27
+Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [Link][wells] | Shapefile | 2021-02-01
 OREDP Assessment Area | Department of Communications, Climate Action and the Environment | [Link][oredp_assessment] | Shapefile | 2023-06-01
 OREDP Study Area | Department of Communications, Climate Action and the Environment | [Link][oredp_study] | Shapefile | 2023-06-01
-Shipwrecks in Irish Waters | INFOMAR | [Link][shipwrecks] | Shapefile | 2023-10-24
+Shipwrecks in Irish Waters | INFOMAR / National Monuments Service / Department of Housing, Local Government and Heritage | [Link][shipwrecks] | Shapefile | 2023-10-24
+Frequently Used Routes (300 gross tonnes and above)  | Department of Housing, Local Government and Heritage / EMODnet | [Link][shippingroutes] | Shapefile | 2022-07-19
 Kish Basin Halite | HYSS | [Link][hyss] | DAT | 2023-07
-UNESCO Sites in Ireland* | The Heritage Council | [Link][unescosites] | Shapefile | 2016-03-24
 
-\* unused dataset
+## Exclusion Data Categories
+
+See <https://www.marineplan.ie>
+
+1. Heritage assets
+    - UNESCO Dublin Bay Biosphere - also covers protected marine sites: nature reserves, RAMSAR sites, special protected areas
+    - Shipwrecks
+1. Protected marine sites
+    - nature reserves
+    - RAMSAR wetland site
+    - special areas of conservation
+    - special protected area
+    - Dublin Bay biosphere marine zones
+1. Ports, harbours, and shipping
+    - frequently used routes (300 gross tonnes and above)
+    - limits of harbours
 
 ## Sources
 
@@ -29,7 +44,6 @@ UNESCO Sites in Ireland* | The Heritage Council | [Link][unescosites] | Shapefil
 
 1. <https://www.ucc.ie/en/earthocean/projects/mappingoffshorewindfarmcableroutes/>
 
-[unescosites]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/69df8904-53df-4e1e-bddf-ab725a4060d4
 [owf]: https://data.gov.ie/dataset/wind-farms-foreshore-process
 [biospheres]: https://data.gov.ie/dataset/unesco-global-geoparks-and-biospheres
 [wells]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
@@ -37,3 +51,4 @@ UNESCO Sites in Ireland* | The Heritage Council | [Link][unescosites] | Shapefil
 [oredp_assessment]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2212
 [oredp_study]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2214
 [shipwrecks]: https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
+[shippingroutes]: https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1
