@@ -170,10 +170,6 @@ def zones_of_interest(dat_xr, dat_crs, min_thickness, min_depth, max_depth):
     return zdf
 
 
-# recommendations from the Hystories project
-# salt thickness >= 300 m, top depth >= 1000 m and <= 1500 m
-zones = zones_of_interest(ds, CRS, 300, 1000, 1500)
-
 # ## Generate caverns in a regular hexagonal grid configuration
 
 
@@ -254,10 +250,6 @@ def generate_caverns(dat_extent, dat_crs, zones_df, diameter, separation):
     return cavern_df
 
 
-# max 80 m diameter based on Hystories
-# separation distance of 4 times the diameter as recommended by Caglayan et al.
-caverns = generate_caverns(extent, CRS, zones, 80, 80 * 4)
-
 # ## Constraints
 
 # ### Exploration wells
@@ -279,9 +271,6 @@ wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
 
 # 500 m buffer - suggested in draft OREDP II p. 108
 wells_b = gpd.GeoDataFrame(geometry=wells.buffer(500))
-
-caverns = caverns.overlay(wells_b, how="difference")
-print("Number of potential caverns:", len(caverns))
 
 # ### Wind farms
 
@@ -306,9 +295,6 @@ wind_farms = (
     .sort_values("Name")
 )
 
-caverns = caverns.overlay(wind_farms, how="difference")
-print("Number of potential caverns:", len(caverns))
-
 # ### Dublin Bay Biosphere
 
 DATA_DIR = os.path.join(
@@ -326,9 +312,6 @@ biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
 
 # 5 km buffer - suggested in draft OREDP II p. 58
 biospheres_b = gpd.GeoDataFrame(geometry=biospheres.buffer(5000))
-
-caverns = caverns.overlay(biospheres_b, how="difference")
-print("Number of potential caverns:", len(caverns))
 
 # ### Frequent shipping routes
 
@@ -353,6 +336,27 @@ shipping = (
 # 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
 
+# ## Calculate
+
+# numbers used in HYSS calculations
+# # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+zones = zones_of_interest(ds, CRS, 300, 1000, 1500)
+caverns = generate_caverns(extent, CRS, zones, 85, 330)
+
+# exclude exploration wells
+caverns = caverns.overlay(wells_b, how="difference")
+print("Number of potential caverns:", len(caverns))
+
+# exclude wind farms
+caverns = caverns.overlay(wind_farms, how="difference")
+print("Number of potential caverns:", len(caverns))
+
+# exclude biosphere
+caverns = caverns.overlay(biospheres_b, how="difference")
+print("Number of potential caverns:", len(caverns))
+
+# exclude shipping routes
 caverns = caverns.overlay(shipping_b, how="difference")
 print("Number of potential caverns:", len(caverns))
 
@@ -401,16 +405,19 @@ def plot_map(dat_xr, var, stat):
 
     # estimates
     print("Number of potential caverns:", len(caverns))
-    print(f"Total volume: {len(caverns) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    print(f"Storage capacity: {len(caverns) * 105.074 / 1e3:.2f} TWh")
+    # print(f"Total volume: {len(caverns) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
+    # print(f"Storage capacity: {len(caverns) * 105.074 / 1e3:.2f} TWh")
 
+    # initialise figure
     plt.figure(figsize=(12, 9))
     ax = plt.axes(projection=ccrs.epsg(CRS))
 
-    cbar_label = (
-        f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
-    )
-
+    # configure colour bar based on variable
+    if var == "TopTWT":
+        units = "ms"
+    else:
+        units = "m"
+    cbar_label = f"{dat_xr[var].attrs['long_name']} [{units}]"
     if stat == "max":
         plot_data = dat_xr.max(dim="halite", skipna=True)
         cbar_label = f"Maximum Halite {cbar_label}"
@@ -421,6 +428,7 @@ def plot_map(dat_xr, var, stat):
         plot_data = dat_xr.mean(dim="halite", skipna=True)
         cbar_label = f"Mean Halite {cbar_label}"
 
+    # plot halite data
     plot_data[var].plot.contourf(
         cmap="jet",
         alpha=0.65,
@@ -428,24 +436,26 @@ def plot_map(dat_xr, var, stat):
         levels=15,
         cbar_kwargs={"label": cbar_label},
     )
+
+    # configure map limits
     plt.xlim(xmin, xmax)
     # plt.ylim(ymin - 4000, ymax + 4000)
     plt.ylim(ymin, ymax)
 
+    # add constraint layers
     buffer.plot(ax=ax, facecolor="none", edgecolor="slategrey", hatch="///")
-
-    caverns.centroid.plot(ax=ax, markersize=7, color="black", edgecolor="none")
-
     wells.centroid.plot(ax=ax, color="black", marker="x")
-
     wind_farms.plot(ax=ax, facecolor="none", hatch="///", edgecolor="black")
-
     biospheres.plot(
         ax=ax, facecolor="none", edgecolor="forestgreen", hatch="///"
     )
-
     shipping.plot(ax=ax, color="deeppink", linewidth=3)
 
+    # add caverns
+    caverns.centroid.plot(ax=ax, markersize=7, color="black", edgecolor="none")
+    # caverns.plot(ax=ax, edgecolor="none", facecolor="black")
+
+    # configure legend entries
     legend_handles = [
         Line2D(
             [0],
@@ -493,6 +503,7 @@ def plot_map(dat_xr, var, stat):
         )
     )
 
+    # add basemap and map elements
     cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
     ax.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
@@ -506,6 +517,7 @@ def plot_map(dat_xr, var, stat):
         loc="lower right", bbox_to_anchor=(1, 0.05), handles=legend_handles
     )
     plt.title(None)
+
     plt.tight_layout()
     plt.show()
 

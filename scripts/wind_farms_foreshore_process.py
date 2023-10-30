@@ -212,7 +212,7 @@ ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]).max(
     levels=15,
     xlim=(xmin, xmax),
     ylim=(ymin - 4000, ymax + 4000),
-    cbar_kwargs={"label": "Maximum Halite Thickness (m)"},
+    cbar_kwargs={"label": "Maximum Halite Thickness [m]"},
 )
 
 # wind farms
@@ -240,7 +240,7 @@ ax.add_artist(
 )
 ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
 
-plt.title("Wind Farms near Kish Basin")
-# plt.title(None)
+# plt.title("Wind Farms near Kish Basin")
+plt.title(None)
 plt.tight_layout()
 plt.show()
