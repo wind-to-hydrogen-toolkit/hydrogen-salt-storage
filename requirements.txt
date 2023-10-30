@@ -10,3 +10,4 @@ matplotlib-scalebar
 pooch
 pylint
 rioxarray
+statsmodels

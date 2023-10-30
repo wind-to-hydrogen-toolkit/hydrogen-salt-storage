@@ -3,14 +3,14 @@
 Dataset | Source | Metadata | Format | Version
 -- | -- | -- | -- | --
 Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [Link][owf] | Shapefile | 2023-09-11
-UNESCO Global Geoparks and Biospheres | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere | [Link][biospheres_heritage] | Shapefile | 2021-10-27
+UNESCO Global Geoparks and Biospheres | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere Partnership | [Link][biospheres_heritage] | Shapefile | 2021-10-27
 Dublin Bay Biosphere Marine Zones | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere Partnership | [Link][biospheres_marine] | Shapefile | 2023-08-17
 Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [Link][wells] | Shapefile | 2021-02-01
 Shipwrecks in Irish Waters | INFOMAR / National Monuments Service / Department of Housing, Local Government and Heritage | [Link][shipwrecks] | Shapefile | 2023-10-24
 Frequently Used Routes (300 gross tonnes and above)  | Department of Housing, Local Government and Heritage / EMODnet | [Link][shippingroutes] | Shapefile | 2022-07-19
-OREDP Assessment Area | Department of Communications, Climate Action and the Environment | [Link][oredp_assessment] | Shapefile | 2023-06-01
-OREDP Study Area | Department of Communications, Climate Action and the Environment | [Link][oredp_study] | Shapefile | 2023-06-01
-Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland | [Link][boundary] | Shapefile | 2022-07-07
+OREDP Assessment Area | Department of the Environment, Climate and Communications | [Link][oredp_assessment] | Shapefile | 2023-06-01
+OREDP Study Area | Department of the Environment, Climate and Communications | [Link][oredp_study] | Shapefile | 2023-06-01
+Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | [Link][boundary] | Shapefile | 2022-07-07
 Kish Basin Halite | HYSS | [Link][hyss] | DAT | 2023-07
 
 ## Exclusion Data Categories
