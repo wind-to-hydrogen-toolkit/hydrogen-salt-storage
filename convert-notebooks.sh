@@ -3,7 +3,7 @@ jupyter nbconvert --to script */*.ipynb
 
 # move files to temporary directory
 mkdir -p temp
-mv */*.py temp
+mv notebooks/*.py temp
 
 # remove "# In []" and multiple blank lines
 for f in temp/*.py;

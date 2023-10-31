@@ -1,10 +1,12 @@
 *.csv
 *.dat
-*.py
+# *.py
 *.zip
+__pycache__/
 .venv/
 .vscode/
 data/*
 scripts/
+# src/
 temp/
 !data/README.md
