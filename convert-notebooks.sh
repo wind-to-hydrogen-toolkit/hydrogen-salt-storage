@@ -19,4 +19,4 @@ black -l 79 temp/*.py
 isort temp/*.py
 
 # copy functions
-cp src/functions.py temp
+cp -r src temp
