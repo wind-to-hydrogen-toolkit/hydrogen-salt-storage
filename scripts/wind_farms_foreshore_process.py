@@ -5,7 +5,6 @@
 #
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
-import glob
 import os
 from datetime import datetime, timezone
 from zipfile import ZipFile
@@ -15,11 +14,10 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import pandas as pd
 import pooch
-import shapely
-from geocube.api.core import make_geocube
 from matplotlib_scalebar.scalebar import ScaleBar
+
+from src import functions as fns
 
 # base data download directory
 DATA_DIR = os.path.join("data", "wind-farms-foreshore-process")
@@ -96,73 +94,9 @@ plt.show()
 # read Kish Basin data
 DATA_DIR = os.path.join("data", "kish-basin")
 
-crs = 23029
+CRS = 23029
 
-
-def read_dat_file(dat_path: str, dat_crs):
-    """
-    Read XYZ data layers into an Xarray dataset
-    """
-
-    gdf = {}
-    for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
-        # read each layer as individual dataframes into a dictionary
-        gdf[os.path.split(dat_file)[1][:-4]] = pd.read_fwf(
-            dat_file, header=None, names=["X", "Y", "Z"]
-        )
-
-        # assign layer name to a column
-        gdf[os.path.split(dat_file)[1][:-4]]["data"] = os.path.split(dat_file)[
-            1
-        ][:-4]
-
-    # find data resolution
-    gdf_xr = (
-        gdf[os.path.split(dat_file)[1][:-4]].set_index(["X", "Y"]).to_xarray()
-    )
-    resx = gdf_xr["X"][1] - gdf_xr["X"][0]
-    resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
-
-    # combine dataframes
-    gdf = pd.concat(gdf.values())
-
-    # convert dataframe to geodataframe
-    gdf["wkt"] = (
-        "POINT (" + gdf["X"].astype(str) + " " + gdf["Y"].astype(str) + ")"
-    )
-    gdf = gpd.GeoDataFrame(
-        gdf, geometry=gpd.GeoSeries.from_wkt(gdf["wkt"]), crs=dat_crs
-    )
-    gdf.drop(columns=["wkt", "X", "Y"], inplace=True)
-
-    # convert to Xarray dataset
-    ds = make_geocube(
-        vector_data=gdf,
-        resolution=(-abs(resy), abs(resx)),
-        align=(abs(resy / 2), abs(resx / 2)),
-        group_by="data",
-    )
-
-    # create extent polygon
-    extent = pd.read_csv(
-        os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"), skiprows=2
-    )
-    extent = gpd.GeoSeries(
-        shapely.geometry.Polygon(
-            [
-                (extent[" X"][0], extent[" Y"][0]),
-                (extent[" X"][1], extent[" Y"][1]),
-                (extent[" X"][2], extent[" Y"][2]),
-                (extent[" X"][3], extent[" Y"][3]),
-            ]
-        ),
-        crs=crs,
-    )
-
-    return ds, extent
-
-
-ds, extent = read_dat_file(DATA_DIR, dat_crs=crs)
+ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 
 # use extent bounds
 xmin, ymin, xmax, ymax = extent.total_bounds
@@ -200,25 +134,23 @@ wind_farms_ = (
 )
 
 plt.figure(figsize=(12, 9))
-ax = plt.axes(projection=ccrs.epsg(crs))
+ax = plt.axes(projection=ccrs.epsg(CRS))
 
-# halite
-ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]).max(
-    dim="data"
-)["Z"].plot.contourf(
+ds.max(dim="halite")["Thickness"].plot.contourf(
     cmap="jet",
-    alpha=0.5,
+    alpha=0.65,
     robust=True,
     levels=15,
-    xlim=(xmin, xmax),
-    ylim=(ymin - 4000, ymax + 4000),
     cbar_kwargs={"label": "Maximum Halite Thickness [m]"},
 )
+
+plt.xlim(xmin, xmax)
+plt.ylim(ymin - 4000, ymax + 4000)
 
 # wind farms
 colours = ["firebrick", "forestgreen", "black", "royalblue"]
 for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(crs).plot(
+    wind_farms_.iloc[[index]].to_crs(CRS).plot(
         ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
     )
 legend_handles = [
@@ -231,7 +163,7 @@ legend_handles = [
     for x in range(len(wind_farms_))
 ]
 
-cx.add_basemap(ax, crs=crs, source=cx.providers.CartoDB.Voyager)
+cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
 ax.gridlines(
     draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
 )

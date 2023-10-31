@@ -1,6 +1,7 @@
 *.csv
 *.dat
 *.zip
+__pycache__/
 .venv/
 .vscode/
 data/

@@ -27,19 +27,16 @@ URL = (
 KNOWN_HASH = None
 FILE_NAME = "ref-nuts-2021-01m.shp.zip"
 
-# file name for the GeoPackage where the boundary vector layer will be saved
 OUT_DIR = os.path.join("data", "basemaps")
 os.makedirs(OUT_DIR, exist_ok=True)
-GPKG_BOUNDARY = os.path.join(OUT_DIR, "ref-nuts-2021-01m.gpkg")
+# basemap cache directory
+cx.set_cache_dir(OUT_DIR)
 
 DATA_DIR_TEMP = os.path.join(DATA_DIR, "temp")
 
 os.makedirs(DATA_DIR_TEMP, exist_ok=True)
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
-
-# basemap cache directory
-cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # download data if necessary
 if not os.path.isfile(DATA_FILE):
@@ -185,14 +182,14 @@ plt.show()
 
 
 def download_basemap(source, zoom):
-    OUT_FILE = os.path.join(OUT_DIR, f"Ireland.{source['name']}.{zoom}.tif")
-    if not os.path.isfile(OUT_FILE):
+    out_file = os.path.join(OUT_DIR, f"Ireland.{source['name']}.{zoom}.tif")
+    if not os.path.isfile(out_file):
         irl = cx.bounds2raster(
-            xmin, ymin, xmax, ymax, path=OUT_FILE, zoom=zoom, source=source
+            xmin, ymin, xmax, ymax, path=out_file, zoom=zoom, source=source
         )
 
-    ax = bbox.to_crs(3857).boundary.plot(linewidth=0)
-    cx.add_basemap(ax, source=OUT_FILE)
+    axis = bbox.to_crs(3857).boundary.plot(linewidth=0)
+    cx.add_basemap(axis, source=out_file)
     plt.tick_params(labelbottom=False, labelleft=False)
     plt.tight_layout()
     plt.show()

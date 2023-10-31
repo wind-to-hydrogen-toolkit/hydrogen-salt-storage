@@ -63,7 +63,7 @@ except BadZipFile:
 with open(os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv")) as f:
     print(f.read())
 
-crs = 23029
+CRS = 23029
 
 # create extent polygon
 extent = pd.read_csv(
@@ -78,7 +78,7 @@ extent = gpd.GeoSeries(
             (extent[" X"][3], extent[" Y"][3]),
         ]
     ),
-    crs=crs,
+    crs=CRS,
 )
 
 extent.bounds
@@ -145,7 +145,7 @@ def read_dat_file(dat_path: str, dat_crs):
     return gdf
 
 
-ds = read_dat_file(DATA_DIR, dat_crs=crs)
+ds = read_dat_file(DATA_DIR, dat_crs=CRS)
 
 ds
 
@@ -169,7 +169,7 @@ def plot_maps(plot_data):
         col_wrap=2,
         robust=True,
         levels=15,
-        subplot_kws={"projection": ccrs.epsg(crs)},
+        subplot_kws={"projection": ccrs.epsg(CRS)},
         xlim=(xmin, xmax),
         ylim=(ymin, ymax),
         cbar_kwargs={"aspect": 20, "pad": 0.02},
@@ -178,7 +178,7 @@ def plot_maps(plot_data):
     # add a basemap
     basemap = cx.providers.CartoDB.PositronNoLabels
     for n, axis in enumerate(fig.axs.flat):
-        cx.add_basemap(axis, crs=crs, source=basemap, attribution=False)
+        cx.add_basemap(axis, crs=CRS, source=basemap, attribution=False)
         # add attribution for basemap tiles
         if n == 2:
             axis.text(xmin, ymin - 2500, basemap["attribution"], fontsize=8)
