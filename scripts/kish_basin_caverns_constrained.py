@@ -42,7 +42,6 @@ def read_dat_file(dat_path: str, dat_crs):
     """
 
     gdf = {}
-    # for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
     for dat_file in [
         x
         for x in glob.glob(os.path.join(dat_path, "*.dat"))

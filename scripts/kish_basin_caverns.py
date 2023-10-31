@@ -12,7 +12,6 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
@@ -130,118 +129,6 @@ ds, extent = read_dat_file(DATA_DIR, CRS)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
-
-def plot_facet_maps(dat_xr, dat_extent, dat_crs):
-    """
-    Helper function to plot facet maps of the halite layers
-
-    Parameters
-    ----------
-    dat_xr : Xarray dataset of the halite data
-    dat_extent : extent of the data
-    dat_crs : CRS
-    """
-
-    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-
-    for v in dat_xr.data_vars:
-        fig = dat_xr[v].plot.contourf(
-            col="halite",
-            robust=True,
-            levels=15,
-            cmap="jet",
-            col_wrap=2,
-            subplot_kws={"projection": ccrs.epsg(dat_crs)},
-            xlim=(xmin_, xmax_),
-            ylim=(ymin_, ymax_),
-        )
-        # add a basemap
-        basemap = cx.providers.CartoDB.PositronNoLabels
-        for n, axis in enumerate(fig.axs.flat):
-            cx.add_basemap(
-                axis, crs=dat_crs, source=basemap, attribution=False
-            )
-            # add attribution for basemap tiles
-            if n == 2:
-                axis.text(
-                    xmin_, ymin_ - 2500, basemap["attribution"], fontsize=8
-                )
-        fig.set_titles("{value}", weight="semibold")
-        plt.show()
-
-
-ds
-
-ds.rio.crs
-
-ds.rio.resolution()
-
-ds.rio.bounds()
-
-plot_facet_maps(ds, extent, CRS)
-
-# ## Stats
-
-df = ds.to_dataframe()[list(ds.data_vars)]
-
-df.describe()
-
-sns.pairplot(
-    df.reset_index(),
-    palette="flare",
-    hue="halite",
-    plot_kws={"alpha": 0.5},
-    vars=["Thickness", "TopDepth", "BaseDepth"],
-)
-plt.show()
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-sns.histplot(
-    df.reset_index(),
-    x="Thickness",
-    hue="halite",
-    ax=axes[0],
-    palette="rocket_r",
-    multiple="fill",
-    bins=100,
-    legend=False,
-)
-sns.histplot(
-    df.reset_index(),
-    x="TopDepth",
-    hue="halite",
-    ax=axes[1],
-    palette="rocket_r",
-    multiple="fill",
-    bins=100,
-)
-plt.tight_layout()
-plt.show()
-
-plt.subplots(figsize=(12, 5))
-sns.boxplot(
-    pd.melt(df.reset_index().drop(columns=["x", "y"]), id_vars=["halite"]),
-    x="variable",
-    y="value",
-    hue="halite",
-    palette="flare",
-)
-plt.show()
-
-# compare depths
-(ds["BaseDepth"] - ds["TopDepth"]).plot.contourf(
-    col="halite",
-    col_wrap=2,
-    extend="both",
-    levels=15,
-    subplot_kws={"projection": ccrs.epsg(CRS)},
-)
-plt.show()
-
-min(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
-
-max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
-
 # ## Zones of interest
 
 
@@ -311,6 +198,11 @@ def zones_of_interest(
 
     return zdf
 
+
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 
 # ## Generate potential salt cavern locations
 
@@ -385,8 +277,6 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 #
 # <https://doi.org/10.1016/j.ijhydene.2019.12.161>
 
-# #### Cavern distribution function
-
 
 def generate_caverns_caglayan_etal(
     dat_extent, dat_crs, zones_df, diameter, separation
@@ -435,77 +325,13 @@ def generate_caverns_caglayan_etal(
     )
 
     print("Number of potential caverns:", len(cavern_df))
-    # estimates
-    # print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    # print(f"Storage capacity: {len(cavern_df) * 146.418 / 1e3:.2f} TWh")
 
     return cavern_df
 
 
-# cavern capacity calculations
-
-# def cavern_capacity_caglayan_etal(
-#     depth,
-#     rho_rock,
-#     m,
-#     z,
-#     v_cavern,
-#     lhv_gas,
-#     cavern_height=120
-# ):
-#     """
-#     t_avg : average gas temperature [K]
-#     depth : depth of the bottom tip of the salt cavern [m]
-#     cavern_height : height of the cavern [m]
-#     p_overburden : overburden / lithostatic pressure
-#     rho_rock : rock density [kg m-3]
-#     g : gravitational acceleration [9.81 m s-2]
-#     rho_h2 : density of hydrogen gas [kg m-3]
-#     z : compressibility factor
-#     p : pressure [Pa]
-#     m : molar mass of the species [kg mol-1]
-#     r : universal gas constant [8.314 J K-1 mol-1]
-#     t : temperature [K]
-#     m_working_gas : mass of the working gas [kg]
-#     v_cavern : cavern volume [m3]
-#     theta_safety : safety factor [70%]
-#     cavern_capacity : energy storage capacity of cavern [GWhH2]
-#     lhv_gas : lower heating value of the gas [GWhH2 kg-1]
-#     """
-
-#     # eq. (1)
-#     t_avg = 288 + 0.025 * (depth - cavern_height / 2)
-
-#     # eq. (2)
-#     # p_overburden = rho_rock * g * (depth - cavern_height)
-#     p_overburden = rho_rock * 9.81 * (depth - cavern_height)
-
-#     # eq. (3)
-#     # rho_h2 = (p * m) / (z * r * t)
-#     rho_h2_max = (p_overburden * 0.8 * m) / (z * 8.314 * t_avg)
-#     rho_h2_min = (p_overburden * 0.24 * m) / (z * 8.314 * t_avg)
-
-#     # eq. (4)
-#     # m_working_gas = (rho_h2_max - rho_h2_min) * v_cavern * theta_safety
-#     m_working_gas = (rho_h2_max - rho_h2_min) * v_cavern * 0.7
-
-#     # eq. (5)
-#     cavern_capacity = m_working_gas * lhv_gas
-
-# #### Generate caverns
-
-# # numbers based on Hystories project
-# # mid investment scenario
-# # thickness >= (155 + 10 + 30 + 50) m, 980 m <= depth <= 1500 m
-# # diameter = 80 m, separation distance of 4 times the diameter based on
-# # Caglayan et al.
-# zones = zones_of_interest(ds, extent, CRS, 155 + 10 + 30 + 50, 980, 1500)
-# caverns = generate_caverns_caglayan_etal(extent, CRS, zones, 80, 80 * 4)
-
 # numbers used in HYSS calculations
-# # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
-zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 caverns = generate_caverns_caglayan_etal(extent, CRS, zones, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
@@ -513,8 +339,6 @@ plot_map(ds, extent, CRS, caverns, "Thickness", "max")
 # ### Cavern calculations based on Williams *et al.* (2022)
 #
 # <https://doi.org/10.1016/j.est.2022.105109>
-
-# #### Cavern distribution function
 
 
 def generate_caverns_williams_etal(
@@ -592,186 +416,13 @@ def generate_caverns_williams_etal(
     cavern_df = gpd.sjoin(cavern_df, zones_df, predicate="within")
 
     print("Number of potential caverns:", len(cavern_df))
-    # estimates
-    # print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    # print(f"Storage capacity: {len(cavern_df) * 105.074 / 1e3:.2f} TWh")
 
     return cavern_df
 
 
-# # numbers based on Hystories project
-# # mid investment scenario
-# # thickness >= (155 + 10 + 30 + 50) m, 980 m <= depth <= 1500 m
-# # diameter = 80 m, separation distance of 4 times the diameter based on
-# # Caglayan et al.
-# zones = zones_of_interest(ds, extent, CRS, 155 + 10 + 30 + 50, 980, 1500)
-# caverns = generate_caverns_williams_etal(extent, CRS, zones, 80, 80 * 4)
-
 # numbers used in HYSS calculations
-# # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
-zones = zones_of_interest(ds, extent, CRS, 300, 1000, 1500)
 caverns = generate_caverns_williams_etal(extent, CRS, zones, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
-
-# ## Zone of interest stats
-
-zds = ds.where(
-    ((ds.Thickness >= 300) & (ds.TopDepth >= 1000) & (ds.TopDepth <= 1500)),
-    drop=True,
-)
-
-zds
-
-zdf = zds.to_dataframe()[list(ds.data_vars)]
-
-zdf.describe()
-
-sns.pairplot(
-    zdf.reset_index(),
-    palette="flare",
-    hue="halite",
-    plot_kws={"alpha": 0.5},
-    vars=["Thickness", "TopDepth", "BaseDepth"],
-)
-plt.show()
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-sns.histplot(
-    zdf.reset_index(),
-    x="Thickness",
-    hue="halite",
-    ax=axes[0],
-    palette="rocket_r",
-    multiple="fill",
-    bins=100,
-    legend=False,
-)
-sns.histplot(
-    zdf.reset_index(),
-    x="TopDepth",
-    hue="halite",
-    ax=axes[1],
-    palette="rocket_r",
-    multiple="fill",
-    bins=100,
-)
-plt.tight_layout()
-plt.show()
-
-plt.subplots(figsize=(12, 5))
-sns.boxplot(
-    pd.melt(zdf.reset_index().drop(columns=["x", "y"]), id_vars=["halite"]),
-    x="variable",
-    y="value",
-    hue="halite",
-    palette="flare",
-)
-plt.show()
-
-# ## Sensitivity analysis
-
-# sensitivity to minimum thickness
-min_thickness = [200 + 5 * n for n in range(41)]
-max_area = []
-
-for t in min_thickness:
-    max_area.append(
-        zones_of_interest(ds, extent, CRS, t, 1000, 1500, plot_map=False).area[
-            0
-        ]
-    )
-
-sdf = pd.DataFrame({"max_area": max_area, "min_thickness": min_thickness})
-
-# percentage change
-sdf["diff_area"] = (sdf["max_area"] - zones.area[0]) / zones.area[0] * 100
-
-sdf.describe()
-
-# sensitivity to minimum depth
-min_depth = [500 + 12.5 * n for n in range(49)]
-max_area = []
-
-for d in min_depth:
-    max_area.append(
-        zones_of_interest(ds, extent, CRS, 300, d, 1500, plot_map=False).area[
-            0
-        ]
-    )
-
-sdf1 = pd.DataFrame({"max_area": max_area, "min_depth": min_depth})
-
-# percentage change
-sdf1["diff_area"] = (sdf1["max_area"] - zones.area[0]) / zones.area[0] * 100
-
-sdf1.describe()
-
-# sensitivity to maximum depth
-max_depth = [1400 + 12.5 * n for n in range(57)]
-max_area = []
-
-for d in max_depth:
-    max_area.append(
-        zones_of_interest(ds, extent, CRS, 300, 1000, d, plot_map=False).area[
-            0
-        ]
-    )
-
-sdf2 = pd.DataFrame({"max_area": max_area, "max_depth": max_depth})
-
-# percentage change
-sdf2["diff_area"] = (sdf2["max_area"] - zones.area[0]) / zones.area[0] * 100
-
-sdf2.describe()
-
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-sns.regplot(
-    sdf, x="min_thickness", y="max_area", logx=True, ax=axes[0], marker="."
-)
-sns.regplot(
-    sdf1,
-    x="min_depth",
-    y="max_area",
-    logx=True,
-    ax=axes[1],
-    color="crimson",
-    marker=".",
-)
-sns.regplot(
-    sdf2,
-    x="max_depth",
-    y="max_area",
-    logx=True,
-    ax=axes[2],
-    color="seagreen",
-    marker=".",
-)
-plt.tight_layout()
-plt.show()
-
-fig, axes = plt.subplots(1, 3, figsize=(12, 4), sharey=True)
-sns.regplot(
-    sdf, x="min_thickness", y="diff_area", logx=True, ax=axes[0], marker="."
-)
-sns.regplot(
-    sdf1,
-    x="min_depth",
-    y="diff_area",
-    logx=True,
-    ax=axes[1],
-    color="crimson",
-    marker=".",
-)
-sns.regplot(
-    sdf2,
-    x="max_depth",
-    y="diff_area",
-    logx=True,
-    ax=axes[2],
-    color="seagreen",
-    marker=".",
-)
-plt.tight_layout()
-plt.show()
