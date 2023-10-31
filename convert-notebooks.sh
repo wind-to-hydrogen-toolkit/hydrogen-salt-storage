@@ -17,3 +17,6 @@ black -l 79 temp/*.py
 
 # sort imports
 isort temp/*.py
+
+# copy functions
+cp src/functions.py temp
