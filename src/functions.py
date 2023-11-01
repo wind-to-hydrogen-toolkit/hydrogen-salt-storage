@@ -70,8 +70,11 @@ def read_dat_file(dat_path: str, dat_crs: int):
     xds_ = {}
     for d in xds["data"].values:
         halite_member = d.split(" ")[0]
+        # fix halite names
         if halite_member == "Presall":
             halite_member = "Preesall"
+        elif halite_member == "Flyde":
+            halite_member = "Fylde"
         unit = d.split(" ")[-1]
         zvar = d.split("Halite ")[-1].split(" XYZ")[0]
         xds_[d] = (
@@ -142,14 +145,23 @@ def zones_of_interest(
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
-    zds = dat_xr.where(
-        (
-            (dat_xr.Thickness >= constraints["min_thickness"])
-            & (dat_xr.TopDepth >= constraints["min_depth"])
-            & (dat_xr.TopDepth <= constraints["max_depth"])
-        ),
-        drop=True,
-    )
+    try:
+        zds = dat_xr.where(
+            (
+                (dat_xr.Thickness >= constraints["min_thickness"])
+                & (dat_xr.TopDepth >= constraints["min_depth"])
+                & (dat_xr.TopDepth <= constraints["max_depth"])
+            ),
+            drop=True,
+        )
+    except KeyError:
+        zds = dat_xr.where(
+            (
+                (dat_xr.Thickness >= constraints["min_thickness"])
+                & (dat_xr.TopDepth >= constraints["min_depth"])
+            ),
+            drop=True,
+        )
 
     # zones of interest polygon
     zdf = (

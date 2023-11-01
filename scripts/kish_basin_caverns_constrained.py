@@ -33,6 +33,8 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # ## Zones of interest
 
+# ### With max depth
+
 # numbers used in HYSS calculations
 # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
@@ -41,6 +43,19 @@ zones, _ = fns.zones_of_interest(
     extent,
     CRS,
     {"min_thickness": 300, "min_depth": 1000, "max_depth": 1500},
+    display_map=False,
+)
+
+# ### Without max depth
+
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+zones_, _ = fns.zones_of_interest(
+    ds,
+    extent,
+    CRS,
+    {"min_thickness": 300, "min_depth": 1000},
     display_map=False,
 )
 
@@ -132,26 +147,53 @@ shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
 
 # ## Calculate
 
+
+def generate_caverns_with_constraints(zones_gdf, diameter, separation):
+    """
+    Add constraints to cavern configuration
+    """
+
+    print("Without constraints...")
+    cavern_df = fns.generate_caverns_hexagonal_grid(
+        extent, CRS, zones_gdf, diameter, separation
+    )
+
+    print("-" * 60)
+    print("Exclude exploration wells...")
+    cavern_df = cavern_df.overlay(wells_b, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude wind farms...")
+    cavern_df = cavern_df.overlay(wind_farms, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude biosphere...")
+    cavern_df = cavern_df.overlay(biospheres_b, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude frequent shipping routes...")
+    cavern_df = cavern_df.overlay(shipping_b, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
+    return cavern_df
+
+
+# ### With max depth
+
 # numbers used in HYSS calculations
 # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
-caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones, 85, 330)
+caverns = generate_caverns_with_constraints(zones, 85, 330)
 
-# exclude exploration wells
-caverns = caverns.overlay(wells_b, how="difference")
-print("Number of potential caverns:", len(caverns))
+# ### Without max depth
 
-# exclude wind farms
-caverns = caverns.overlay(wind_farms, how="difference")
-print("Number of potential caverns:", len(caverns))
-
-# exclude biosphere
-caverns = caverns.overlay(biospheres_b, how="difference")
-print("Number of potential caverns:", len(caverns))
-
-# exclude shipping routes
-caverns = caverns.overlay(shipping_b, how="difference")
-print("Number of potential caverns:", len(caverns))
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+caverns_ = generate_caverns_with_constraints(zones_, 85, 330)
 
 # ## Crop data layers
 
@@ -184,7 +226,7 @@ buffer = buffer.overlay(pd.concat([biospheres, wind_farms]), how="difference")
 # ## Plot
 
 
-def plot_map(dat_xr, var, stat):
+def plot_map(dat_xr, cavern_df, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -197,9 +239,9 @@ def plot_map(dat_xr, var, stat):
     """
 
     # estimates
-    print("Number of potential caverns:", len(caverns))
-    # print(f"Total volume: {len(caverns) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    # print(f"Storage capacity: {len(caverns) * 105.074 / 1e3:.2f} TWh")
+    print("Number of potential caverns:", len(cavern_df))
+    # print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
+    # print(f"Storage capacity: {len(cavern_df) * 105.074 / 1e3:.2f} TWh")
 
     # initialise figure
     plt.figure(figsize=(12, 9))
@@ -245,8 +287,10 @@ def plot_map(dat_xr, var, stat):
     shipping.plot(ax=ax, color="deeppink", linewidth=3)
 
     # add caverns
-    caverns.centroid.plot(ax=ax, markersize=7, color="black", edgecolor="none")
-    # caverns.plot(ax=ax, edgecolor="none", facecolor="black")
+    cavern_df.centroid.plot(
+        ax=ax, markersize=7, color="black", edgecolor="none"
+    )
+    # cavern_df.plot(ax=ax, edgecolor="none", facecolor="black")
 
     # configure legend entries
     legend_handles = [
@@ -315,4 +359,10 @@ def plot_map(dat_xr, var, stat):
     plt.show()
 
 
-plot_map(ds, "Thickness", "max")
+# ### With max depth
+
+plot_map(ds, caverns, "Thickness", "max")
+
+# ### Without max depth
+
+plot_map(ds, caverns_, "Thickness", "max")

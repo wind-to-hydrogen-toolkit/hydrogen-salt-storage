@@ -26,6 +26,8 @@ ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 
 # ## Zones of interest
 
+# ### With max depth
+
 # numbers used in HYSS calculations
 # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
@@ -34,6 +36,15 @@ zones, _ = fns.zones_of_interest(
     extent,
     CRS,
     {"min_thickness": 300, "min_depth": 1000, "max_depth": 1500},
+)
+
+# ### Without max depth
+
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+zones_, _ = fns.zones_of_interest(
+    ds, extent, CRS, {"min_thickness": 300, "min_depth": 1000}
 )
 
 # ## Generate potential salt cavern locations
@@ -109,6 +120,8 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 #
 # <https://doi.org/10.1016/j.ijhydene.2019.12.161>
 
+# #### With max depth
+
 # numbers used in HYSS calculations
 # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
@@ -116,13 +129,33 @@ caverns = fns.generate_caverns_square_grid(extent, CRS, zones, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
 
+# #### Without max depth
+
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+caverns = fns.generate_caverns_square_grid(extent, CRS, zones_, 85, 330)
+
+plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+
 # ### Cavern calculations based on Williams *et al.* (2022)
 #
 # <https://doi.org/10.1016/j.est.2022.105109>
+
+# #### With max depth
 
 # numbers used in HYSS calculations
 # thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
 # separation = 330 m
 caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones, 85, 330)
+
+plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+
+# #### Without max depth
+
+# numbers used in HYSS calculations
+# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
+# separation = 330 m
+caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones_, 85, 330)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
