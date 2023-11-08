@@ -5,17 +5,12 @@ Main functions used in the Jupyter Notebooks
 import glob
 import os
 
-import cartopy.crs as ccrs
-import contextily as cx
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
-
-# import seaborn as sns
 
 
 def read_dat_file(dat_path: str, dat_crs: int):
@@ -115,13 +110,37 @@ def read_dat_file(dat_path: str, dat_crs: int):
     return xds, dat_extent  # zones
 
 
-def zones_of_interest(
-    dat_xr,
-    dat_extent,
-    dat_crs: int,
-    constraints: dict[str, float],
-    display_map: bool = True,
-):
+def halite_shape(dat_xr, dat_crs: int):
+    """
+    Create a vector shape of the halite data
+
+    Parameters
+    ----------
+    dat_xr : Xarray dataset of the halite data
+    dat_crs : EPSG CRS
+
+    Returns
+    -------
+    - A (multi)polygon geodataframe of the halite's shape
+    """
+
+    shape = (
+        dat_xr.max(dim="halite")["Thickness"]
+        .to_dataframe()
+        .dropna()
+        .reset_index()
+    )
+    shape = gpd.GeoDataFrame(
+        geometry=gpd.GeoSeries(gpd.points_from_xy(shape.x, shape.y))
+        .buffer(100)
+        .envelope,
+        crs=dat_crs,
+    ).dissolve()
+
+    return shape
+
+
+def zones_of_interest(dat_xr, dat_crs: int, constraints: dict[str, float]):
     """
     Generate a (multi)polygon of the zones of interest by applying thickness
     and depth constraints.
@@ -129,21 +148,17 @@ def zones_of_interest(
     Parameters
     ----------
     dat_xr : Xarray dataset of the halite data
-    dat_extent : extent of the data
     dat_crs : EPSG CRS
-    constraints :
-    - min_thickness : minimum halite thickness [m]
-    - min_depth : minimum halite top depth [m]
-    - max_depth : maximum halite top depth [m]
-    display_map : whether to plot a map of the zones of interest polygon
+    constraints : Dictionary containing the following:
+        - min_thickness: minimum halite thickness [m]
+        - min_depth: minimum halite top depth [m]
+        - max_depth: maximum halite top depth [m]
 
     Returns
     -------
     - A (multi)polygon geodataframe of the zones of interest
     - Xarray dataset of the zones of interest
     """
-
-    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
     try:
         zds = dat_xr.where(
@@ -177,18 +192,6 @@ def zones_of_interest(
         crs=dat_crs,
     ).dissolve()
 
-    if display_map:
-        ax = plt.axes(projection=ccrs.epsg(dat_crs))
-        zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
-        plt.xlim(xmin_, xmax_)
-        plt.ylim(ymin_, ymax_)
-        cx.add_basemap(
-            ax, source=cx.providers.CartoDB.PositronNoLabels, crs=dat_crs
-        )
-        plt.title("Zones of interest")
-        plt.tight_layout()
-        plt.show()
-
     return zdf, zds
 
 
@@ -197,8 +200,7 @@ def generate_caverns_square_grid(
 ):
     """
     Generate salt caverns using a regular square grid within the zones of
-    interest based on the methodology by Caglayan et al. (2020):
-    https://doi.org/10.1016/j.ijhydene.2019.12.161.
+    interest.
     Gridding method based on
     https://james-brennan.github.io/posts/fast_gridding_geopandas/.
 
