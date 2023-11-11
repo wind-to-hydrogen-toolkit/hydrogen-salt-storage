@@ -1,3 +1,5 @@
+#!/bin/sh
+
 mv temp/src/*.py src
 
 rm -d -r scripts

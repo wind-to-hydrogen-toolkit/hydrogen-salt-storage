@@ -26,26 +26,30 @@ ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 
 # ## Zones of interest
 
-# ### With max depth
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
+def plot_zones_map(zdf, dat_extent, dat_crs):
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
+
+    ax = plt.axes(projection=ccrs.epsg(dat_crs))
+    zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
+    plt.xlim(xmin_, xmax_)
+    plt.ylim(ymin_, ymax_)
+    cx.add_basemap(
+        ax, source=cx.providers.CartoDB.PositronNoLabels, crs=dat_crs
+    )
+    plt.title("Zones of interest")
+    plt.tight_layout()
+    plt.show()
+
+
+# ### Optimal depth, low investment
+
+# height = 311 m, 1,000 m <= depth <= 1,500 m
 zones, _ = fns.zones_of_interest(
-    ds,
-    extent,
-    CRS,
-    {"min_thickness": 300, "min_depth": 1000, "max_depth": 1500},
+    ds, CRS, {"height": 311, "min_depth": 1000, "max_depth": 1500}
 )
 
-# ### Without max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-zones_, _ = fns.zones_of_interest(
-    ds, extent, CRS, {"min_thickness": 300, "min_depth": 1000}
-)
+plot_zones_map(zones, extent, CRS)
 
 # ## Generate potential salt cavern locations
 
@@ -116,46 +120,15 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.show()
 
 
-# ### Cavern calculations based on Caglayan *et al.* (2020)
-#
-# <https://doi.org/10.1016/j.ijhydene.2019.12.161>
+# ### Cavern calculations in a regular square grid
 
-# #### With max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns = fns.generate_caverns_square_grid(extent, CRS, zones, 85, 330)
+# diameter = 80 m, separation = 320 m
+caverns = fns.generate_caverns_square_grid(extent, CRS, zones, 80)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
 
-# #### Without max depth
+# ### Cavern calculations in a regular hexagonal grid
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns = fns.generate_caverns_square_grid(extent, CRS, zones_, 85, 330)
-
-plot_map(ds, extent, CRS, caverns, "Thickness", "max")
-
-# ### Cavern calculations based on Williams *et al.* (2022)
-#
-# <https://doi.org/10.1016/j.est.2022.105109>
-
-# #### With max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones, 85, 330)
-
-plot_map(ds, extent, CRS, caverns, "Thickness", "max")
-
-# #### Without max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones_, 85, 330)
+caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones, 80)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")

@@ -62,7 +62,7 @@ data2.shape
 
 data2.crs
 
-ax = data2.to_crs(3857).plot(
+ax = data2.plot(
     figsize=(7.5, 7.5), column="Name", legend=True, cmap="Accent", alpha=0.85
 )
 plt.xlim(-1.2e6, -0.6e6)

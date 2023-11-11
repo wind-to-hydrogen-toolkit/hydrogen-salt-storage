@@ -105,7 +105,7 @@ def make_stats_plots(dat_xr):
     plt.show()
 
     # histograms
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
     sns.histplot(
         dat_df.reset_index(),
         x="Thickness",
@@ -163,6 +163,63 @@ df = make_stats_plots(ds)
 
 df.describe()
 
+# surface area
+shape = fns.halite_shape(ds, CRS)
+
+f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
+
+
+def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
+    """
+    Helper function to plot facet maps of the halite layers
+
+    Parameters
+    ----------
+    dat_xr : Xarray dataset of the halite data
+    dat_extent : extent of the data
+    dat_crs : EPSG CRS
+    """
+
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
+
+    f = dat_xr[v].plot.contourf(
+        col="halite",
+        robust=True,
+        levels=levels,
+        cmap=sns.color_palette("flare", as_cmap=True),
+        # col_wrap=2,
+        figsize=(12, 6),
+        subplot_kws={"projection": ccrs.epsg(dat_crs)},
+        xlim=(xmin_, xmax_),
+        ylim=(ymin_, ymax_),
+        cbar_kwargs={
+            "location": "bottom",
+            "aspect": 35,
+            "shrink": 0.65,
+            "pad": 0.05,
+            "extendfrac": 0.2,
+            "label": dat_xr[v].attrs["long_name"] + " [m]",
+        },
+    )
+    # add a basemap
+    basemap = cx.providers.CartoDB.PositronNoLabels
+    for n, axis in enumerate(f.axs.flat):
+        cx.add_basemap(axis, crs=dat_crs, source=basemap, attribution=False)
+        # add attribution for basemap tiles
+        if n == 0:
+            axis.text(xmin_, ymin_ - 2500, basemap["attribution"], fontsize=8)
+    f.set_titles("{value}", weight="semibold")
+    plt.show()
+
+
+plot_facet_maps_distr(
+    ds, extent, CRS, "TopDepth", [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80]
+)
+
+plot_facet_maps_distr(
+    ds, extent, CRS, "Thickness", [85 + 90, 155 + 90, 311 + 90]
+)
+
 # compare depths
 (ds["BaseDepth"] - ds["TopDepth"]).plot(
     col="halite",
@@ -178,40 +235,74 @@ max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 
 # ## Zones of interest
 
-# ### With max depth
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-zones_max_depth, zds_max_depth = fns.zones_of_interest(
-    ds,
-    extent,
-    CRS,
-    {"min_thickness": 300, "min_depth": 1000, "max_depth": 1500},
+def plot_zones_map(zdf, dat_extent, dat_crs):
+    xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
+
+    ax = plt.axes(projection=ccrs.epsg(dat_crs))
+    zdf.boundary.plot(ax=ax, linewidth=1, color="darkslategrey")
+    plt.xlim(xmin_, xmax_)
+    plt.ylim(ymin_, ymax_)
+    cx.add_basemap(
+        ax, source=cx.providers.CartoDB.PositronNoLabels, crs=dat_crs
+    )
+    plt.title("Zones of interest")
+    plt.tight_layout()
+    plt.show()
+
+
+# ### Case 1
+#
+# height = 311 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
+# separation = 320 m
+
+zones_1, zds_1 = fns.zones_of_interest(
+    ds, CRS, {"height": 311, "min_depth": 1000, "max_depth": 1500}
 )
 
-# ### Without max depth
+plot_zones_map(zones_1, extent, CRS)
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-zones_min_depth, zds_min_depth = fns.zones_of_interest(
-    ds, extent, CRS, {"min_thickness": 300, "min_depth": 1000}
+# ### Case 2
+#
+# height = 155 m, 1000 m <= depth <= 1,500 m, diameter = 80 m,
+# separation = 320 m
+
+zones_2, zds_2 = fns.zones_of_interest(
+    ds, CRS, {"height": 155, "min_depth": 750, "max_depth": 1750}
 )
+
+plot_zones_map(zones_2, extent, CRS)
+
+# ### Case 3
+#
+# height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
+# separation = 320 m
+
+zones_3, zds_3 = fns.zones_of_interest(
+    ds, CRS, {"height": 85, "min_depth": 500, "max_depth": 2000}
+)
+
+plot_zones_map(zones_3, extent, CRS)
 
 # ## Zones of interest stats
 
-# ### With max depth
+# ### Case 1
 
-zdf_max_depth = make_stats_plots(zds_max_depth)
+zdf_1 = make_stats_plots(zds_1)
 
-zdf_max_depth.describe()
+zdf_1.describe()
 
-# ### Without max depth
+# ### Case 2
 
-zdf_min_depth = make_stats_plots(zds_min_depth)
+zdf_2 = make_stats_plots(zds_2)
 
-zdf_min_depth.describe()
+zdf_2.describe()
+
+# ### Case 3
+
+zdf_3 = make_stats_plots(zds_3)
+
+zdf_3.describe()
 
 # ## Sensitivity analysis
 #
@@ -219,47 +310,49 @@ zdf_min_depth.describe()
 # cavern construction (without constraints) to depth and thickness
 
 
-def sensitivity(zones_gdf, include_max_depth=True):
+def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     sdf = {}
 
-    # sensitivity to minimum thickness
-    thickness_min = [200 + 5 * n for n in range(41)]
+    # sensitivity to height
+    heights = [85 + 226 / 50 * n for n in range(51)]
     area_max = []
 
-    for t in thickness_min:
+    for t in heights:
         area_max.append(
             fns.zones_of_interest(
                 ds,
-                extent,
                 CRS,
-                {"min_thickness": t, "min_depth": 1000, "max_depth": 1500},
-                display_map=False,
+                {
+                    "height": t,
+                    "min_depth": min_depth_base,
+                    "max_depth": max_depth_base,
+                },
             )[0].area[0]
         )
 
-    sdf["min_thickness"] = pd.DataFrame(
-        {"max_area": area_max, "min_thickness": thickness_min}
-    )
+    sdf["height"] = pd.DataFrame({"max_area": area_max, "height": heights})
 
     # percentage change
-    sdf["min_thickness"]["diff_area"] = (
-        (sdf["min_thickness"]["max_area"] - zones_gdf.area[0])
+    sdf["height"]["diff_area"] = (
+        (sdf["height"]["max_area"] - zones_gdf.area[0])
         / zones_gdf.area[0]
         * 100
     )
 
     # sensitivity to minimum depth
-    depth_min = [500 + 12.5 * n for n in range(49)]
+    depth_min = [500 + 10 * n for n in range(61)]
     area_max = []
 
     for t in depth_min:
         area_max.append(
             fns.zones_of_interest(
                 ds,
-                extent,
                 CRS,
-                {"min_thickness": 300, "min_depth": t, "max_depth": 1500},
-                display_map=False,
+                {
+                    "height": height_base,
+                    "min_depth": t,
+                    "max_depth": max_depth_base,
+                },
             )[0].area[0]
         )
 
@@ -274,50 +367,49 @@ def sensitivity(zones_gdf, include_max_depth=True):
         * 100
     )
 
-    if include_max_depth:
-        # sensitivity to maximum depth
-        depth_max = [1400 + 12.5 * n for n in range(57)]
-        area_max = []
+    # sensitivity to maximum depth
+    depth_max = [1400 + 10 * n for n in range(61)]
+    area_max = []
 
-        for t in depth_max:
-            area_max.append(
-                fns.zones_of_interest(
-                    ds,
-                    extent,
-                    CRS,
-                    {"min_thickness": 300, "min_depth": 1000, "max_depth": t},
-                    display_map=False,
-                )[0].area[0]
-            )
-
-        sdf["max_depth"] = pd.DataFrame(
-            {"max_area": area_max, "max_depth": depth_max}
+    for t in depth_max:
+        area_max.append(
+            fns.zones_of_interest(
+                ds,
+                CRS,
+                {
+                    "height": height_base,
+                    "min_depth": min_depth_base,
+                    "max_depth": t,
+                },
+            )[0].area[0]
         )
 
-        # percentage change
-        sdf["max_depth"]["diff_area"] = (
-            (sdf["max_depth"]["max_area"] - zones_gdf.area[0])
-            / zones_gdf.area[0]
-            * 100
-        )
+    sdf["max_depth"] = pd.DataFrame(
+        {"max_area": area_max, "max_depth": depth_max}
+    )
+
+    # percentage change
+    sdf["max_depth"]["diff_area"] = (
+        (sdf["max_depth"]["max_area"] - zones_gdf.area[0])
+        / zones_gdf.area[0]
+        * 100
+    )
 
     return sdf
 
 
-# ### With max depth
+sdf = sensitivity(zones_2, 155, 750, 1750)
 
-sdf_max_depth = sensitivity(zones_max_depth)
-
-for key in sdf_max_depth.keys():
+for key in sdf.keys():
     print(key)
-    print(sdf_max_depth[key].describe())
+    print(sdf[key].describe())
 
 fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 for (n, key), c in zip(
-    enumerate(sdf_max_depth.keys()), ["royalblue", "crimson", "seagreen"]
+    enumerate(sdf.keys()), ["royalblue", "crimson", "seagreen"]
 ):
     sns.regplot(
-        sdf_max_depth[key],
+        sdf[key],
         x=key,
         y="max_area",
         logx=True,
@@ -330,10 +422,10 @@ plt.show()
 
 fig, axes = plt.subplots(1, 3, figsize=(12, 4), sharey=True)
 for (n, key), c in zip(
-    enumerate(sdf_max_depth.keys()), ["royalblue", "crimson", "seagreen"]
+    enumerate(sdf.keys()), ["royalblue", "crimson", "seagreen"]
 ):
     sns.regplot(
-        sdf_max_depth[key],
+        sdf[key],
         x=key,
         y="diff_area",
         logx=True,
@@ -341,45 +433,6 @@ for (n, key), c in zip(
         marker=".",
         color=c,
     )
-plt.tight_layout()
-plt.show()
-
-# ### Without max depth
-
-sdf_min_depth = sensitivity(zones_min_depth, include_max_depth=False)
-
-for key in sdf_min_depth.keys():
-    print(key)
-    print(sdf_min_depth[key].describe())
-
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-for (n, key), c in zip(
-    enumerate(sdf_min_depth.keys()), ["royalblue", "crimson", "seagreen"]
-):
-    sns.regplot(
-        sdf_min_depth[key],
-        x=key,
-        y="max_area",
-        logx=True,
-        ax=axes[n],
-        marker=".",
-        color=c,
-    )
-plt.tight_layout()
-plt.show()
-
-fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
-for (n, key), c in zip(
-    enumerate(sdf_min_depth.keys()), ["royalblue", "crimson", "seagreen"]
-):
-    sns.regplot(
-        sdf_min_depth[key],
-        x=key,
-        y="diff_area",
-        logx=True,
-        ax=axes[n],
-        marker=".",
-        color=c,
-    )
+plt.ylim(-110, 110)
 plt.tight_layout()
 plt.show()

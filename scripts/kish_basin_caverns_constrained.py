@@ -31,34 +31,6 @@ ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
-# ## Zones of interest
-
-# ### With max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-zones, _ = fns.zones_of_interest(
-    ds,
-    extent,
-    CRS,
-    {"min_thickness": 300, "min_depth": 1000, "max_depth": 1500},
-    display_map=False,
-)
-
-# ### Without max depth
-
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-zones_, _ = fns.zones_of_interest(
-    ds,
-    extent,
-    CRS,
-    {"min_thickness": 300, "min_depth": 1000},
-    display_map=False,
-)
-
 # ## Constraints
 
 # ### Exploration wells
@@ -119,9 +91,6 @@ biospheres = gpd.read_file(
 
 biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
 
-# 5 km buffer - suggested in draft OREDP II p. 58
-biospheres_b = gpd.GeoDataFrame(geometry=biospheres.buffer(5000))
-
 # ### Frequent shipping routes
 
 DATA_DIR = os.path.join(
@@ -145,17 +114,68 @@ shipping = (
 # 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
 
+# ### Shipwrecks
+
+DATA_DIR = os.path.join(
+    "data", "heritage", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+)
+
+shipwrecks = gpd.read_file(
+    os.path.join(
+        f"zip://{DATA_DIR}!"
+        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
+    )
+)
+
+shipwrecks = (
+    shipwrecks.to_crs(CRS)
+    .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
+    .reset_index()
+)
+
+# Archaeological Exclusion Zones recommendation
+shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(100))
+
+# ### Distance from salt edge
+
+# shape of the halite
+edge = fns.halite_shape(ds, CRS)
+
+# 3 times the cavern diameter
+# edge_b = edge.clip(edge.boundary.buffer(3 * 80))
+edge_b = gpd.GeoDataFrame(geometry=edge.boundary.buffer(3 * 80))
+
+# ## Zones of interest
+
+# ### Case 1
+#
+# height = 85 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
+# separation = 320 m
+
+zones_1, _ = fns.zones_of_interest(
+    ds, CRS, {"height": 85, "min_depth": 1000, "max_depth": 1500}
+)
+
+# ### Case 2
+#
+# height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
+# separation = 320 m
+
+zones_2, _ = fns.zones_of_interest(
+    ds, CRS, {"height": 85, "min_depth": 500, "max_depth": 2000}
+)
+
 # ## Calculate
 
 
-def generate_caverns_with_constraints(zones_gdf, diameter, separation):
+def generate_caverns_with_constraints(zones_gdf, diameter):
     """
     Add constraints to cavern configuration
     """
 
     print("Without constraints...")
     cavern_df = fns.generate_caverns_hexagonal_grid(
-        extent, CRS, zones_gdf, diameter, separation
+        extent, CRS, zones_gdf, diameter
     )
 
     print("-" * 60)
@@ -170,7 +190,7 @@ def generate_caverns_with_constraints(zones_gdf, diameter, separation):
 
     print("-" * 60)
     print("Exclude biosphere...")
-    cavern_df = cavern_df.overlay(biospheres_b, how="difference")
+    cavern_df = cavern_df.overlay(biospheres, how="difference")
     print("Number of potential caverns:", len(cavern_df))
 
     print("-" * 60)
@@ -178,22 +198,26 @@ def generate_caverns_with_constraints(zones_gdf, diameter, separation):
     cavern_df = cavern_df.overlay(shipping_b, how="difference")
     print("Number of potential caverns:", len(cavern_df))
 
+    print("-" * 60)
+    print("Exclude shipwrecks...")
+    cavern_df = cavern_df.overlay(shipwrecks_b, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude cavern edge...")
+    cavern_df = cavern_df.overlay(edge_b, how="difference")
+    print("Number of potential caverns:", len(cavern_df))
+
     return cavern_df
 
 
-# ### With max depth
+# ### Case 1
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns = generate_caverns_with_constraints(zones, 85, 330)
+caverns_1 = generate_caverns_with_constraints(zones_1, 80)
 
-# ### Without max depth
+# ### Case 2
 
-# numbers used in HYSS calculations
-# thickness >= 300 m, 1000 m <= depth <= 1500 m, diameter = 85 m
-# separation = 330 m
-caverns_ = generate_caverns_with_constraints(zones_, 85, 330)
+caverns_2 = generate_caverns_with_constraints(zones_2, 80)
 
 # ## Crop data layers
 
@@ -215,18 +239,20 @@ land = land.dissolve().to_crs(CRS)
 biospheres = biospheres.overlay(land, how="difference")
 
 # create exclusion buffer
-buffer = pd.concat([biospheres_b, wells_b, shipping_b]).dissolve()
+buffer = pd.concat([wells_b, shipwrecks_b, shipping_b]).dissolve()
 
-# crop land areas from buffer
-buffer = buffer.overlay(land, how="difference")
+# crop land areas and constraints from buffer
+buffer = buffer.overlay(
+    pd.concat([land, biospheres, wind_farms]), how="difference"
+)
 
-# crop constraints from buffer
-buffer = buffer.overlay(pd.concat([biospheres, wind_farms]), how="difference")
+# merge salt edge buffer
+buffer = pd.concat([buffer, edge_b]).dissolve()
 
 # ## Plot
 
 
-def plot_map(dat_xr, cavern_df, var, stat):
+def plot_map(dat_xr, cavern_df, var, stat, plot_caverns=True):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -239,12 +265,11 @@ def plot_map(dat_xr, cavern_df, var, stat):
     """
 
     # estimates
-    print("Number of potential caverns:", len(cavern_df))
-    # print(f"Total volume: {len(cavern_df) * 5e5:.2E} m\N{SUPERSCRIPT THREE}")
-    # print(f"Storage capacity: {len(cavern_df) * 105.074 / 1e3:.2f} TWh")
+    if plot_caverns:
+        print("Number of potential caverns:", len(cavern_df))
 
     # initialise figure
-    plt.figure(figsize=(12, 9))
+    plt.figure(figsize=(12, 8))
     ax = plt.axes(projection=ccrs.epsg(CRS))
 
     # configure colour bar based on variable
@@ -273,39 +298,30 @@ def plot_map(dat_xr, cavern_df, var, stat):
     )
 
     # configure map limits
-    plt.xlim(xmin, xmax)
-    # plt.ylim(ymin - 4000, ymax + 4000)
-    plt.ylim(ymin, ymax)
+    plt.xlim(xmin - 7000, xmax)
+    # plt.xlim(xmin, xmax)
+    plt.ylim(ymin - 500, ymax + 500)
+    # plt.ylim(ymin, ymax)
 
     # add constraint layers
     buffer.plot(ax=ax, facecolor="none", edgecolor="slategrey", hatch="///")
-    wells.centroid.plot(ax=ax, color="black", marker="x")
     wind_farms.plot(ax=ax, facecolor="none", hatch="///", edgecolor="black")
     biospheres.plot(
         ax=ax, facecolor="none", edgecolor="forestgreen", hatch="///"
     )
     shipping.plot(ax=ax, color="deeppink", linewidth=3)
+    shipwrecks.plot(ax=ax, color="black", marker="+", zorder=2)
+    wells.centroid.plot(ax=ax, color="black", marker="x", zorder=2)
 
     # add caverns
-    cavern_df.centroid.plot(
-        ax=ax, markersize=7, color="black", edgecolor="none"
-    )
-    # cavern_df.plot(ax=ax, edgecolor="none", facecolor="black")
+    if plot_caverns:
+        cavern_df.centroid.plot(
+            ax=ax, markersize=7, color="black", edgecolor="none", zorder=2
+        )
+        # cavern_df.plot(ax=ax, edgecolor="none", facecolor="black")
 
     # configure legend entries
     legend_handles = [
-        Line2D(
-            [0],
-            [0],
-            marker=".",
-            markersize=7,
-            markeredgecolor="none",
-            markerfacecolor="black",
-            linewidth=0,
-            label="Salt cavern",
-        )
-    ]
-    legend_handles.append(
         Line2D(
             [0],
             [0],
@@ -313,6 +329,16 @@ def plot_map(dat_xr, cavern_df, var, stat):
             linewidth=0,
             markeredgecolor="black",
             label="Exploration well",
+        )
+    ]
+    legend_handles.append(
+        Line2D(
+            [0],
+            [0],
+            marker="+",
+            linewidth=0,
+            markeredgecolor="black",
+            label="Shipwreck",
         )
     )
     legend_handles.append(
@@ -340,6 +366,20 @@ def plot_map(dat_xr, cavern_df, var, stat):
         )
     )
 
+    if plot_caverns:
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                marker=".",
+                markersize=7,
+                markeredgecolor="none",
+                markerfacecolor="black",
+                linewidth=0,
+                label="Salt cavern",
+            )
+        )
+
     # add basemap and map elements
     cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
     ax.gridlines(
@@ -359,10 +399,12 @@ def plot_map(dat_xr, cavern_df, var, stat):
     plt.show()
 
 
-# ### With max depth
+plot_map(ds, caverns_1, "Thickness", "max", False)
 
-plot_map(ds, caverns, "Thickness", "max")
+# ### Case 1
 
-# ### Without max depth
+plot_map(ds, caverns_1, "Thickness", "max")
 
-plot_map(ds, caverns_, "Thickness", "max")
+# ### Case 2
+
+plot_map(ds, caverns_2, "Thickness", "max")

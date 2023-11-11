@@ -73,7 +73,7 @@ data["weight"] = data["weight"].astype(str)
 
 data["legend"] = data.weight + ": " + data.key_
 
-ax = data.to_crs(3857).plot(
+ax = data.plot(
     figsize=(7.5, 7.5),
     column="legend",
     legend=True,

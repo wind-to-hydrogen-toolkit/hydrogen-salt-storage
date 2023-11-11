@@ -101,6 +101,9 @@ ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 # use extent bounds
 xmin, ymin, xmax, ymax = extent.total_bounds
 
+# shape of the halite
+shape = fns.halite_shape(ds, CRS)
+
 # wind farms in the Irish Sea
 wind_farms_ = wind_farms.sjoin(
     gpd.GeoDataFrame(geometry=extent.buffer(50000)).to_crs(wind_farms.crs)
@@ -133,7 +136,10 @@ wind_farms_ = (
     .sort_values("Name")
 )
 
-plt.figure(figsize=(12, 9))
+# combine Codling wind farm polygons
+wind_farms_["Name_"] = wind_farms_["Name"].str.split(expand=True)[0]
+
+plt.figure(figsize=(10, 8))
 ax = plt.axes(projection=ccrs.epsg(CRS))
 
 ds.max(dim="halite")["Thickness"].plot.contourf(
@@ -144,11 +150,11 @@ ds.max(dim="halite")["Thickness"].plot.contourf(
     cbar_kwargs={"label": "Maximum Halite Thickness [m]"},
 )
 
-plt.xlim(xmin, xmax)
-plt.ylim(ymin - 4000, ymax + 4000)
+plt.xlim(xmin - 7750, xmax + 7750)
+plt.ylim(ymin - 10500, ymax + 10500)
 
 # wind farms
-colours = ["firebrick", "forestgreen", "black", "royalblue"]
+colours = ["firebrick", "firebrick", "black", "royalblue"]
 for index, colour in zip(range(len(wind_farms_)), colours):
     wind_farms_.iloc[[index]].to_crs(CRS).plot(
         ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
@@ -157,13 +163,60 @@ legend_handles = [
     mpatches.Patch(
         facecolor="none",
         hatch="////",
-        edgecolor=colours[x],
-        label=list(wind_farms_["Name"])[x],
+        edgecolor=colours[1:][x],
+        label=list(wind_farms_.dissolve("Name_")["Name"])[x],
     )
-    for x in range(len(wind_farms_))
+    for x in range(len(wind_farms_.dissolve("Name_")))
 ]
 
-cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
+cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
+)
+ax.add_artist(
+    ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+)
+ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
+
+# plt.title("Wind Farms near Kish Basin")
+plt.title(None)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(9, 9))
+ax = plt.axes(projection=ccrs.epsg(CRS))
+
+shape.boundary.plot(ax=ax, color="black", linewidth=2)
+
+plt.xlim(xmin - 7750, xmax + 7750)
+plt.ylim(ymin - 10500, ymax + 10500)
+
+# wind farms
+colours = ["firebrick", "firebrick", "seagreen", "royalblue"]
+for index, colour in zip(range(len(wind_farms_)), colours):
+    wind_farms_.iloc[[index]].to_crs(CRS).plot(
+        ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
+    )
+legend_handles = [
+    mpatches.Patch(
+        facecolor="none",
+        hatch="////",
+        edgecolor=colours[1:][x],
+        label=list(wind_farms_.dissolve("Name_")["Name"])[x],
+    )
+    for x in range(len(wind_farms_.dissolve("Name_")))
+]
+
+legend_handles.append(
+    mpatches.Patch(
+        facecolor="none",
+        edgecolor="black",
+        label="Kish Basin halite",
+        linewidth=2,
+    )
+)
+
+cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
 ax.gridlines(
     draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
 )
