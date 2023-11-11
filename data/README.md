@@ -5,9 +5,9 @@ Dataset | Source | Metadata | Format | Version
 Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [Link][owf] | Shapefile | 2023-09-11
 UNESCO Global Geoparks and Biospheres | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere Partnership | [Link][biospheres_heritage] | Shapefile | 2021-10-27
 Dublin Bay Biosphere Marine Zones | Department of Housing, Local Government and Heritage / Dublin Bay Biosphere Partnership | [Link][biospheres_marine] | Shapefile | 2023-08-17
-Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [Link][wells] | Shapefile | 2021-02-01
+Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [Link][wells]; [Link][wells2] | Shapefile | 2021-02-01
 Shipwrecks in Irish Waters | INFOMAR / National Monuments Service / Department of Housing, Local Government and Heritage | [Link][shipwrecks] | Shapefile | 2023-10-24
-Frequently Used Routes (300 gross tonnes and above)  | Department of Housing, Local Government and Heritage / EMODnet | [Link][shippingroutes] | Shapefile | 2022-07-19
+Frequently Used Routes (300 gross tonnes and above) | Department of Housing, Local Government and Heritage / EMODnet | [Link][shippingroutes] | Shapefile | 2022-07-19
 OREDP Assessment Area | Department of the Environment, Climate and Communications | [Link][oredp_assessment] | Shapefile | 2023-06-01
 OREDP Study Area | Department of the Environment, Climate and Communications | [Link][oredp_study] | Shapefile | 2023-06-01
 Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | [Link][boundary] | Shapefile | 2022-07-07
@@ -31,6 +31,7 @@ Other constraints as stated in the Draft OREDP II:
 1. Interconnectors
 1. Cables - electricity, telecoms, new cables from wind farms
 1. Oil and gas pipelines (there is one intersecting with NISA)
+1. Other maritime traffic - anchorage
 
 Boundaries for cropping:
 
@@ -72,6 +73,7 @@ Other constraints to consider:
 [biospheres_heritage]: https://data.gov.ie/dataset/unesco-global-geoparks-and-biospheres
 [biospheres_marine]: https://data.gov.ie/dataset/dublin-bay-biosphere-marine-zones
 [wells]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
+[wells2]: https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
 [hyss]: https://hyss.ie
 [oredp_assessment]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2212
 [oredp_study]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2214

@@ -110,7 +110,7 @@ def read_dat_file(dat_path: str, dat_crs: int):
     return xds, dat_extent  # zones
 
 
-def halite_shape(dat_xr, dat_crs: int):
+def halite_shape(dat_xr, dat_crs: int, halite: str = None):
     """
     Create a vector shape of the halite data
 
@@ -118,18 +118,27 @@ def halite_shape(dat_xr, dat_crs: int):
     ----------
     dat_xr : Xarray dataset of the halite data
     dat_crs : EPSG CRS
+    halite : Halite member
 
     Returns
     -------
     - A (multi)polygon geodataframe of the halite's shape
     """
 
-    shape = (
-        dat_xr.max(dim="halite")["Thickness"]
-        .to_dataframe()
-        .dropna()
-        .reset_index()
-    )
+    if halite:
+        shape = (
+            dat_xr.sel(halite=halite)["Thickness"]
+            .to_dataframe()
+            .dropna()
+            .reset_index()
+        )
+    else:
+        shape = (
+            dat_xr.max(dim="halite")["Thickness"]
+            .to_dataframe()
+            .dropna()
+            .reset_index()
+        )
     shape = gpd.GeoDataFrame(
         geometry=gpd.GeoSeries(gpd.points_from_xy(shape.x, shape.y))
         .buffer(100)
@@ -150,9 +159,9 @@ def zones_of_interest(dat_xr, dat_crs: int, constraints: dict[str, float]):
     dat_xr : Xarray dataset of the halite data
     dat_crs : EPSG CRS
     constraints : Dictionary containing the following:
-        - min_thickness: minimum halite thickness [m]
-        - min_depth: minimum halite top depth [m]
-        - max_depth: maximum halite top depth [m]
+        - height: cavern height [m]
+        - min_depth: minimum cavern depth [m]
+        - max_depth: maximum cavern depth [m]
 
     Returns
     -------
@@ -163,16 +172,16 @@ def zones_of_interest(dat_xr, dat_crs: int, constraints: dict[str, float]):
     try:
         zds = dat_xr.where(
             (
-                (dat_xr.Thickness >= constraints["min_thickness"])
-                & (dat_xr.TopDepth >= constraints["min_depth"])
-                & (dat_xr.TopDepth <= constraints["max_depth"])
+                (dat_xr.Thickness >= constraints["height"] + 90)
+                & (dat_xr.TopDepth >= constraints["min_depth"] - 80)
+                & (dat_xr.TopDepth <= constraints["max_depth"] - 80)
             ),
             drop=True,
         )
     except KeyError:
         zds = dat_xr.where(
             (
-                (dat_xr.Thickness >= constraints["min_thickness"])
+                (dat_xr.Thickness >= constraints["height"])
                 & (dat_xr.TopDepth >= constraints["min_depth"])
             ),
             drop=True,
@@ -196,7 +205,8 @@ def zones_of_interest(dat_xr, dat_crs: int, constraints: dict[str, float]):
 
 
 def generate_caverns_square_grid(
-    dat_extent, dat_crs: int, zones_df, diameter: float, separation: float
+    dat_extent, dat_crs: int, zones_df, diameter: float,
+    separation: float = None
 ):
     """
     Generate salt caverns using a regular square grid within the zones of
@@ -218,6 +228,9 @@ def generate_caverns_square_grid(
     """
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
+
+    if not separation:
+        separation = diameter * 4
 
     # create the cells in a loop
     grid_cells = []
@@ -270,7 +283,8 @@ def hexgrid_init(dat_extent, separation: float):
 
 
 def generate_caverns_hexagonal_grid(
-    dat_extent, dat_crs: int, zones_df, diameter: float, separation: float
+    dat_extent, dat_crs: int, zones_df, diameter: float,
+    separation: float = None
 ):
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
@@ -290,6 +304,9 @@ def generate_caverns_hexagonal_grid(
     -------
     - A polygon geodataframe of potential caverns
     """
+
+    if not separation:
+        separation = diameter * 4
 
     a, cols, rows = hexgrid_init(dat_extent, separation)
 

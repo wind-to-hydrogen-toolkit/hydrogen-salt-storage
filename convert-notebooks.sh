@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script */*.ipynb
 
