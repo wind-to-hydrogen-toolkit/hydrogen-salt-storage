@@ -12,6 +12,7 @@ import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
@@ -76,6 +77,8 @@ wind_farms = (
     .sort_values("Name")
 )
 
+wind_farms.drop(columns=["index_right"], inplace=True)
+
 # ### Dublin Bay Biosphere
 
 DATA_DIR = os.path.join(
@@ -110,6 +113,8 @@ shipping = (
     .reset_index()
 )
 
+shipping.drop(columns=["index_right"], inplace=True)
+
 # routes near Kish Basin
 # 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
@@ -133,6 +138,8 @@ shipwrecks = (
     .reset_index()
 )
 
+shipwrecks.drop(columns=["index_right"], inplace=True)
+
 # Archaeological Exclusion Zones recommendation
 shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(100))
 
@@ -147,28 +154,17 @@ edge_b = gpd.GeoDataFrame(geometry=edge.boundary.buffer(3 * 80))
 
 # ## Zones of interest
 
-# ### Case 1
-#
-# height = 85 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
-# separation = 320 m
-
-zones_1, _ = fns.zones_of_interest(
-    ds, CRS, {"height": 85, "min_depth": 1000, "max_depth": 1500}
-)
-
-# ### Case 2
-#
 # height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
 # separation = 320 m
 
-zones_2, _ = fns.zones_of_interest(
+zones, zds = fns.zones_of_interest(
     ds, CRS, {"height": 85, "min_depth": 500, "max_depth": 2000}
 )
 
-# ## Calculate
+# ## Generate caverns
 
 
-def generate_caverns_with_constraints(zones_gdf, diameter):
+def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
     """
     Add constraints to cavern configuration
     """
@@ -177,47 +173,74 @@ def generate_caverns_with_constraints(zones_gdf, diameter):
     cavern_df = fns.generate_caverns_hexagonal_grid(
         extent, CRS, zones_gdf, diameter
     )
+    cavern_df = fns.cavern_data(zones_ds, cavern_df, CRS)
 
     print("-" * 60)
     print("Exclude exploration wells...")
-    cavern_df = cavern_df.overlay(wells_b, how="difference")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, wells_b, predicate="intersects"), how="difference"
+    )
     print("Number of potential caverns:", len(cavern_df))
 
     print("-" * 60)
     print("Exclude wind farms...")
-    cavern_df = cavern_df.overlay(wind_farms, how="difference")
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude biosphere...")
-    cavern_df = cavern_df.overlay(biospheres, how="difference")
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude frequent shipping routes...")
-    cavern_df = cavern_df.overlay(shipping_b, how="difference")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, wind_farms, predicate="intersects"),
+        how="difference",
+    )
     print("Number of potential caverns:", len(cavern_df))
 
     print("-" * 60)
     print("Exclude shipwrecks...")
-    cavern_df = cavern_df.overlay(shipwrecks_b, how="difference")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, shipwrecks_b, predicate="intersects"),
+        how="difference",
+    )
     print("Number of potential caverns:", len(cavern_df))
 
+    # print("-" * 60)
+    # print("Exclude biosphere...")
+    # cavern_df = cavern_df.overlay(biospheres, how="difference")
+    # print("Number of potential caverns:", len(cavern_df))
+
     print("-" * 60)
-    print("Exclude cavern edge...")
-    cavern_df = cavern_df.overlay(edge_b, how="difference")
+    print("Exclude frequent shipping routes...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, shipping_b, predicate="intersects"),
+        how="difference",
+    )
     print("Number of potential caverns:", len(cavern_df))
+
+    # print("-" * 60)
+    # print("Exclude cavern edge...")
+    # cavern_df = cavern_df.overlay(edge_b, how="difference")
+    # print("Number of potential caverns:", len(cavern_df))
 
     return cavern_df
 
 
-# ### Case 1
+caverns = generate_caverns_with_constraints(zones, zds, 80)
 
-caverns_1 = generate_caverns_with_constraints(zones_1, 80)
+caverns.describe()[["Thickness", "TopDepth"]]
 
-# ### Case 2
+# caverns at optimal depth, 1,000 m - 1,500 m
+caverns_opt = caverns.loc[
+    (caverns["TopDepth"] <= (1500 - 80)) & (caverns["TopDepth"] >= (1000 - 80))
+]
 
-caverns_2 = generate_caverns_with_constraints(zones_2, 80)
+len(caverns_opt)
+
+# shallow caverns, < 1,000 m
+caverns_low = caverns.loc[caverns["TopDepth"] < (1000 - 80)]
+
+len(caverns_low)
+
+# deep caverns, > 1,500 m
+caverns_high = caverns.loc[caverns["TopDepth"] > (1500 - 80)]
+
+len(caverns_high)
+
+len(caverns) == len(caverns_low) + len(caverns_opt) + len(caverns_high)
 
 # ## Crop data layers
 
@@ -235,24 +258,21 @@ land = gpd.read_file(
 
 land = land.dissolve().to_crs(CRS)
 
-# crop land areas from biosphere
-biospheres = biospheres.overlay(land, how="difference")
-
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b]).dissolve()
 
-# crop land areas and constraints from buffer
-buffer = buffer.overlay(
-    pd.concat([land, biospheres, wind_farms]), how="difference"
-)
+# crop land areas from biosphere, shipping, and the buffer
+biospheres = biospheres.overlay(land, how="difference")
+shipping = shipping.overlay(land, how="difference")
+buffer = buffer.overlay(land, how="difference")
 
 # merge salt edge buffer
-buffer = pd.concat([buffer, edge_b]).dissolve()
+# buffer = pd.concat([buffer, edge_b]).dissolve()
 
 # ## Plot
 
 
-def plot_map(dat_xr, cavern_df, var, stat, plot_caverns=True):
+def plot_map(dat_xr, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -263,10 +283,6 @@ def plot_map(dat_xr, cavern_df, var, stat, plot_caverns=True):
     var : variable
     stat : statistic (max / min / mean)
     """
-
-    # estimates
-    if plot_caverns:
-        print("Number of potential caverns:", len(cavern_df))
 
     # initialise figure
     plt.figure(figsize=(12, 8))
@@ -299,84 +315,43 @@ def plot_map(dat_xr, cavern_df, var, stat, plot_caverns=True):
 
     # configure map limits
     plt.xlim(xmin - 7000, xmax)
-    # plt.xlim(xmin, xmax)
     plt.ylim(ymin - 500, ymax + 500)
-    # plt.ylim(ymin, ymax)
 
     # add constraint layers
-    buffer.plot(ax=ax, facecolor="none", edgecolor="slategrey", hatch="///")
+    buffer.overlay(pd.concat([biospheres, wind_farms]), how="difference").plot(
+        ax=ax, facecolor="none", edgecolor="slategrey", hatch="///"
+    )
     wind_farms.plot(ax=ax, facecolor="none", hatch="///", edgecolor="black")
     biospheres.plot(
         ax=ax, facecolor="none", edgecolor="forestgreen", hatch="///"
     )
     shipping.plot(ax=ax, color="deeppink", linewidth=3)
     shipwrecks.plot(ax=ax, color="black", marker="+", zorder=2)
-    wells.centroid.plot(ax=ax, color="black", marker="x", zorder=2)
-
-    # add caverns
-    if plot_caverns:
-        cavern_df.centroid.plot(
-            ax=ax, markersize=7, color="black", edgecolor="none", zorder=2
-        )
-        # cavern_df.plot(ax=ax, edgecolor="none", facecolor="black")
+    wells.plot(ax=ax, color="black", marker="x", zorder=2)
 
     # configure legend entries
-    legend_handles = [
-        Line2D(
-            [0],
-            [0],
-            marker="x",
-            linewidth=0,
-            markeredgecolor="black",
-            label="Exploration well",
-        )
-    ]
-    legend_handles.append(
-        Line2D(
-            [0],
-            [0],
-            marker="+",
-            linewidth=0,
-            markeredgecolor="black",
-            label="Shipwreck",
-        )
-    )
-    legend_handles.append(
-        Line2D([0], [0], color="deeppink", label="Shipping route", linewidth=3)
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none", hatch="///", edgecolor="black", label="Wind farm"
-        )
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            edgecolor="forestgreen",
-            hatch="///",
-            label="Biosphere",
-        )
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            hatch="///",
-            edgecolor="slategrey",
-            label="Exclusion buffer",
-        )
-    )
-
-    if plot_caverns:
+    legend_handles = []
+    for marker, label in zip(["x", "+"], ["Exploration well", "Shipwreck"]):
         legend_handles.append(
             Line2D(
                 [0],
                 [0],
-                marker=".",
-                markersize=7,
-                markeredgecolor="none",
-                markerfacecolor="black",
+                marker=marker,
                 linewidth=0,
-                label="Salt cavern",
+                markeredgecolor="black",
+                label=label,
+            )
+        )
+    legend_handles.append(
+        Line2D([0], [0], color="deeppink", label="Shipping route", linewidth=3)
+    )
+    for color, label in zip(
+        ["black", "forestgreen", "slategrey"],
+        ["Wind farm", "Biosphere", "Exclusion buffer"],
+    ):
+        legend_handles.append(
+            mpatches.Patch(
+                facecolor="none", hatch="///", edgecolor=color, label=label
             )
         )
 
@@ -399,12 +374,117 @@ def plot_map(dat_xr, cavern_df, var, stat, plot_caverns=True):
     plt.show()
 
 
-plot_map(ds, caverns_1, "Thickness", "max", False)
+plot_map(ds, "Thickness", "max")
 
-# ### Case 1
 
-plot_map(ds, caverns_1, "Thickness", "max")
+def plot_map_alt(cavern_df_opt, cavern_df_low, cavern_df_high, zones_gdf):
+    """
+    Helper function to plot caverns within the zones of interest
+    """
 
-# ### Case 2
+    plt.figure(figsize=(12, 8))
+    ax = plt.axes(projection=ccrs.epsg(CRS))
 
-plot_map(ds, caverns_2, "Thickness", "max")
+    for df, markersize in zip(
+        [cavern_df_low, cavern_df_opt, cavern_df_high], [20, 50, 20]
+    ):
+        gpd.GeoDataFrame(df, geometry=df.centroid).plot(
+            ax=ax,
+            column="Thickness",
+            zorder=3,
+            markersize=markersize,
+            linewidth=0,
+            marker=".",
+            cmap=sns.color_palette("flare", as_cmap=True),
+            scheme="UserDefined",
+            classification_kwds={"bins": [245, 401]},
+        )
+
+    zones_gdf.plot(
+        ax=ax,
+        color="none",
+        zorder=2,
+        edgecolor="slategrey",
+        linestyle="dotted",
+    )
+    pd.concat([buffer, wind_farms]).dissolve().plot(
+        ax=ax,
+        facecolor="white",
+        linewidth=0.5,
+        edgecolor="slategrey",
+        zorder=1,
+        alpha=0.25,
+        hatch="//",
+    )
+
+    legend_handles = []
+    legend_handles.append(
+        mpatches.Patch(label="Cavern height [m]", visible=False)
+    )
+    for color, label in zip(
+        [
+            sns.color_palette("flare", 255)[0],
+            sns.color_palette("flare", 255)[127],
+            sns.color_palette("flare", 255)[-1],
+        ],
+        ["85", "155", "311"],
+    ):
+        legend_handles.append(
+            Line2D([0], [0], marker="o", linewidth=0, label=label, color=color)
+        )
+    legend_handles.append(
+        mpatches.Patch(label="Cavern top depth [m]", visible=False)
+    )
+    for markersize, label in zip(
+        [6, 3], ["1,000 - 1,500", "< 1,000 or > 1,500"]
+    ):
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                marker=".",
+                linewidth=0,
+                label=label,
+                color="darkslategrey",
+                markersize=markersize,
+            )
+        )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="white",
+            hatch="//",
+            edgecolor="slategrey",
+            label="Exclusion",
+            alpha=0.25,
+        )
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            linestyle="dotted",
+            edgecolor="slategrey",
+            label="Area of interest",
+        )
+    )
+
+    plt.xlim(xmin - 1000, zones.bounds["maxx"][0] + 1000)
+    plt.ylim(zones.bounds["miny"][0] - 1500, zones.bounds["maxy"][0] + 1500)
+
+    cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
+    ax.gridlines(
+        draw_labels={"bottom": "x", "left": "y"},
+        alpha=0.25,
+        color="darkslategrey",
+    )
+    ax.add_artist(
+        ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+    )
+    plt.legend(
+        loc="lower right", bbox_to_anchor=(1, 0.05), handles=legend_handles
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+plot_map_alt(caverns_opt, caverns_low, caverns_high, zones)

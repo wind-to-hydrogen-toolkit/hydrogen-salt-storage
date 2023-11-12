@@ -253,6 +253,8 @@ def generate_caverns_square_grid(
         predicate="within",
     )
 
+    cavern_df.drop(columns=["index_right"], inplace=True)
+
     print("Number of potential caverns:", len(cavern_df))
 
     return cavern_df
@@ -356,6 +358,51 @@ def generate_caverns_hexagonal_grid(
     # clip caverns to the zones of interest
     cavern_df = gpd.sjoin(cavern_df, zones_df, predicate="within")
 
+    cavern_df.drop(columns=["index_right"], inplace=True)
+
     print("Number of potential caverns:", len(cavern_df))
+
+    return cavern_df
+
+
+def cavern_data(dat_zone, cavern_df, dat_crs):
+    """
+    Merge halite data for each cavern location
+
+    Parameters
+    ----------
+    dat_zone : Xarray dataset for the zone of interest
+    dat_crs : EPSG CRS
+    cavern_df : Geodataframe of caverns within the zone of interest
+
+    Returns
+    -------
+    - The cavern geodataframe with halite height and depth data for only the
+      thickest halite layer at each given point
+    """
+
+    # read the halite dataset into a dataframe
+    zdf = dat_zone.to_dataframe()[
+        list(dat_zone.data_vars)
+    ].dropna().reset_index()
+
+    # generate a square grid for the dataset
+    zdf = gpd.GeoDataFrame(
+        zdf,
+        geometry=gpd.GeoSeries(
+            gpd.points_from_xy(zdf.x, zdf.y)
+        ).buffer(100).envelope,
+        crs=dat_crs
+    )
+
+    # merge with the cavern data
+    cavern_df = gpd.sjoin(cavern_df, zdf)
+
+    cavern_df.drop(columns=["index_right"], inplace=True)
+
+    # remove duplicate caverns at each location - keep the thickest layer
+    cavern_df = cavern_df.sort_values(
+        ["Thickness", "TopDepth"], ascending=False
+    ).drop_duplicates(["geometry"])
 
     return cavern_df
