@@ -42,11 +42,9 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
-# ### Optimal depth, low investment
-
-# height = 311 m, 1,000 m <= depth <= 1,500 m
+# height = 311 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
-    ds, CRS, {"height": 311, "min_depth": 1000, "max_depth": 1500}
+    ds, CRS, {"height": 311, "min_depth": 500, "max_depth": 2000}
 )
 
 plot_zones_map(zones, extent, CRS)

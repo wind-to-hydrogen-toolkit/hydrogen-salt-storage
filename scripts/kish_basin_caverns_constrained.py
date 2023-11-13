@@ -117,7 +117,7 @@ shipping.drop(columns=["index_right"], inplace=True)
 
 # routes near Kish Basin
 # 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
-shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852))
+shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852)).dissolve()
 
 # ### Shipwrecks
 
@@ -143,14 +143,28 @@ shipwrecks.drop(columns=["index_right"], inplace=True)
 # Archaeological Exclusion Zones recommendation
 shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(100))
 
+# ### Subsea cables
+
+DATA_DIR = os.path.join("data", "kis-orca", "KIS-ORCA.gpkg")
+
+cables = gpd.read_file(DATA_DIR)
+
+cables = cables.to_crs(CRS)
+
+# remove point features
+cables = cables.drop(range(3)).reset_index(drop=True)
+
+# 750 m buffer - suggested in draft OREDP II p. 109-111
+cables_b = gpd.GeoDataFrame(geometry=cables.buffer(750)).dissolve()
+
 # ### Distance from salt edge
 
-# shape of the halite
-edge = fns.halite_shape(ds, CRS)
+# # shape of the halite
+# edge = fns.halite_shape(ds, CRS)
 
-# 3 times the cavern diameter
-# edge_b = edge.clip(edge.boundary.buffer(3 * 80))
-edge_b = gpd.GeoDataFrame(geometry=edge.boundary.buffer(3 * 80))
+# # 3 times the cavern diameter
+# # edge_b = edge.clip(edge.boundary.buffer(3 * 80))
+# edge_b = gpd.GeoDataFrame(geometry=edge.boundary.buffer(3 * 80))
 
 # ## Zones of interest
 
@@ -211,6 +225,14 @@ def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
     )
     print("Number of potential caverns:", len(cavern_df))
 
+    print("-" * 60)
+    print("Exclude subsea cables...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, cables_b, predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
     # print("-" * 60)
     # print("Exclude cavern edge...")
     # cavern_df = cavern_df.overlay(edge_b, how="difference")
@@ -259,11 +281,12 @@ land = gpd.read_file(
 land = land.dissolve().to_crs(CRS)
 
 # create exclusion buffer
-buffer = pd.concat([wells_b, shipwrecks_b, shipping_b]).dissolve()
+buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
-# crop land areas from biosphere, shipping, and the buffer
+# crop land areas from constraints and the buffer
 biospheres = biospheres.overlay(land, how="difference")
 shipping = shipping.overlay(land, how="difference")
+cables = cables.overlay(land, how="difference")
 buffer = buffer.overlay(land, how="difference")
 
 # merge salt edge buffer
@@ -326,6 +349,7 @@ def plot_map(dat_xr, var, stat):
         ax=ax, facecolor="none", edgecolor="forestgreen", hatch="///"
     )
     shipping.plot(ax=ax, color="deeppink", linewidth=3)
+    cables.plot(ax=ax, color="darkorange", linewidth=3, linestyle="dashed")
     shipwrecks.plot(ax=ax, color="black", marker="+", zorder=2)
     wells.plot(ax=ax, color="black", marker="x", zorder=2)
 
@@ -344,6 +368,16 @@ def plot_map(dat_xr, var, stat):
         )
     legend_handles.append(
         Line2D([0], [0], color="deeppink", label="Shipping route", linewidth=3)
+    )
+    legend_handles.append(
+        Line2D(
+            [0],
+            [0],
+            color="darkorange",
+            label="Subsea cable",
+            linewidth=3,
+            linestyle="dashed",
+        )
     )
     for color, label in zip(
         ["black", "forestgreen", "slategrey"],
@@ -436,7 +470,7 @@ def plot_map_alt(cavern_df_opt, cavern_df_low, cavern_df_high, zones_gdf):
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
     )
     for markersize, label in zip(
-        [6, 3], ["1,000 - 1,500", "< 1,000 or > 1,500"]
+        [6, 3], ["1,000 - 1,500", "500 - 1,000 or 1,500 - 2,000"]
     ):
         legend_handles.append(
             Line2D(
@@ -488,3 +522,58 @@ def plot_map_alt(cavern_df_opt, cavern_df_low, cavern_df_high, zones_gdf):
 
 
 plot_map_alt(caverns_opt, caverns_low, caverns_high, zones)
+
+# ## Stats
+
+caverns_low["depth"] = "500 - 1,000 m"
+caverns_opt["depth"] = "1,000 - 1,500 m"
+caverns_high["depth"] = "1,500 - 2,000 m"
+
+len(pd.concat([caverns_low, caverns_opt, caverns_high])) == len(caverns)
+
+caverns_small = caverns.loc[caverns["Thickness"] < (155 + 90)]
+caverns_medium = caverns.loc[
+    (caverns["Thickness"] < (311 + 90)) & (caverns["Thickness"] >= (155 + 90))
+]
+caverns_large = caverns.loc[caverns["Thickness"] >= (311 + 90)]
+caverns_small["height"] = "85 m"
+caverns_medium["height"] = "155 m"
+caverns_large["height"] = "311 m"
+
+len(pd.concat([caverns_small, caverns_medium, caverns_large])) == len(caverns)
+
+caverns_stats = pd.merge(
+    pd.concat([caverns_small, caverns_medium, caverns_large]),
+    pd.concat([caverns_low, caverns_opt, caverns_high]),
+)
+
+len(caverns_stats) == len(caverns)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
+sns.countplot(
+    caverns_stats,
+    ax=axes[0],
+    x="depth",
+    hue="halite",
+    palette="rocket_r",
+    legend=False,
+)
+sns.countplot(
+    caverns_stats, ax=axes[1], x="height", hue="halite", palette="rocket_r"
+)
+plt.tight_layout()
+plt.show()
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
+sns.countplot(
+    caverns_stats,
+    ax=axes[0],
+    x="depth",
+    hue="height",
+    palette="rocket_r",
+)
+sns.countplot(
+    caverns_stats, ax=axes[1], x="height", hue="depth", palette="rocket_r"
+)
+plt.tight_layout()
+plt.show()
