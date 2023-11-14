@@ -186,7 +186,9 @@ plt.show()
 plt.figure(figsize=(9, 9))
 ax = plt.axes(projection=ccrs.epsg(CRS))
 
-shape.boundary.plot(ax=ax, color="black", linewidth=2)
+shape.buffer(1000).buffer(-1000).boundary.plot(
+    ax=ax, color="black", linewidth=2
+)
 
 plt.xlim(xmin - 7750, xmax + 7750)
 plt.ylim(ymin - 10500, ymax + 10500)

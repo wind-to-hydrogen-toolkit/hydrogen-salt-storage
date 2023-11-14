@@ -4,6 +4,9 @@
 # # KIS-ORCA subsea cables
 #
 # <https://kis-orca.org/>
+#
+# **IMPORTANT:** There may be some incorrect name assignments as a simple
+# backfill and multiline conversion was used and no further checks were done
 
 import os
 from datetime import datetime, timezone
@@ -94,9 +97,6 @@ names.shape
 names.set_index("index", inplace=True)
 
 # ## Merge names with coordinates
-#
-# **IMPORTANT:** There may be some incorrect name assignments as a simple
-# backfill was used and no further checks were done
 
 names = names.reindex(range(max(data.index) + 1))
 
@@ -164,6 +164,8 @@ data_ie
 
 data_ie.shape
 
+# ## Convert multipoint geometries to multilines
+
 # convert all multi points to multi lines
 data_ie_1 = data_ie[
     data_ie["geometry"].astype(str).str.contains("MULTI")
@@ -175,7 +177,7 @@ data_ie_1["geometry"] = gpd.GeoSeries.from_wkt(
     crs=4326,
 )
 
-# merge multi lines with any remaining point / other data
+# merge multilines with remaining geometry data
 data_ie = pd.concat(
     [
         data_ie[~data_ie["geometry"].astype(str).str.contains("MULTI")],
@@ -196,9 +198,6 @@ cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=23029)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
-
-# **IMPORTANT:** There may be some incorrect name assignments as a simple
-# backfill was used and no further checks were done
 
 ax = (
     gpd.GeoDataFrame(geometry=data_ie.to_crs(23029).buffer(750))
@@ -224,9 +223,6 @@ plt.show()
 
 # remove incorrect data lines - Hibernia Atlantic
 data_ie = data_ie.drop([6]).reset_index(drop=True)
-
-# **IMPORTANT:** There may be some incorrect name assignments as a simple
-# backfill was used and no further checks were done
 
 ax = (
     gpd.GeoDataFrame(geometry=data_ie.to_crs(23029).buffer(750))
