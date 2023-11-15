@@ -1,4 +1,5 @@
 #!/bin/sh
+jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
 
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script */*.ipynb
