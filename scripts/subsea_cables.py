@@ -58,7 +58,8 @@ except BadZipFile:
 
 DATA_FILE = os.path.join(DATA_DIR, ZipFile(DATA_FILE).namelist()[0])
 
-# extract gz file
+# extract gz file using gzip
+# https://www.gnu.org/software/gzip/
 os.system(f"gzip -d < {DATA_FILE} > {DATA_FILE[:-3]}")
 
 DATA_FILE = DATA_FILE[:-3]
@@ -122,8 +123,8 @@ data = data.drop_duplicates(["y", "x"])
 
 data.shape
 
-# https://gis.stackexchange.com/a/241922
 # convert coords from minutes to degrees
+# https://gis.stackexchange.com/a/241922
 data["x"] = data["x"] / 60
 data["y"] = data["y"] / 60
 
@@ -199,29 +200,7 @@ plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
-ax = (
-    gpd.GeoDataFrame(geometry=data_ie.to_crs(23029).buffer(750))
-    .dissolve()
-    .plot(figsize=(12, 12), alpha=0.25, color="slategrey")
-)
-data_ie.to_crs(23029).plot(
-    column="name",
-    legend=True,
-    ax=ax,
-    cmap="jet",
-    legend_kwds={"loc": "upper right"},
-)
-data.to_crs(23029).plot(
-    ax=ax, marker="x", color="black", markersize=20, alpha=0.5
-)
-plt.xlim(xmin - 10000, xmax + 50000)
-plt.ylim(ymin, ymax)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=23029)
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
-
-# remove incorrect data lines - Hibernia Atlantic
+# remove obvious incorrect data lines - Hibernia Atlantic
 data_ie = data_ie.drop([6]).reset_index(drop=True)
 
 ax = (

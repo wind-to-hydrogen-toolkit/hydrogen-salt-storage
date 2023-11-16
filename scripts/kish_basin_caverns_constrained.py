@@ -82,18 +82,18 @@ wind_farms.drop(columns=["index_right"], inplace=True)
 
 # ### Dublin Bay Biosphere
 
-DATA_DIR = os.path.join(
-    "data", "heritage", "unesco-global-geoparks-and-biospheres.zip"
-)
+# DATA_DIR = os.path.join(
+#     "data", "heritage", "unesco-global-geoparks-and-biospheres.zip"
+# )
 
-biospheres = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-    )
-)
+# biospheres = gpd.read_file(
+#     os.path.join(
+#         f"zip://{DATA_DIR}!" +
+#         [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
+#     )
+# )
 
-biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
+# biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
 
 # ### Frequent shipping routes
 
@@ -296,7 +296,7 @@ land = land.dissolve().to_crs(CRS)
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 # crop land areas from constraints and the buffer
-biospheres = biospheres.overlay(land, how="difference")
+# biospheres = biospheres.overlay(land, how="difference")
 shipping = shipping.overlay(land, how="difference")
 cables = cables.overlay(land, how="difference")
 buffer = buffer.overlay(land, how="difference")
@@ -339,6 +339,7 @@ def plot_map(dat_xr, var, stat):
     #     cbar_kwargs={"label": cbar_label}
     # )
 
+    # halite boundary - use buffering to smooth the outline
     shape = fns.halite_shape(dat_xr, CRS).buffer(1000).buffer(-1000)
 
     # configure map limits
@@ -350,7 +351,7 @@ def plot_map(dat_xr, var, stat):
     # configure legend entries
     legend_handles = []
 
-    # add halite boundary - use buffering to smooth the outline
+    shape.plot(ax=ax, zorder=1, linewidth=0, facecolor="white", alpha=0.35)
     shape.plot(
         ax=ax,
         edgecolor=sns.color_palette("flare", 4)[-2],
@@ -362,7 +363,7 @@ def plot_map(dat_xr, var, stat):
         mpatches.Patch(
             facecolor="none",
             linewidth=2,
-            label="Halite boundary",
+            label="Halite edge",
             edgecolor=sns.color_palette("flare", 4)[-2],
         )
     )
@@ -437,7 +438,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     ax = plt.axes(projection=ccrs.epsg(CRS))
     legend_handles = []
 
-    # add halite boundary - use buffering to smooth the outline
+    # halite boundary - use buffering to smooth the outline
     shape = fns.halite_shape(dat_xr, CRS).buffer(1000).buffer(-1000)
     shape.plot(
         ax=ax,
@@ -452,18 +453,19 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
             facecolor="none",
             linewidth=2,
             edgecolor="darkslategrey",
-            label="Halite boundary",
+            label="Halite edge",
             alpha=0.5,
         )
     )
 
+    zones_gdf.plot(ax=ax, zorder=1, linewidth=0, facecolor="white", alpha=0.45)
     zones_gdf.plot(
         ax=ax,
-        color="none",
         zorder=2,
         edgecolor="slategrey",
         linestyle="dotted",
         linewidth=1.25,
+        facecolor="none",
     )
     legend_handles.append(
         mpatches.Patch(
@@ -477,20 +479,20 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
 
     pd.concat([buffer, wind_farms]).dissolve().clip(shape).plot(
         ax=ax,
-        facecolor="white",
-        linewidth=0.5,
+        facecolor="none",
+        linewidth=0.65,
         edgecolor="slategrey",
-        zorder=1,
+        zorder=2,
         alpha=0.5,
         hatch="//",
     )
     legend_handles.append(
         mpatches.Patch(
-            facecolor="white",
+            facecolor="none",
             hatch="//",
             edgecolor="slategrey",
             label="Exclusion area",
-            alpha=0.5,
+            alpha=0.65,
             linewidth=0.5,
         )
     )
@@ -532,7 +534,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
     )
     for markersize, label in zip(
-        [5, 2], ["1,000 - 1,500", "500 - 1,000 or 1,500 - 2,000"]
+        [6, 3], ["1,000 - 1,500", "500 - 1,000 or 1,500 - 2,000"]
     ):
         legend_handles.append(
             Line2D(

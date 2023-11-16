@@ -178,7 +178,6 @@ ax.add_artist(
 )
 ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
 
-# plt.title("Wind Farms near Kish Basin")
 plt.title(None)
 plt.tight_layout()
 plt.show()
@@ -186,6 +185,7 @@ plt.show()
 plt.figure(figsize=(9, 9))
 ax = plt.axes(projection=ccrs.epsg(CRS))
 
+# add halite boundary - use buffering to smooth the outline
 shape.buffer(1000).buffer(-1000).boundary.plot(
     ax=ax, color="black", linewidth=2
 )
@@ -227,7 +227,19 @@ ax.add_artist(
 )
 ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
 
-# plt.title("Wind Farms near Kish Basin")
 plt.title(None)
 plt.tight_layout()
 plt.show()
+
+# distance from Kish Bank
+wind_farms_ = wind_farms_.dissolve("Name_").reset_index().to_crs(CRS)
+
+for i in range(len(wind_farms_)):
+    print(
+        wind_farms_.iloc[[i]]["Name"].values[0],
+        "is",
+        wind_farms_.iloc[[i]]
+        .distance(shape["geometry"], align=False)
+        .values[0],
+        "m away from Kish Bank",
+    )
