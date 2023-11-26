@@ -17,7 +17,6 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
 import pooch
-import seaborn as sns
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kis-orca")
@@ -44,7 +43,7 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-4]}.txt") as f:
+with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
     print(f.read())
 
 # ## Read data
@@ -63,6 +62,10 @@ DATA_FILE = os.path.join(DATA_DIR, ZipFile(DATA_FILE).namelist()[0])
 os.system(f"gzip -d < {DATA_FILE} > {DATA_FILE[:-3]}")
 
 DATA_FILE = DATA_FILE[:-3]
+
+for n, line in enumerate(open(DATA_FILE, "r", encoding="ISO-8859-15")):
+    if n < 11:
+        print(line[:-1])
 
 # coordinates
 with open(f"{DATA_FILE}_data.txt", "w", encoding="utf-8") as outfile:

@@ -50,7 +50,7 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-8]}.txt") as f:
+with open(f"{DATA_FILE[:-8]}.txt", encoding="utf-8") as f:
     print(f.read())
 
 ZipFile(DATA_FILE).namelist()
@@ -125,7 +125,7 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-4]}.txt") as f:
+with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
     print(f.read())
 
 ZipFile(DATA_FILE).namelist()
@@ -182,6 +182,10 @@ plt.show()
 
 
 def download_basemap(source, zoom):
+    """
+    Download Contextily basemaps for local use
+    """
+
     out_file = os.path.join(OUT_DIR, f"Ireland.{source['name']}.{zoom}.tif")
     if not os.path.isfile(out_file):
         irl = cx.bounds2raster(

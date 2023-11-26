@@ -8,7 +8,6 @@ import os
 import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
-import pandas as pd
 import seaborn as sns
 
 from src import functions as fns
@@ -194,8 +193,8 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
         ylim=(ymin_, ymax_),
         cbar_kwargs={
             "location": "bottom",
-            "aspect": 35,
-            "shrink": 0.65,
+            "aspect": 20,
+            "shrink": 0.4,
             "pad": 0.05,
             "extendfrac": 0.2,
             "label": dat_xr[v].attrs["long_name"] + " [m]",

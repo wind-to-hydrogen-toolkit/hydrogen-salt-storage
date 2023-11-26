@@ -42,7 +42,7 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-13]}.txt") as f:
+with open(f"{DATA_FILE[:-13]}.txt", encoding="utf-8") as f:
     print(f.read())
 
 ZipFile(DATA_FILE).namelist()

@@ -93,7 +93,9 @@ wind_farms.drop(columns=["index_right"], inplace=True)
 #     )
 # )
 
-# biospheres = biospheres[biospheres["Name"].str.contains("Dublin")].to_crs(CRS)
+# biospheres = biospheres[
+#     biospheres["Name"].str.contains("Dublin")
+# ].to_crs(CRS)
 
 # ### Frequent shipping routes
 
@@ -237,14 +239,10 @@ def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
     print("-" * 60)
     print("Exclude salt formation edges...")
     cavern_dict = {}
-    for halite in cavern_df["halite"].unique():
-        cavern_dict[halite] = cavern_df[cavern_df["halite"] == halite]
-        cavern_dict[halite] = cavern_dict[halite].overlay(
-            gpd.sjoin(
-                cavern_dict[halite],
-                buffer_edge[halite],
-                predicate="intersects",
-            ),
+    for h in cavern_df["halite"].unique():
+        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
+        cavern_dict[h] = cavern_dict[h].overlay(
+            gpd.sjoin(cavern_dict[h], buffer_edge[h], predicate="intersects"),
             how="difference",
         )
     cavern_df = pd.concat(cavern_dict.values())
@@ -315,7 +313,7 @@ def plot_map(dat_xr, var, stat):
 
     # initialise figure
     plt.figure(figsize=(12, 8))
-    ax = plt.axes(projection=ccrs.epsg(CRS))
+    axis = plt.axes(projection=ccrs.epsg(CRS))
 
     # configure colour bar based on variable
     if var == "TopTWT":
@@ -351,9 +349,9 @@ def plot_map(dat_xr, var, stat):
     # configure legend entries
     legend_handles = []
 
-    shape.plot(ax=ax, zorder=1, linewidth=0, facecolor="white", alpha=0.35)
+    shape.plot(ax=axis, zorder=1, linewidth=0, facecolor="white", alpha=0.35)
     shape.plot(
-        ax=ax,
+        ax=axis,
         edgecolor=sns.color_palette("flare", 4)[-2],
         color="none",
         linewidth=2,
@@ -363,7 +361,7 @@ def plot_map(dat_xr, var, stat):
         mpatches.Patch(
             facecolor="none",
             linewidth=2,
-            label="Halite edge",
+            label="Halite boundary",
             edgecolor=sns.color_palette("flare", 4)[-2],
         )
     )
@@ -374,7 +372,9 @@ def plot_map(dat_xr, var, stat):
         ["slategrey", sns.color_palette("GnBu", 10)[-1]],
         ["Exclusion buffer", "Wind farm"],
     ):
-        df.plot(ax=ax, facecolor="none", hatch="//", edgecolor=color, zorder=1)
+        df.plot(
+            ax=axis, facecolor="none", hatch="//", edgecolor=color, zorder=1
+        )
         legend_handles.append(
             mpatches.Patch(
                 facecolor="none", hatch="//", edgecolor=color, label=label
@@ -387,7 +387,7 @@ def plot_map(dat_xr, var, stat):
         [2, 3],
         ["Subsea cable", "Shipping route"],
     ):
-        df.plot(ax=ax, color=color, linewidth=linewidth, zorder=2)
+        df.plot(ax=axis, color=color, linewidth=linewidth, zorder=2)
         legend_handles.append(
             Line2D([0], [0], color=color, label=label, linewidth=linewidth)
         )
@@ -395,7 +395,7 @@ def plot_map(dat_xr, var, stat):
     for df, marker, label in zip(
         [wells, shipwrecks], ["x", "+"], ["Exploration well", "Shipwreck"]
     ):
-        df.plot(ax=ax, color="black", marker=marker, zorder=4)
+        df.plot(ax=axis, color="black", marker=marker, zorder=4)
         legend_handles.append(
             Line2D(
                 [0],
@@ -408,13 +408,13 @@ def plot_map(dat_xr, var, stat):
         )
 
     # add basemap and map elements
-    cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager)
-    ax.gridlines(
+    cx.add_basemap(axis, crs=CRS, source=cx.providers.CartoDB.Voyager)
+    axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
     )
-    ax.add_artist(
+    axis.add_artist(
         ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
     plt.legend(
@@ -435,13 +435,13 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     """
 
     plt.figure(figsize=(14, 10))
-    ax = plt.axes(projection=ccrs.epsg(CRS))
+    axis = plt.axes(projection=ccrs.epsg(CRS))
     legend_handles = []
 
     # halite boundary - use buffering to smooth the outline
     shape = fns.halite_shape(dat_xr, CRS).buffer(1000).buffer(-1000)
     shape.plot(
-        ax=ax,
+        ax=axis,
         edgecolor="darkslategrey",
         color="none",
         linewidth=2,
@@ -453,14 +453,16 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
             facecolor="none",
             linewidth=2,
             edgecolor="darkslategrey",
-            label="Halite edge",
+            label="Halite boundary",
             alpha=0.5,
         )
     )
 
-    zones_gdf.plot(ax=ax, zorder=1, linewidth=0, facecolor="white", alpha=0.45)
     zones_gdf.plot(
-        ax=ax,
+        ax=axis, zorder=1, linewidth=0, facecolor="white", alpha=0.45
+    )
+    zones_gdf.plot(
+        ax=axis,
         zorder=2,
         edgecolor="slategrey",
         linestyle="dotted",
@@ -478,7 +480,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     )
 
     pd.concat([buffer, wind_farms]).dissolve().clip(shape).plot(
-        ax=ax,
+        ax=axis,
         facecolor="none",
         linewidth=0.65,
         edgecolor="slategrey",
@@ -506,7 +508,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
         [20, 50, 20],
     ):
         gpd.GeoDataFrame(df, geometry=df.centroid).plot(
-            ax=ax,
+            ax=axis,
             column="Thickness",
             zorder=3,
             markersize=markersize,
@@ -519,17 +521,18 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     legend_handles.append(
         mpatches.Patch(label="Cavern height [m]", visible=False)
     )
-    for color, label in zip(
-        [
-            sns.color_palette("flare", 255)[0],
-            sns.color_palette("flare", 255)[127],
-            sns.color_palette("flare", 255)[-1],
-        ],
-        ["85", "155", "311"],
-    ):
-        legend_handles.append(
-            Line2D([0], [0], marker="o", linewidth=0, label=label, color=color)
-        )
+    palette = [
+        sns.color_palette("flare", 255)[0],
+        sns.color_palette("flare", 255)[127],
+        sns.color_palette("flare", 255)[-1],
+    ]
+    for color, label in zip(palette, ["85", "155", "311"]):
+        # legend_handles.append(
+        #     Line2D(
+        #         [0], [0], marker="o", linewidth=0, label=label, color=color
+        #     )
+        # )
+        legend_handles.append(mpatches.Patch(facecolor=color, label=label))
     legend_handles.append(
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
     )
@@ -551,13 +554,13 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     plt.xlim(shape.bounds["minx"][0] - 1000, shape.bounds["maxx"][0] + 1000)
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
-    cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.VoyagerNoLabels)
-    ax.gridlines(
+    cx.add_basemap(axis, crs=CRS, source=cx.providers.CartoDB.VoyagerNoLabels)
+    axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
     )
-    ax.add_artist(
+    axis.add_artist(
         ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
     plt.legend(
@@ -592,22 +595,45 @@ sns.countplot(
     order=["85", "155", "311"],
 )
 axes[1].set_xlabel("Cavern height [m]")
-axes[0].set_ylabel("")
+axes[0].set_ylabel("Count")
+axes[0].grid(which="major", axis="y")
+axes[1].grid(which="major", axis="y")
 plt.legend(title="Halite member")
 sns.despine()
 plt.tight_layout()
 plt.show()
 
 ax = sns.countplot(
-    caverns.sort_values("TopDepth"),
-    x="height",
-    hue="depth",
+    caverns.sort_values("Thickness"),
+    x="depth",
+    hue="height",
     palette="rocket_r",
-    order=["85", "155", "311"],
+    order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
 )
-ax.set_xlabel("Cavern height [m]")
-ax.set_ylabel("")
+ax.set_xlabel("Cavern top depth [m]")
+ax.set_ylabel("Count")
+ax.grid(which="major", axis="y")
 sns.despine()
-plt.legend(title="Cavern top depth [m]")
+plt.legend(title="Cavern height [m]")
 plt.tight_layout()
 plt.show()
+
+s = (
+    caverns.sort_values("Thickness")
+    .groupby("height", sort=False)
+    .count()[["geometry"]]
+)
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = (
+    caverns.sort_values("TopDepth")
+    .groupby("depth", sort=False)
+    .count()[["geometry"]]
+)
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s

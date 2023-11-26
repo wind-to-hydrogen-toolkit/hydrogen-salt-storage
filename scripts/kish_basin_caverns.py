@@ -28,6 +28,10 @@ ds, extent = fns.read_dat_file(DATA_DIR, CRS)
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
+    """
+    Plot zones of interest
+    """
+
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
     ax = plt.axes(projection=ccrs.epsg(dat_crs))

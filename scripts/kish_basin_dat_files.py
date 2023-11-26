@@ -17,7 +17,6 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
 import pooch
-import rioxarray as rxr
 from geocube.api.core import make_geocube
 from shapely.geometry import Polygon
 
@@ -46,7 +45,7 @@ if not os.path.isfile(DATA_FILE):
             f"Download URL: {URL}"
         )
 
-with open(f"{DATA_FILE[:-4]}.txt") as f:
+with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
     print(f.read())
 
 ZipFile(DATA_FILE).namelist()
@@ -60,7 +59,10 @@ except BadZipFile:
 
 # ## Map extent
 
-with open(os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv")) as f:
+with open(
+    os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"),
+    encoding="utf-8",
+) as f:
     print(f.read())
 
 CRS = 23029
@@ -114,6 +116,7 @@ def read_dat_file(dat_path: str, dat_crs):
         gdf[os.path.split(dat_file)[1][:-4]]["data"] = os.path.split(dat_file)[
             1
         ][:-4]
+    dat_file = glob.glob(os.path.join(dat_path, "*.dat"))[-1]
 
     # find data resolution
     gdf_xr = (
