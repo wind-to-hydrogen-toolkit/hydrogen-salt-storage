@@ -9,6 +9,8 @@ import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
 import seaborn as sns
+from cartopy.mpl.ticker import LongitudeFormatter
+from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import functions as fns
 
@@ -186,8 +188,7 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
         robust=True,
         levels=levels,
         cmap=sns.color_palette("flare", as_cmap=True),
-        # col_wrap=2,
-        figsize=(12, 6),
+        figsize=(13, 6),
         subplot_kws={"projection": ccrs.epsg(dat_crs)},
         xlim=(xmin_, xmax_),
         ylim=(ymin_, ymax_),
@@ -195,18 +196,38 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
             "location": "bottom",
             "aspect": 20,
             "shrink": 0.4,
-            "pad": 0.05,
+            "pad": 0.125,
             "extendfrac": 0.2,
-            "label": dat_xr[v].attrs["long_name"] + " [m]",
+            "label": "Halite " + dat_xr[v].attrs["long_name"] + " [m]",
         },
     )
+
     # add a basemap
     basemap = cx.providers.CartoDB.PositronNoLabels
     for n, axis in enumerate(f.axs.flat):
         cx.add_basemap(axis, crs=dat_crs, source=basemap, attribution=False)
-        # add attribution for basemap tiles
+        # tick labels and attribution for basemap tiles
         if n == 0:
-            axis.text(xmin_, ymin_ - 2500, basemap["attribution"], fontsize=8)
+            axis.gridlines(draw_labels={"left": "y"}, color="none")
+            axis.text(
+                xmin_ + 1000, ymax_ - 2500, basemap["attribution"], fontsize=9
+            )
+        axis.gridlines(
+            draw_labels={"bottom": "x"},
+            color="none",
+            rotate_labels=90,
+            xpadding=20,
+            xformatter=LongitudeFormatter(number_format=".2f"),
+        )
+        if n == 3:
+            axis.add_artist(
+                ScaleBar(
+                    1,
+                    box_alpha=0,
+                    location="lower right",
+                    color="darkslategrey",
+                )
+            )
     f.set_titles("{value}", weight="semibold")
     plt.show()
 

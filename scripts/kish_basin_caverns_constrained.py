@@ -3,6 +3,7 @@
 
 # # Caverns with constraints
 
+import importlib
 import os
 from zipfile import ZipFile
 
@@ -16,6 +17,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
+from pyfluids import Fluid, FluidsList, Input
 
 from src import functions as fns
 
@@ -637,3 +639,29 @@ s
 s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
 s["%"] = s["geometry"] / len(caverns) * 100
 s
+
+# ## Volume
+
+importlib.reload(fns)
+
+caverns["cavern_height"] = caverns["height"].astype(int)
+
+caverns["cavern_volume"] = caverns["cavern_height"].apply(
+    fns.cavern_volume, diameter=80, theta=20
+)
+
+caverns.head()
+
+caverns["cavern_volume"].unique()
+
+hydrogen = Fluid(FluidsList.Hydrogen).with_state(
+    Input.pressure(100e3), Input.temperature(20)
+)
+
+hydrogen.density
+
+rho_approx = (
+    (2.01588 / 1000)
+    / (hydrogen.compressibility * 8.314 * (20 + 273.15))
+    * 100e3
+)
