@@ -8,6 +8,7 @@ jupyterlab
 mapclassify
 matplotlib-scalebar
 pooch
+pyfluids
 pylint
 rioxarray
 statsmodels

@@ -16,10 +16,10 @@ mv $f.txt $f
 done
 
 # format scripts
-black -l 79 temp/*.py
+black -l 79 */*.py
 
 # sort imports
-isort temp/*.py
+isort */*.py
 
 # copy functions
 cp -r src temp
