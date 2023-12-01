@@ -1,4 +1,4 @@
-black
+black[jupyter]
 cartopy
 contextily
 flake8

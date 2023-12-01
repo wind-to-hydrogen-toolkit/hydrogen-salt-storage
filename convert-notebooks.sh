@@ -1,6 +1,12 @@
 #!/bin/sh
 jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
 
+# format notebooks
+black -l 79 */*.ipynb
+
+# sort imports
+isort */*.ipynb
+
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script */*.ipynb
 
@@ -16,10 +22,10 @@ mv $f.txt $f
 done
 
 # format scripts
-black -l 79 */*.py
+black -l 79 src/*.py
 
 # sort imports
-isort */*.py
+isort src/*.py
 
 # copy functions
 cp -r src temp
