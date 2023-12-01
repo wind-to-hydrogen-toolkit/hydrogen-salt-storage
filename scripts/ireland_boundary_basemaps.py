@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pooch
 
 # ## NUTS Island of Ireland boundary
-#
+# 
 # <https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts>
 
 # base data download directory
@@ -101,7 +101,7 @@ plt.tight_layout()
 plt.show()
 
 # ## Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised
-#
+# 
 # <https://data.gov.ie/dataset/provinces-osi-national-statutory-boundaries-2019>
 
 URL = (
@@ -160,7 +160,7 @@ plt.tight_layout()
 plt.show()
 
 # ## Basemaps from xyzservices
-#
+# 
 # <https://xyzservices.readthedocs.io/en/stable/gallery.html>
 
 # bounding box limits with a ~50000 m buffer
@@ -180,7 +180,6 @@ plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
-
 def download_basemap(source, zoom):
     """
     Download Contextily basemaps for local use
@@ -198,9 +197,9 @@ def download_basemap(source, zoom):
     plt.tight_layout()
     plt.show()
 
-
 download_basemap(cx.providers.CartoDB.Voyager, 6)
 
 download_basemap(cx.providers.Stamen.Terrain, 6)
 
 download_basemap(cx.providers.USGS.USImagery, 6)
+

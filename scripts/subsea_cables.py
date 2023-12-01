@@ -2,9 +2,9 @@
 # coding: utf-8
 
 # # KIS-ORCA subsea cables
-#
+# 
 # <https://kis-orca.org/>
-#
+# 
 # **IMPORTANT:** There may be some incorrect name assignments as a simple
 # backfill and multiline conversion was used and no further checks were done
 
@@ -229,3 +229,4 @@ plt.tight_layout()
 plt.show()
 
 data_ie.to_file(os.path.join(DATA_DIR, "KIS-ORCA.gpkg"))
+

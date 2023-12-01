@@ -14,7 +14,7 @@ import pooch
 import seaborn as sns
 
 # ## OREDP Assessment Zone
-#
+# 
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2212>
 
 # base data download directory
@@ -79,7 +79,7 @@ plt.tight_layout()
 plt.show()
 
 # ## OREDP Study Area
-#
+# 
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2214>
 
 URL = (
@@ -135,3 +135,4 @@ plt.title("OREDP Study Area")
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
+

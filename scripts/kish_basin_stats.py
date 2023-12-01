@@ -24,7 +24,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = fns.read_dat_file(DATA_DIR, CRS)
+ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 ds
 
@@ -33,7 +33,6 @@ ds.rio.crs
 ds.rio.resolution()
 
 ds.rio.bounds()
-
 
 def plot_facet_maps(dat_xr, dat_extent, dat_crs):
     """
@@ -73,11 +72,9 @@ def plot_facet_maps(dat_xr, dat_extent, dat_crs):
         f.set_titles("{value}", weight="semibold")
         plt.show()
 
-
 plot_facet_maps(ds, extent, CRS)
 
 # ## Stats
-
 
 def make_stats_plots(dat_xr):
     """
@@ -159,16 +156,14 @@ def make_stats_plots(dat_xr):
 
     return dat_df
 
-
 df = make_stats_plots(ds)
 
 df.describe()
 
 # surface area
-shape = fns.halite_shape(ds, CRS)
+shape = fns.halite_shape(dat_xr=ds)
 
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
-
 
 def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
     """
@@ -231,7 +226,6 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
     f.set_titles("{value}", weight="semibold")
     plt.show()
 
-
 plot_facet_maps_distr(
     ds, extent, CRS, "TopDepth", [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80]
 )
@@ -252,3 +246,4 @@ plt.show()
 min(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 
 max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
+

@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Wind Farms (Foreshore Process)
-#
+# 
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
 import os
@@ -96,13 +96,13 @@ DATA_DIR = os.path.join("data", "kish-basin")
 
 CRS = 23029
 
-ds, extent = fns.read_dat_file(DATA_DIR, CRS)
+ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 # use extent bounds
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 # shape of the halite
-shape = fns.halite_shape(ds, CRS)
+shape = fns.halite_shape(dat_xr=ds)
 
 # wind farms in the Irish Sea
 wind_farms_ = wind_farms.sjoin(
@@ -243,3 +243,4 @@ for i in range(len(wind_farms_)):
         .values[0],
         "m away from Kish Bank",
     )
+

@@ -22,10 +22,9 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = fns.read_dat_file(DATA_DIR, CRS)
+ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 # ## Zones of interest
-
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
     """
@@ -45,16 +44,14 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.tight_layout()
     plt.show()
 
-
 # height = 311 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
-    ds, CRS, {"height": 311, "min_depth": 500, "max_depth": 2000}
+    dat_xr=ds, constraints={"height": 311, "min_depth": 500, "max_depth": 2000}
 )
 
 plot_zones_map(zones, extent, CRS)
 
 # ## Generate potential salt cavern locations
-
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     """
@@ -121,16 +118,20 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.tight_layout()
     plt.show()
 
-
 # ### Cavern calculations in a regular square grid
 
 # diameter = 80 m, separation = 320 m
-caverns = fns.generate_caverns_square_grid(extent, CRS, zones, 80)
+caverns = fns.generate_caverns_square_grid(
+    dat_extent=extent, zones_df=zones, diameter=80
+)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
 
 # ### Cavern calculations in a regular hexagonal grid
 
-caverns = fns.generate_caverns_hexagonal_grid(extent, CRS, zones, 80)
+caverns = fns.generate_caverns_hexagonal_grid(
+    dat_extent=extent, zones_df=zones, diameter=80
+)
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+

@@ -31,7 +31,7 @@ CRS = 23029
 # data directory
 DATA_DIR = os.path.join("data", "kish-basin")
 
-ds, extent = fns.read_dat_file(DATA_DIR, CRS)
+ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -81,23 +81,6 @@ wind_farms = (
 )
 
 wind_farms.drop(columns=["index_right"], inplace=True)
-
-# ### Dublin Bay Biosphere
-
-# DATA_DIR = os.path.join(
-#     "data", "heritage", "unesco-global-geoparks-and-biospheres.zip"
-# )
-
-# biospheres = gpd.read_file(
-#     os.path.join(
-#         f"zip://{DATA_DIR}!" +
-#         [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-#     )
-# )
-
-# biospheres = biospheres[
-#     biospheres["Name"].str.contains("Dublin")
-# ].to_crs(CRS)
 
 # ### Frequent shipping routes
 
@@ -166,7 +149,7 @@ cables_b = gpd.GeoDataFrame(geometry=cables.buffer(750)).dissolve()
 
 buffer_edge = {}
 for halite in ds.halite.values:
-    buffer_edge[halite] = fns.halite_shape(ds, CRS, halite)
+    buffer_edge[halite] = fns.halite_shape(dat_xr=ds, halite=halite)
     # 3 times the cavern diameter
     buffer_edge[halite] = gpd.GeoDataFrame(
         geometry=buffer_edge[halite].boundary.buffer(3 * 80)
@@ -177,11 +160,10 @@ for halite in ds.halite.values:
 # height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
 # separation = 320 m
 zones, zds = fns.zones_of_interest(
-    ds, CRS, {"height": 85, "min_depth": 500, "max_depth": 2000}
+    dat_xr=ds, constraints={"height": 85, "min_depth": 500, "max_depth": 2000}
 )
 
 # ## Generate caverns
-
 
 def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
     """
@@ -190,9 +172,9 @@ def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
 
     print("Without constraints...")
     cavern_df = fns.generate_caverns_hexagonal_grid(
-        extent, CRS, zones_gdf, diameter
+        dat_extent=extent, zones_df=zones_gdf, diameter=diameter
     )
-    cavern_df = fns.cavern_data(zones_ds, cavern_df, CRS)
+    cavern_df = fns.cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
 
     print("-" * 60)
     print("Exclude exploration wells...")
@@ -216,11 +198,6 @@ def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
         how="difference",
     )
     print("Number of potential caverns:", len(cavern_df))
-
-    # print("-" * 60)
-    # print("Exclude biosphere...")
-    # cavern_df = cavern_df.overlay(biospheres, how="difference")
-    # print("Number of potential caverns:", len(cavern_df))
 
     print("-" * 60)
     print("Exclude frequent shipping routes...")
@@ -251,7 +228,6 @@ def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
     print("Number of potential caverns:", len(cavern_df))
 
     return cavern_df
-
 
 caverns = generate_caverns_with_constraints(zones, zds, 80)
 
@@ -306,7 +282,6 @@ buffer = buffer.overlay(land, how="difference")
 
 # ## Maps
 
-
 def plot_map(dat_xr, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
@@ -340,7 +315,7 @@ def plot_map(dat_xr, var, stat):
     # )
 
     # halite boundary - use buffering to smooth the outline
-    shape = fns.halite_shape(dat_xr, CRS).buffer(1000).buffer(-1000)
+    shape = fns.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
 
     # configure map limits
     # plt.xlim(xmin - 1450, xmax + 500)
@@ -427,9 +402,7 @@ def plot_map(dat_xr, var, stat):
     plt.tight_layout()
     plt.show()
 
-
 plot_map(ds, "Thickness", "max")
-
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     """
@@ -441,7 +414,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     legend_handles = []
 
     # halite boundary - use buffering to smooth the outline
-    shape = fns.halite_shape(dat_xr, CRS).buffer(1000).buffer(-1000)
+    shape = fns.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
     shape.plot(
         ax=axis,
         edgecolor="darkslategrey",
@@ -572,7 +545,6 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     plt.tight_layout()
     plt.show()
 
-
 plot_map_alt(ds, caverns, zones)
 
 # ## Stats
@@ -665,3 +637,4 @@ rho_approx = (
     / (hydrogen.compressibility * 8.314 * (20 + 273.15))
     * 100e3
 )
+

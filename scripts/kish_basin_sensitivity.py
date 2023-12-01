@@ -23,10 +23,9 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = fns.read_dat_file(DATA_DIR, CRS)
+ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 # ## Stats
-
 
 def make_stats_plots(dat_xr, show_plots=True):
     """
@@ -109,18 +108,16 @@ def make_stats_plots(dat_xr, show_plots=True):
 
     return dat_df
 
-
 df = make_stats_plots(ds, show_plots=False)
 
 df.describe()
 
 # surface area
-shape = fns.halite_shape(ds, CRS)
+shape = fns.halite_shape(dat_xr=ds)
 
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
 
 # ## Zones of interest
-
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
@@ -136,36 +133,36 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.tight_layout()
     plt.show()
 
-
 # ### Case 1
-#
+# 
 # height = 311 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
 # separation = 320 m
 
 zones_1, zds_1 = fns.zones_of_interest(
-    ds, CRS, {"height": 311, "min_depth": 1000, "max_depth": 1500}
+    dat_xr=ds,
+    constraints={"height": 311, "min_depth": 1000, "max_depth": 1500},
 )
 
 plot_zones_map(zones_1, extent, CRS)
 
 # ### Case 2
-#
+# 
 # height = 155 m, 1000 m <= depth <= 1,500 m, diameter = 80 m,
 # separation = 320 m
 
 zones_2, zds_2 = fns.zones_of_interest(
-    ds, CRS, {"height": 155, "min_depth": 750, "max_depth": 1750}
+    dat_xr=ds, constraints={"height": 155, "min_depth": 750, "max_depth": 1750}
 )
 
 plot_zones_map(zones_2, extent, CRS)
 
 # ### Case 3
-#
+# 
 # height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
 # separation = 320 m
 
 zones_3, zds_3 = fns.zones_of_interest(
-    ds, CRS, {"height": 85, "min_depth": 500, "max_depth": 2000}
+    dat_xr=ds, constraints={"height": 85, "min_depth": 500, "max_depth": 2000}
 )
 
 plot_zones_map(zones_3, extent, CRS)
@@ -191,10 +188,9 @@ zdf_3 = make_stats_plots(zds_3)
 zdf_3.describe()
 
 # ## Sensitivity analysis
-#
+# 
 # Sensitivity of maximum halite area (i.e. zones of interest) available for
 # cavern construction (without constraints) to depth and thickness
-
 
 def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     sdf = {}
@@ -206,9 +202,8 @@ def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     for t in heights:
         area_max.append(
             fns.zones_of_interest(
-                ds,
-                CRS,
-                {
+                dat_xr=ds,
+                constraints={
                     "height": t,
                     "min_depth": min_depth_base,
                     "max_depth": max_depth_base,
@@ -232,9 +227,8 @@ def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     for t in depth_min:
         area_max.append(
             fns.zones_of_interest(
-                ds,
-                CRS,
-                {
+                dat_xr=ds,
+                constraints={
                     "height": height_base,
                     "min_depth": t,
                     "max_depth": max_depth_base,
@@ -260,9 +254,8 @@ def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     for t in depth_max:
         area_max.append(
             fns.zones_of_interest(
-                ds,
-                CRS,
-                {
+                dat_xr=ds,
+                constraints={
                     "height": height_base,
                     "min_depth": min_depth_base,
                     "max_depth": t,
@@ -282,7 +275,6 @@ def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     )
 
     return sdf
-
 
 sdf = sensitivity(zones_2, 155, 750, 1750)
 
@@ -322,3 +314,4 @@ for (n, key), c in zip(
 plt.ylim(-110, 110)
 plt.tight_layout()
 plt.show()
+

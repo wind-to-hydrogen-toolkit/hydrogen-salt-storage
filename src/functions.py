@@ -14,7 +14,7 @@ from geocube.api.core import make_geocube
 
 
 def read_dat_file(
-    dat_path: str, dat_crs: int
+    dat_path: str, dat_crs: int = 23029
 ) -> tuple[xr.Dataset, gpd.GeoSeries]:
     """
     Read XYZ data layers into an Xarray dataset
@@ -118,7 +118,7 @@ def read_dat_file(
 
 
 def halite_shape(
-    dat_xr: xr.Dataset, dat_crs: int, halite: str = None
+    dat_xr: xr.Dataset, dat_crs: int = 23029, halite: str = None
 ) -> gpd.GeoDataFrame:
     """
     Create a vector shape of the halite data
@@ -159,7 +159,11 @@ def halite_shape(
 
 
 def zones_of_interest(
-    dat_xr: xr.Dataset, dat_crs: int, constraints: dict[str, float]
+    dat_xr: xr.Dataset,
+    constraints: dict[str, float],
+    dat_crs: int = 23029,
+    roof_thickness: float = 80,
+    floor_thickness: float = 10,
 ) -> tuple[gpd.GeoDataFrame, xr.Dataset]:
     """
     Generate a (multi)polygon of the zones of interest by applying thickness
@@ -168,11 +172,13 @@ def zones_of_interest(
     Parameters
     ----------
     dat_xr : Xarray dataset of the halite data
-    dat_crs : EPSG CRS
     constraints : Dictionary containing the following:
         - height: cavern height [m]
         - min_depth: minimum cavern depth [m]
         - max_depth: maximum cavern depth [m]
+    dat_crs : EPSG CRS
+    roof_thickness : Salt roof thickness [m]
+    floor_thickness : Minimum salt floor thickness [m]
 
     Returns
     -------
@@ -183,17 +189,32 @@ def zones_of_interest(
     try:
         zds = dat_xr.where(
             (
-                (dat_xr.Thickness >= constraints["height"] + 90)
-                & (dat_xr.TopDepth >= constraints["min_depth"] - 80)
-                & (dat_xr.TopDepth <= constraints["max_depth"] - 80)
+                (
+                    dat_xr.Thickness
+                    >= constraints["height"] + roof_thickness + floor_thickness
+                )
+                & (
+                    dat_xr.TopDepth
+                    >= constraints["min_depth"] - roof_thickness
+                )
+                & (
+                    dat_xr.TopDepth
+                    <= constraints["max_depth"] - roof_thickness
+                )
             ),
             drop=True,
         )
     except KeyError:
         zds = dat_xr.where(
             (
-                (dat_xr.Thickness >= constraints["height"])
-                & (dat_xr.TopDepth >= constraints["min_depth"])
+                (
+                    dat_xr.Thickness
+                    >= constraints["height"] + roof_thickness + floor_thickness
+                )
+                & (
+                    dat_xr.TopDepth
+                    >= constraints["min_depth"] - roof_thickness
+                )
             ),
             drop=True,
         )
@@ -217,10 +238,10 @@ def zones_of_interest(
 
 def generate_caverns_square_grid(
     dat_extent: gpd.GeoSeries,
-    dat_crs: int,
-    zones_df,
+    zones_df: gpd.GeoDataFrame,
     diameter: float,
     separation: float = None,
+    dat_crs: int = 23029,
 ) -> gpd.GeoDataFrame:
     """
     Generate salt caverns using a regular square grid within the zones of
@@ -231,10 +252,10 @@ def generate_caverns_square_grid(
     Parameters
     ----------
     dat_extent : extent of the data
-    dat_crs : EPSG CRS
     zones_df : zones of interest
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
+    dat_crs : EPSG CRS
 
     Returns
     -------
@@ -302,10 +323,10 @@ def hexgrid_init(
 
 def generate_caverns_hexagonal_grid(
     dat_extent: gpd.GeoSeries,
-    dat_crs: int,
     zones_df: gpd.GeoDataFrame,
     diameter: float,
     separation: float = None,
+    dat_crs: int = 23029,
 ) -> gpd.GeoDataFrame:
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
@@ -316,10 +337,10 @@ def generate_caverns_hexagonal_grid(
     Parameters
     ----------
     dat_extent : extent of the data
-    dat_crs : EPSG CRS
     zones_df : zones of interest
     diameter : diameter of the cavern [m]
     separation : cavern separation distance [m]
+    dat_crs : EPSG CRS
 
     Returns
     -------
@@ -329,7 +350,7 @@ def generate_caverns_hexagonal_grid(
     if not separation:
         separation = diameter * 4
 
-    a, cols, rows = hexgrid_init(dat_extent, separation)
+    a, cols, rows = hexgrid_init(dat_extent=dat_extent, separation=separation)
 
     cavern_df = []
     for x in cols:
@@ -384,8 +405,8 @@ def generate_caverns_hexagonal_grid(
     return cavern_df
 
 
-def cavern_data(
-    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int
+def cavern_dataframe(
+    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int = 23029
 ) -> gpd.GeoDataFrame:
     """
     Merge halite data for each cavern location
@@ -429,6 +450,28 @@ def cavern_data(
     ).drop_duplicates(["geometry"])
 
     return cavern_df
+
+
+def constraint_exploration_well(data_path: str):
+    DATA_DIR = os.path.join(
+        data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
+    )
+
+    wells = gpd.read_file(
+        os.path.join(
+            f"zip://{DATA_DIR}!"
+            + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][
+                0
+            ]
+        )
+    )
+
+    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
+
+    # 500 m buffer - suggested in draft OREDP II p. 108
+    wells_b = gpd.GeoDataFrame(geometry=wells.buffer(500))
+
+    return wells, wells_b
 
 
 def cavern_volume(height: float, diameter: float, theta: float) -> float:

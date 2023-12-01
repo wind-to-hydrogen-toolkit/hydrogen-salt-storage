@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pooch
 
 # ## UNESCO Global Geoparks and Biospheres
-#
+# 
 # <https://data.gov.ie/dataset/unesco-global-geoparks-and-biospheres>
 
 # base data download directory
@@ -75,7 +75,7 @@ plt.tight_layout()
 plt.show()
 
 # ## Shipwrecks in Irish Waters
-#
+# 
 # <https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
 
 URL = (
@@ -127,3 +127,4 @@ plt.title("Shipwrecks in Irish Waters")
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
+
