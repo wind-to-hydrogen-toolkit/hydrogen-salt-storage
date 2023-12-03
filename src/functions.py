@@ -11,6 +11,7 @@ import pandas as pd
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
+from zipfile import ZipFile
 
 
 def read_dat_file(
@@ -21,7 +22,7 @@ def read_dat_file(
 
     Parameters
     ----------
-    dat_path : path to the .dat files
+    dat_path : Path to the .dat files
     dat_crs : EPSG CRS
 
     Returns
@@ -173,9 +174,9 @@ def zones_of_interest(
     ----------
     dat_xr : Xarray dataset of the halite data
     constraints : Dictionary containing the following:
-        - height: cavern height [m]
-        - min_depth: minimum cavern depth [m]
-        - max_depth: maximum cavern depth [m]
+        - height: Cavern height [m]
+        - min_depth: Minimum cavern depth [m]
+        - max_depth: Maximum cavern depth [m]
     dat_crs : EPSG CRS
     roof_thickness : Salt roof thickness [m]
     floor_thickness : Minimum salt floor thickness [m]
@@ -251,10 +252,10 @@ def generate_caverns_square_grid(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    zones_df : zones of interest
-    diameter : diameter of the cavern [m]
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    zones_df : Zones of interest
+    diameter : Diameter of the cavern [m]
+    separation : Cavern separation distance [m]
     dat_crs : EPSG CRS
 
     Returns
@@ -304,8 +305,8 @@ def hexgrid_init(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    separation : Cavern separation distance [m]
 
     Returns
     -------
@@ -336,10 +337,10 @@ def generate_caverns_hexagonal_grid(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    zones_df : zones of interest
-    diameter : diameter of the cavern [m]
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    zones_df : Zones of interest
+    diameter : Diameter of the cavern [m]
+    separation : Cavern separation distance [m]
     dat_crs : EPSG CRS
 
     Returns
@@ -450,6 +451,60 @@ def cavern_dataframe(
     ).drop_duplicates(["geometry"])
 
     return cavern_df
+
+
+def read_shapefile_from_zip(data_path: str) -> gpd.GeoDataFrame:
+    """
+    Read the shapefile layer from a Zipfile
+
+    Parameters
+    ----------
+    data_path : Path to the exploration well Zip file
+
+    Returns
+    -------
+    - Geodataframe of the shapefile data
+    """
+
+    data_shp = gpd.read_file(
+        os.path.join(
+            f"zip://{data_path}!"
+            + [x for x in ZipFile(data_path).namelist() if x.endswith(".shp")][
+                0
+            ]
+        )
+    )
+
+    return data_shp
+
+
+def constraint_exploration_well(data_path: str, dat_crs: int = 23029, buffer=500) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read exploration well data and generate constraint.
+    500 m buffer - suggested in draft OREDP II p. 108.
+
+    Parameters
+    ----------
+    data_path : Path to the exploration well Zip file
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    data_dir = os.path.join(
+        data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
+    )
+
+    wells = read_shapefile_from_zip(data_path=data_dir)
+
+    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(dat_crs)
+
+    wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
+
+    return wells, wells_b
 
 
 def cavern_volume(height: float, diameter: float, theta: float) -> float:

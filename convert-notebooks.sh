@@ -4,7 +4,7 @@ jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
 # format notebooks
 black -l 79 */*.ipynb
 
-# sort imports
+# sort imports in notebooks
 isort */*.ipynb
 
 # convert Jupyter Notebooks to Python scripts
@@ -22,7 +22,7 @@ mv $f.txt $f
 done
 
 # format scripts
-black -l 79 src/*.py
+black -l 79 */*.py
 
 # sort imports
 isort src/*.py
