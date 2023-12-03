@@ -4,6 +4,7 @@ Main functions used in the Jupyter Notebooks
 
 import glob
 import os
+from zipfile import ZipFile
 
 import geopandas as gpd
 import numpy as np
@@ -11,11 +12,13 @@ import pandas as pd
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
-from zipfile import ZipFile
+
+# CRS of the Kish Basin dat files
+CRS = 23029
 
 
 def read_dat_file(
-    dat_path: str, dat_crs: int = 23029
+    dat_path: str, dat_crs: int = CRS
 ) -> tuple[xr.Dataset, gpd.GeoSeries]:
     """
     Read XYZ data layers into an Xarray dataset
@@ -119,7 +122,7 @@ def read_dat_file(
 
 
 def halite_shape(
-    dat_xr: xr.Dataset, dat_crs: int = 23029, halite: str = None
+    dat_xr: xr.Dataset, dat_crs: int = CRS, halite: str = None
 ) -> gpd.GeoDataFrame:
     """
     Create a vector shape of the halite data
@@ -162,7 +165,7 @@ def halite_shape(
 def zones_of_interest(
     dat_xr: xr.Dataset,
     constraints: dict[str, float],
-    dat_crs: int = 23029,
+    dat_crs: int = CRS,
     roof_thickness: float = 80,
     floor_thickness: float = 10,
 ) -> tuple[gpd.GeoDataFrame, xr.Dataset]:
@@ -187,38 +190,17 @@ def zones_of_interest(
     - Xarray dataset of the zones of interest
     """
 
-    try:
-        zds = dat_xr.where(
+    zds = dat_xr.where(
+        (
             (
-                (
-                    dat_xr.Thickness
-                    >= constraints["height"] + roof_thickness + floor_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    >= constraints["min_depth"] - roof_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    <= constraints["max_depth"] - roof_thickness
-                )
-            ),
-            drop=True,
-        )
-    except KeyError:
-        zds = dat_xr.where(
-            (
-                (
-                    dat_xr.Thickness
-                    >= constraints["height"] + roof_thickness + floor_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    >= constraints["min_depth"] - roof_thickness
-                )
-            ),
-            drop=True,
-        )
+                dat_xr.Thickness
+                >= constraints["height"] + roof_thickness + floor_thickness
+            )
+            & (dat_xr.TopDepth >= constraints["min_depth"] - roof_thickness)
+            & (dat_xr.TopDepth <= constraints["max_depth"] - roof_thickness)
+        ),
+        drop=True,
+    )
 
     # zones of interest polygon
     zdf = (
@@ -242,7 +224,7 @@ def generate_caverns_square_grid(
     zones_df: gpd.GeoDataFrame,
     diameter: float,
     separation: float = None,
-    dat_crs: int = 23029,
+    dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
     Generate salt caverns using a regular square grid within the zones of
@@ -327,7 +309,7 @@ def generate_caverns_hexagonal_grid(
     zones_df: gpd.GeoDataFrame,
     diameter: float,
     separation: float = None,
-    dat_crs: int = 23029,
+    dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
@@ -407,10 +389,10 @@ def generate_caverns_hexagonal_grid(
 
 
 def cavern_dataframe(
-    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int = 23029
+    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int = CRS
 ) -> gpd.GeoDataFrame:
     """
-    Merge halite data for each cavern location
+    Merge halite data for each cavern location and create a dataframe
 
     Parameters
     ----------
@@ -478,14 +460,16 @@ def read_shapefile_from_zip(data_path: str) -> gpd.GeoDataFrame:
     return data_shp
 
 
-def constraint_exploration_well(data_path: str, dat_crs: int = 23029, buffer=500) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+def constraint_exploration_well(
+    data_path: str, dat_crs: int = CRS, buffer: float = 500
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Read exploration well data and generate constraint.
     500 m buffer - suggested in draft OREDP II p. 108.
 
     Parameters
     ----------
-    data_path : Path to the exploration well Zip file
+    data_path : Path to the Zip file
     dat_crs : EPSG CRS
     buffer : Buffer [m]
 
@@ -494,17 +478,242 @@ def constraint_exploration_well(data_path: str, dat_crs: int = 23029, buffer=500
     - Geodataframes of the dataset and buffer
     """
 
-    data_dir = os.path.join(
-        data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
+    wells = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
+        )
     )
-
-    wells = read_shapefile_from_zip(data_path=data_dir)
 
     wells = wells[wells["AREA"].str.contains("Kish")].to_crs(dat_crs)
 
     wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
 
     return wells, wells_b
+
+
+def constraint_wind_farm(
+    data_path: str, dat_extent: gpd.GeoSeries, dat_crs: int = CRS
+) -> gpd.GeoDataFrame:
+    """
+    Read data for wind farms.
+    The shapes are used as is without a buffer - suggested for renewable
+    energy test site areas in draft OREDP II p. 109.
+
+    Parameters
+    ----------
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
+
+    Returns
+    -------
+    - Geodataframes of the dataset
+    """
+
+    wind_farms = read_shapefile_from_zip(
+        data_path=os.path.join(data_path, "wind-farms-foreshore-process.zip")
+    )
+
+    # keep only features near Kish Basin
+    wind_farms = (
+        wind_farms.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+        .sort_values("Name")
+    )
+
+    wind_farms.drop(columns=["index_right"], inplace=True)
+
+    return wind_farms
+
+
+def constraint_shipping_routes(
+    data_path: str,
+    dat_extent: gpd.GeoSeries,
+    dat_crs: int = CRS,
+    buffer: float = 1852,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read frequent shipping route data and generate constraint.
+    1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
+
+    Parameters
+    ----------
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    shipping = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "shipping_frequently_used_routes.zip"
+        )
+    )
+
+    # keep only features near Kish Basin
+    shipping = (
+        shipping.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+    )
+
+    shipping.drop(columns=["index_right"], inplace=True)
+
+    shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(buffer)).dissolve()
+
+    return shipping, shipping_b
+
+
+def constraint_shipwrecks(
+    data_path: str,
+    dat_extent: gpd.GeoSeries,
+    dat_crs: int = CRS,
+    buffer: float = 100,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read shipwreck data and generate constraint.
+    Archaeological Exclusion Zones recommendation - 100 m buffer.
+
+    Parameters
+    ----------
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    shipwrecks = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+        )
+    )
+
+    # keep only features near Kish Basin
+    shipwrecks = (
+        shipwrecks.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+    )
+
+    shipwrecks.drop(columns=["index_right"], inplace=True)
+
+    # Archaeological Exclusion Zones recommendation
+    shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(buffer))
+
+    return shipwrecks, shipwrecks_b
+
+
+def constraint_subsea_cables(
+    data_path: str, dat_crs: int = CRS, buffer: float = 750
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read subsea cable data and generate constraint.
+    750 m buffer - suggested in draft OREDP II p. 109-111.
+
+    Parameters
+    ----------
+    data_path : Path to the GPKG file
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    cables = gpd.read_file(os.path.join(data_path, "KIS-ORCA.gpkg"))
+
+    cables = cables.to_crs(dat_crs)
+
+    # remove point features
+    cables = cables.drop(range(3)).reset_index(drop=True)
+
+    cables_b = gpd.GeoDataFrame(geometry=cables.buffer(buffer)).dissolve()
+
+    return cables, cables_b
+
+
+def generate_caverns_with_constraints(
+    zones_gdf, zones_ds, diameter, dat_extent, exclusions
+):
+    """
+    Add constraints to cavern configuration
+    """
+
+    print("Without constraints...")
+    cavern_df = generate_caverns_hexagonal_grid(
+        dat_extent=dat_extent, zones_df=zones_gdf, diameter=diameter
+    )
+    cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
+
+    print("-" * 60)
+    print("Exclude exploration wells...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["wells_b"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude wind farms...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["wind_farms"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude shipwrecks...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(
+            cavern_df, exclusions["shipwrecks_b"], predicate="intersects"
+        ),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude frequent shipping routes...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["shipping_b"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude subsea cables...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["cables_b"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude salt formation edges...")
+    cavern_dict = {}
+    for h in cavern_df["halite"].unique():
+        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
+        cavern_dict[h] = cavern_dict[h].overlay(
+            gpd.sjoin(
+                cavern_dict[h],
+                exclusions["buffer_edge"][h],
+                predicate="intersects",
+            ),
+            how="difference",
+        )
+    cavern_df = pd.concat(cavern_dict.values())
+    print("Number of potential caverns:", len(cavern_df))
+
+    return cavern_df
 
 
 def cavern_volume(height: float, diameter: float, theta: float) -> float:
