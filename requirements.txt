@@ -1,10 +1,14 @@
+black[jupyter]
 cartopy
 contextily
+flake8
 geocube
 geopandas
 jupyterlab
 mapclassify
 matplotlib-scalebar
 pooch
+pyfluids
+pylint
 rioxarray
 statsmodels

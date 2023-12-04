@@ -3,7 +3,6 @@
 
 # # Caverns with constraints
 
-import importlib
 import os
 from zipfile import ZipFile
 
@@ -17,10 +16,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
-from pyfluids import Fluid, FluidsList, Input
 
 from src import functions as fns
-from src import capacity as cap
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -364,9 +361,9 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
         mpatches.Patch(label="Cavern height [m]", visible=False)
     )
     palette = [
-        sns.color_palette("flare", 255)[0],
-        sns.color_palette("flare", 255)[127],
-        sns.color_palette("flare", 255)[-1],
+        sns.color_palette("flare", 256)[0],
+        sns.color_palette("flare", 256)[127],
+        sns.color_palette("flare", 256)[-1],
     ]
     for color, label in zip(palette, ["85", "155", "311"]):
         # legend_handles.append(
@@ -379,7 +376,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
     )
     for markersize, label in zip(
-        [6, 3], ["1,000 - 1,500", "500 - 1,000 or 1,500 - 2,000"]
+        [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
     ):
         legend_handles.append(
             Line2D(
@@ -481,76 +478,3 @@ s
 s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
 s["%"] = s["geometry"] / len(caverns) * 100
 s
-
-# ## Capacity
-
-importlib.reload(fns)
-
-importlib.reload(cap)
-
-# ### Volume
-
-caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
-
-caverns["cavern_volume"].unique()
-
-# ### Mid-point temperature
-
-caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
-    height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
-)
-
-caverns[["t_mid_point"]].describe()
-
-# ### Operating pressure
-
-(
-    caverns["p_operating_min"],
-    caverns["p_operating_max"],
-) = cap.pressure_operating(thickness_overburden=caverns["TopDepth"])
-
-caverns[["p_operating_min", "p_operating_max"]].describe()
-
-# ### Hydrogen gas density
-
-caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
-    p_operating_min=caverns["p_operating_min"],
-    p_operating_max=caverns["p_operating_max"],
-    t_mid_point=caverns["t_mid_point"],
-)
-
-caverns[["rho_min", "rho_max"]].describe()
-
-# ### Working mass of hydrogen
-
-caverns["working_mass"] = cap.mass_hydrogen_working(
-    rho_h2_min=caverns["rho_min"],
-    rho_h2_max=caverns["rho_max"],
-    v_cavern=caverns["cavern_volume"],
-)
-
-caverns[["working_mass"]].describe()
-
-# ### Energy storage capacity in GWh
-
-caverns["capacity"] = cap.energy_storage_capacity(
-    m_working=caverns["working_mass"]
-)
-
-caverns[["capacity"]].describe()
-
-# total capacity
-caverns[["capacity"]].sum()
-
-# total capacity for caverns in optimal depth
-caverns[caverns["depth"] == "1,000 - 1,500"][["capacity"]].sum()
-
-# total capacity for caverns in optimal depth and at 311 m height
-caverns[(caverns["depth"] == "1,000 - 1,500") & (caverns["height"] == "311")][
-    ["capacity"]
-].sum()
-
-# total capacity for caverns in optimal depth and at 155 m height
-caverns[(caverns["depth"] == "1,000 - 1,500") & (caverns["height"] == "155")][
-    ["capacity"]
-].sum()
