@@ -3,9 +3,13 @@ Functions to calculate salt cavern volumes and storage capacities
 """
 
 import numpy as np
+import pandas as pd
+from pyfluids import Fluid, FluidsList, Input
 
 
-def cavern_volume(height: float, diameter: float, theta: float) -> float:
+def cavern_volume(
+    height: float, diameter: float = 80, theta: float = 20
+) -> float:
     """
     Calculate the cavern volume. See Williams et al. (2022), eq. (1) and
     Jannel and Torquet (2022).
@@ -100,7 +104,6 @@ def density_hydrogen_gas(
     p_operating_min: float,
     p_operating_max: float,
     t_mid_point: float,
-    compressibility_factor: float = 1.05,
 ) -> tuple[float, float]:
     """
     Density of hydrogen at cavern conditions. See Williams et al. (2022),
@@ -115,7 +118,6 @@ def density_hydrogen_gas(
 
     Parameters
     ----------
-    compressibility_factor : compressibility factor
     p_operating_min : Minimum operating pressure [Pa]
     p_operating_max : Maximum operating pressure [Pa]
     t_mid_point : Mid point temperature [deg C]
@@ -125,15 +127,36 @@ def density_hydrogen_gas(
     - Hydrogen gas density [kg m-3]
     """
 
-    # rho / p = m / (z * r * t)
-    rho_p = (2.01588 / 1000) / (
-        compressibility_factor * 8.314 * (t_mid_point + 273.15)
-    )
+    rho_h2 = []
 
-    rho_h2_min = p_operating_min * rho_p
-    rho_h2_max = p_operating_max * rho_p
+    for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
+        h2_min = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(p_min), Input.temperature(t + 273.15)
+        )
 
-    return rho_h2_min, rho_h2_max
+        h2_max = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(p_max), Input.temperature(t + 273.15)
+        )
+
+        rho_h2.append((h2_min.density, h2_max.density))
+
+    # # rho / p = m / (z * r * t)
+    # rho_p = (2.01588 / 1000) / (
+    #     compressibility_factor * 8.314 * (t_mid_point + 273.15)
+    # )
+
+    # rho_h2_min = p_operating_min * rho_p
+    # rho_h2_max = p_operating_max * rho_p
+
+    # rho_approx_min = (
+    #     (2.01588 / 1000)
+    #     / (h2_min.compressibility * 8.314 * (20 + 273.15))
+    #     * 100e3
+    # )
+
+    rho_h2 = pd.DataFrame(rho_h2)
+
+    return rho_h2[0], rho_h2[1]
 
 
 def mass_hydrogen_working(
