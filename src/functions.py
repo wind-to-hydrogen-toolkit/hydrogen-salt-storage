@@ -223,8 +223,8 @@ def zones_of_interest(
 def generate_caverns_square_grid(
     dat_extent: gpd.GeoSeries,
     zones_df: gpd.GeoDataFrame,
-    diameter: float,
-    separation: float = None,
+    diameter: float = 80,
+    separation: float = 80 * 4,
     dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
@@ -247,9 +247,6 @@ def generate_caverns_square_grid(
     """
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-
-    if not separation:
-        separation = diameter * 4
 
     # create the cells in a loop
     grid_cells = []
@@ -308,8 +305,8 @@ def hexgrid_init(
 def generate_caverns_hexagonal_grid(
     dat_extent: gpd.GeoSeries,
     zones_df: gpd.GeoDataFrame,
-    diameter: float,
-    separation: float = None,
+    diameter: float = 80,
+    separation: float = 80 * 4,
     dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
@@ -330,9 +327,6 @@ def generate_caverns_hexagonal_grid(
     -------
     - A polygon geodataframe of potential caverns
     """
-
-    if not separation:
-        separation = diameter * 4
 
     a, cols, rows = hexgrid_init(dat_extent=dat_extent, separation=separation)
 
@@ -643,23 +637,51 @@ def constraint_subsea_cables(
     return cables, cables_b
 
 
+def constraint_halite_edge(
+    dat_xr: xr.Dataset, buffer: float = 80 * 3
+) -> dict[str, gpd.GeoDataFrame]:
+    """
+    3 times the cavern diameter, i.e. the pillar width
+    """
+
+    buffer_edge = {}
+    for halite in dat_xr.halite.values:
+        buffer_edge[halite] = halite_shape(dat_xr=dat_xr, halite=halite)
+        buffer_edge[halite] = gpd.GeoDataFrame(
+            geometry=buffer_edge[halite].boundary.buffer(buffer)
+        ).overlay(buffer_edge[halite], how="intersection")
+
+    return buffer_edge
+
+
 def generate_caverns_with_constraints(
-    zones_gdf, zones_ds, diameter, dat_extent, exclusions
-):
+    zones_gdf: gpd.GeoDataFrame,
+    zones_ds: xr.Dataset,
+    dat_extent: gpd.GeoSeries,
+    exclusions: dict[str, gpd.GeoDataFrame],
+    diameter: float = 80,
+    separation: float = 80 * 4,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Add constraints to cavern configuration
     """
 
     print("Without constraints...")
     cavern_df = generate_caverns_hexagonal_grid(
-        dat_extent=dat_extent, zones_df=zones_gdf, diameter=diameter
+        dat_extent=dat_extent,
+        zones_df=zones_gdf,
+        diameter=diameter,
+        separation=separation,
     )
     cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
+
+    # keep original
+    cavern_all = cavern_df.copy()
 
     print("-" * 60)
     print("Exclude exploration wells...")
     cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["wells_b"], predicate="intersects"),
+        gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
         how="difference",
     )
     print("Number of potential caverns:", len(cavern_df))
@@ -675,9 +697,7 @@ def generate_caverns_with_constraints(
     print("-" * 60)
     print("Exclude shipwrecks...")
     cavern_df = cavern_df.overlay(
-        gpd.sjoin(
-            cavern_df, exclusions["shipwrecks_b"], predicate="intersects"
-        ),
+        gpd.sjoin(cavern_df, exclusions["shipwrecks"], predicate="intersects"),
         how="difference",
     )
     print("Number of potential caverns:", len(cavern_df))
@@ -685,7 +705,7 @@ def generate_caverns_with_constraints(
     print("-" * 60)
     print("Exclude frequent shipping routes...")
     cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["shipping_b"], predicate="intersects"),
+        gpd.sjoin(cavern_df, exclusions["shipping"], predicate="intersects"),
         how="difference",
     )
     print("Number of potential caverns:", len(cavern_df))
@@ -693,7 +713,7 @@ def generate_caverns_with_constraints(
     print("-" * 60)
     print("Exclude subsea cables...")
     cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["cables_b"], predicate="intersects"),
+        gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
         how="difference",
     )
     print("Number of potential caverns:", len(cavern_df))
@@ -706,12 +726,68 @@ def generate_caverns_with_constraints(
         cavern_dict[h] = cavern_dict[h].overlay(
             gpd.sjoin(
                 cavern_dict[h],
-                exclusions["buffer_edge"][h],
+                exclusions["edge"][h],
                 predicate="intersects",
             ),
             how="difference",
         )
     cavern_df = pd.concat(cavern_dict.values())
     print("Number of potential caverns:", len(cavern_df))
+
+    # get excluded caverns
+    caverns_excl = cavern_all.overlay(
+        gpd.sjoin(cavern_all, cavern_df, predicate="intersects"),
+        how="difference",
+    )
+
+    return cavern_df, caverns_excl
+
+
+def label_caverns(
+    cavern_df: gpd.GeoDataFrame,
+    heights: list[float],
+    depths: dict[str, float],
+    roof_thickness: float = 80,
+    floor_thickness: float = 10,
+):
+    """
+    Label cavern dataframe by height and depth
+    """
+
+    # label caverns by height
+    conditions = [
+        (
+            cavern_df["Thickness"]
+            < (heights[1] + roof_thickness + floor_thickness)
+        ),
+        (
+            cavern_df["Thickness"]
+            >= (heights[1] + roof_thickness + floor_thickness)
+        )
+        & (
+            cavern_df["Thickness"]
+            < (heights[2] + roof_thickness + floor_thickness)
+        ),
+        (
+            cavern_df["Thickness"]
+            >= (heights[2] + roof_thickness + floor_thickness)
+        ),
+    ]
+    choices = [str(x) for x in heights]
+    cavern_df["height"] = np.select(conditions, choices)
+
+    # label caverns by depth
+    conditions = [
+        (cavern_df["TopDepth"] < (depths["min_opt"] - roof_thickness)),
+        (cavern_df["TopDepth"] >= (depths["min_opt"] - roof_thickness))
+        & (cavern_df["TopDepth"] <= (depths["max_opt"] - roof_thickness)),
+        (cavern_df["TopDepth"] > (depths["max_opt"] - roof_thickness)),
+    ]
+    choices = [
+        f"{depths['min']:,} - {depths['min_opt']:,}",
+        f"{depths['min_opt']:,} - {depths['max_opt']:,}",
+        f"{depths['max_opt']:,} - {depths['max']:,}",
+    ]
+    cavern_df["depth"] = np.select(conditions, choices)
 
     return cavern_df
