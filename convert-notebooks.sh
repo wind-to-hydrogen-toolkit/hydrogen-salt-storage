@@ -27,5 +27,6 @@ black -l 79 */*.py
 # sort imports
 isort src/*.py
 
-# copy functions
+# copy other stuff to main
 cp -r src temp
+cp requirements.txt temp
