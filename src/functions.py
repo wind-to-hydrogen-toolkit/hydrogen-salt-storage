@@ -271,7 +271,7 @@ def generate_caverns_square_grid(
 
     cavern_df.drop(columns=["index_right"], inplace=True)
 
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     return cavern_df
 
@@ -378,7 +378,7 @@ def generate_caverns_hexagonal_grid(
 
     cavern_df.drop(columns=["index_right"], inplace=True)
 
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     return cavern_df
 
@@ -473,11 +473,7 @@ def constraint_exploration_well(
     - Geodataframes of the dataset and buffer
     """
 
-    wells = read_shapefile_from_zip(
-        data_path=os.path.join(
-            data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
-        )
-    )
+    wells = read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     wells = wells[wells["AREA"].str.contains("Kish")].to_crs(dat_crs)
 
@@ -505,9 +501,7 @@ def constraint_wind_farm(
     - Geodataframes of the dataset
     """
 
-    wind_farms = read_shapefile_from_zip(
-        data_path=os.path.join(data_path, "wind-farms-foreshore-process.zip")
-    )
+    wind_farms = read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     wind_farms = (
@@ -544,11 +538,7 @@ def constraint_shipping_routes(
     - Geodataframes of the dataset and buffer
     """
 
-    shipping = read_shapefile_from_zip(
-        data_path=os.path.join(
-            data_path, "shipping_frequently_used_routes.zip"
-        )
-    )
+    shipping = read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     shipping = (
@@ -586,11 +576,7 @@ def constraint_shipwrecks(
     - Geodataframes of the dataset and buffer
     """
 
-    shipwrecks = read_shapefile_from_zip(
-        data_path=os.path.join(
-            data_path, "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
-        )
-    )
+    shipwrecks = read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     shipwrecks = (
@@ -625,7 +611,7 @@ def constraint_subsea_cables(
     - Geodataframes of the dataset and buffer
     """
 
-    cables = gpd.read_file(os.path.join(data_path, "KIS-ORCA.gpkg"))
+    cables = gpd.read_file(os.path.join(data_path))
 
     cables = cables.to_crs(dat_crs)
 
@@ -684,7 +670,7 @@ def generate_caverns_with_constraints(
         gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
         how="difference",
     )
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     print("-" * 60)
     print("Exclude wind farms...")
@@ -692,7 +678,7 @@ def generate_caverns_with_constraints(
         gpd.sjoin(cavern_df, exclusions["wind_farms"], predicate="intersects"),
         how="difference",
     )
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     print("-" * 60)
     print("Exclude shipwrecks...")
@@ -700,7 +686,7 @@ def generate_caverns_with_constraints(
         gpd.sjoin(cavern_df, exclusions["shipwrecks"], predicate="intersects"),
         how="difference",
     )
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     print("-" * 60)
     print("Exclude frequent shipping routes...")
@@ -708,7 +694,7 @@ def generate_caverns_with_constraints(
         gpd.sjoin(cavern_df, exclusions["shipping"], predicate="intersects"),
         how="difference",
     )
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     print("-" * 60)
     print("Exclude subsea cables...")
@@ -716,7 +702,7 @@ def generate_caverns_with_constraints(
         gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
         how="difference",
     )
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     print("-" * 60)
     print("Exclude salt formation edges...")
@@ -732,7 +718,7 @@ def generate_caverns_with_constraints(
             how="difference",
         )
     cavern_df = pd.concat(cavern_dict.values())
-    print("Number of potential caverns:", len(cavern_df))
+    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     # get excluded caverns
     caverns_excl = cavern_all.overlay(
@@ -749,7 +735,7 @@ def label_caverns(
     depths: dict[str, float],
     roof_thickness: float = 80,
     floor_thickness: float = 10,
-):
+) -> gpd.GeoDataFrame:
     """
     Label cavern dataframe by height and depth
     """
@@ -789,5 +775,9 @@ def label_caverns(
         f"{depths['max_opt']:,} - {depths['max']:,}",
     ]
     cavern_df["depth"] = np.select(conditions, choices)
+
+    # create columns for the cavern heights and top depths
+    cavern_df["cavern_height"] = cavern_df["height"].astype(int)
+    cavern_df["cavern_depth"] = cavern_df["TopDepth"] + roof_thickness
 
     return cavern_df

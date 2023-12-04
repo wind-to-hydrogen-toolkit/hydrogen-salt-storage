@@ -20,6 +20,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from pyfluids import Fluid, FluidsList, Input
 
 from src import functions as fns
+from src import capacity as cap
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -36,7 +37,11 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # 500 m buffer - suggested in draft OREDP II p. 108
 wells, wells_b = fns.constraint_exploration_well(
-    data_path=os.path.join("data", "exploration-wells-irish-offshore")
+    data_path=os.path.join(
+        "data",
+        "exploration-wells-irish-offshore",
+        "Exploration_Wells_Irish_Offshore.shapezip.zip",
+    )
 )
 
 # ### Wind farms
@@ -44,7 +49,11 @@ wells, wells_b = fns.constraint_exploration_well(
 # the shapes are used as is without a buffer - suggested for renewable energy
 # test site areas in draft OREDP II p. 109
 wind_farms = fns.constraint_wind_farm(
-    data_path=os.path.join("data", "wind-farms-foreshore-process"),
+    data_path=os.path.join(
+        "data",
+        "wind-farms-foreshore-process",
+        "wind-farms-foreshore-process.zip",
+    ),
     dat_extent=extent,
 )
 
@@ -52,21 +61,27 @@ wind_farms = fns.constraint_wind_farm(
 
 # 1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 shipping, shipping_b = fns.constraint_shipping_routes(
-    data_path=os.path.join("data", "shipping"), dat_extent=extent
+    data_path=os.path.join(
+        "data", "shipping", "shipping_frequently_used_routes.zip"
+    ),
+    dat_extent=extent,
 )
 
 # ### Shipwrecks
 
 # Archaeological Exclusion Zones recommendation - 100 m buffer
 shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
-    data_path=os.path.join("data", "heritage"), dat_extent=extent
+    data_path=os.path.join(
+        "data", "heritage", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+    ),
+    dat_extent=extent,
 )
 
 # ### Subsea cables
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
 cables, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "kis-orca")
+    data_path=os.path.join("data", "kis-orca", "KIS-ORCA.gpkg")
 )
 
 # ### Distance from salt formation edge
@@ -132,7 +147,7 @@ buffer = buffer.overlay(land, how="difference")
 # ## Maps
 
 
-def plot_map(dat_xr, var, stat):
+def plot_map(dat_xr):
     """
     Helper function to plot halite layer and caverns within the zones of
     interest
@@ -142,21 +157,21 @@ def plot_map(dat_xr, var, stat):
     plt.figure(figsize=(12, 8))
     axis = plt.axes(projection=ccrs.epsg(fns.CRS))
 
-    # configure colour bar based on variable
-    if var == "TopTWT":
-        units = "ms"
-    else:
-        units = "m"
-    cbar_label = f"{dat_xr[var].attrs['long_name']} [{units}]"
-    if stat == "max":
-        plot_data = dat_xr.max(dim="halite", skipna=True)
-        cbar_label = f"Maximum Halite {cbar_label}"
-    elif stat == "min":
-        plot_data = dat_xr.min(dim="halite", skipna=True)
-        cbar_label = f"Minimum Halite {cbar_label}"
-    elif stat == "mean":
-        plot_data = dat_xr.mean(dim="halite", skipna=True)
-        cbar_label = f"Mean Halite {cbar_label}"
+    # # configure colour bar based on variable
+    # if var == "TopTWT":
+    #     units = "ms"
+    # else:
+    #     units = "m"
+    # cbar_label = f"{dat_xr[var].attrs['long_name']} [{units}]"
+    # if stat == "max":
+    #     plot_data = dat_xr.max(dim="halite", skipna=True)
+    #     cbar_label = f"Maximum Halite {cbar_label}"
+    # elif stat == "min":
+    #     plot_data = dat_xr.min(dim="halite", skipna=True)
+    #     cbar_label = f"Minimum Halite {cbar_label}"
+    # elif stat == "mean":
+    #     plot_data = dat_xr.mean(dim="halite", skipna=True)
+    #     cbar_label = f"Mean Halite {cbar_label}"
 
     # # plot halite data
     # plot_data[var].plot.contourf(
@@ -253,7 +268,7 @@ def plot_map(dat_xr, var, stat):
     plt.show()
 
 
-plot_map(ds, "Thickness", "max")
+plot_map(ds)
 
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf):
@@ -467,28 +482,75 @@ s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
 s["%"] = s["geometry"] / len(caverns) * 100
 s
 
-# ## Volume
+# ## Capacity
 
 importlib.reload(fns)
 
-caverns["cavern_height"] = caverns["height"].astype(int)
+importlib.reload(cap)
 
-caverns["cavern_volume"] = caverns["cavern_height"].apply(
-    fns.cavern_volume, diameter=80, theta=20
-)
+# ### Volume
 
-caverns.head()
+caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
 
 caverns["cavern_volume"].unique()
 
-hydrogen = Fluid(FluidsList.Hydrogen).with_state(
-    Input.pressure(100e3), Input.temperature(20)
+# ### Mid-point temperature
+
+caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
+    height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
 )
 
-hydrogen.density
+caverns[["t_mid_point"]].describe()
 
-rho_approx = (
-    (2.01588 / 1000)
-    / (hydrogen.compressibility * 8.314 * (20 + 273.15))
-    * 100e3
+# ### Operating pressure
+
+(
+    caverns["p_operating_min"],
+    caverns["p_operating_max"],
+) = cap.pressure_operating(thickness_overburden=caverns["TopDepth"])
+
+caverns[["p_operating_min", "p_operating_max"]].describe()
+
+# ### Hydrogen gas density
+
+caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
+    p_operating_min=caverns["p_operating_min"],
+    p_operating_max=caverns["p_operating_max"],
+    t_mid_point=caverns["t_mid_point"],
 )
+
+caverns[["rho_min", "rho_max"]].describe()
+
+# ### Working mass of hydrogen
+
+caverns["working_mass"] = cap.mass_hydrogen_working(
+    rho_h2_min=caverns["rho_min"],
+    rho_h2_max=caverns["rho_max"],
+    v_cavern=caverns["cavern_volume"],
+)
+
+caverns[["working_mass"]].describe()
+
+# ### Energy storage capacity in GWh
+
+caverns["capacity"] = cap.energy_storage_capacity(
+    m_working=caverns["working_mass"]
+)
+
+caverns[["capacity"]].describe()
+
+# total capacity
+caverns[["capacity"]].sum()
+
+# total capacity for caverns in optimal depth
+caverns[caverns["depth"] == "1,000 - 1,500"][["capacity"]].sum()
+
+# total capacity for caverns in optimal depth and at 311 m height
+caverns[(caverns["depth"] == "1,000 - 1,500") & (caverns["height"] == "311")][
+    ["capacity"]
+].sum()
+
+# total capacity for caverns in optimal depth and at 155 m height
+caverns[(caverns["depth"] == "1,000 - 1,500") & (caverns["height"] == "155")][
+    ["capacity"]
+].sum()
