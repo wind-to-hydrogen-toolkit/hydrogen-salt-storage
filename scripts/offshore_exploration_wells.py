@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Exploration Wells in the Irish Offshore
-# 
+#
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
 
 import os
@@ -77,4 +77,3 @@ plt.title("Exploration Wells in the Irish Offshore (1970-2019)")
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
-

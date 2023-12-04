@@ -24,14 +24,9 @@ from src import functions as fns
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-CRS = 23029
-
 # ## Halite data
 
-# data directory
-DATA_DIR = os.path.join("data", "kish-basin")
-
-ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
+ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -39,121 +34,44 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # ### Exploration wells
 
-DATA_DIR = os.path.join(
-    "data",
-    "exploration-wells-irish-offshore",
-    "Exploration_Wells_Irish_Offshore.shapezip.zip",
-)
-
-wells = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-    )
-)
-
-wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
-
 # 500 m buffer - suggested in draft OREDP II p. 108
-wells_b = gpd.GeoDataFrame(geometry=wells.buffer(500))
+wells, wells_b = fns.constraint_exploration_well(
+    data_path=os.path.join("data", "exploration-wells-irish-offshore")
+)
 
 # ### Wind farms
 
-DATA_DIR = os.path.join(
-    "data", "wind-farms-foreshore-process", "wind-farms-foreshore-process.zip"
-)
-
-wind_farms = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-    )
-)
-
-# wind farms near Kish Basin
 # the shapes are used as is without a buffer - suggested for renewable energy
 # test site areas in draft OREDP II p. 109
-wind_farms = (
-    wind_farms.to_crs(CRS)
-    .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
-    .reset_index()
-    .sort_values("Name")
+wind_farms = fns.constraint_wind_farm(
+    data_path=os.path.join("data", "wind-farms-foreshore-process"),
+    dat_extent=extent,
 )
-
-wind_farms.drop(columns=["index_right"], inplace=True)
 
 # ### Frequent shipping routes
 
-DATA_DIR = os.path.join(
-    "data", "shipping", "shipping_frequently_used_routes.zip"
+# 1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
+shipping, shipping_b = fns.constraint_shipping_routes(
+    data_path=os.path.join("data", "shipping"), dat_extent=extent
 )
-
-shipping = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-    )
-)
-
-shipping = (
-    shipping.to_crs(CRS)
-    .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
-    .reset_index()
-)
-
-shipping.drop(columns=["index_right"], inplace=True)
-
-# routes near Kish Basin
-# 1NM (1,852 m) buffer - suggested in draft OREDP II p. 108
-shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(1852)).dissolve()
 
 # ### Shipwrecks
 
-DATA_DIR = os.path.join(
-    "data", "heritage", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+# Archaeological Exclusion Zones recommendation - 100 m buffer
+shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
+    data_path=os.path.join("data", "heritage"), dat_extent=extent
 )
-
-shipwrecks = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
-    )
-)
-
-shipwrecks = (
-    shipwrecks.to_crs(CRS)
-    .sjoin(gpd.GeoDataFrame(geometry=extent.buffer(3000)))
-    .reset_index()
-)
-
-shipwrecks.drop(columns=["index_right"], inplace=True)
-
-# Archaeological Exclusion Zones recommendation
-shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(100))
 
 # ### Subsea cables
 
-DATA_DIR = os.path.join("data", "kis-orca", "KIS-ORCA.gpkg")
-
-cables = gpd.read_file(DATA_DIR)
-
-cables = cables.to_crs(CRS)
-
-# remove point features
-cables = cables.drop(range(3)).reset_index(drop=True)
-
 # 750 m buffer - suggested in draft OREDP II p. 109-111
-cables_b = gpd.GeoDataFrame(geometry=cables.buffer(750)).dissolve()
+cables, cables_b = fns.constraint_subsea_cables(
+    data_path=os.path.join("data", "kis-orca")
+)
 
 # ### Distance from salt formation edge
 
-buffer_edge = {}
-for halite in ds.halite.values:
-    buffer_edge[halite] = fns.halite_shape(dat_xr=ds, halite=halite)
-    # 3 times the cavern diameter
-    buffer_edge[halite] = gpd.GeoDataFrame(
-        geometry=buffer_edge[halite].boundary.buffer(3 * 80)
-    ).overlay(buffer_edge[halite], how="intersection")
+edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 # ## Zones of interest
 
@@ -165,108 +83,39 @@ zones, zds = fns.zones_of_interest(
 
 # ## Generate caverns
 
-def generate_caverns_with_constraints(zones_gdf, zones_ds, diameter):
-    """
-    Add constraints to cavern configuration
-    """
-
-    print("Without constraints...")
-    cavern_df = fns.generate_caverns_hexagonal_grid(
-        dat_extent=extent, zones_df=zones_gdf, diameter=diameter
-    )
-    cavern_df = fns.cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
-
-    print("-" * 60)
-    print("Exclude exploration wells...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, wells_b, predicate="intersects"), how="difference"
-    )
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude wind farms...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, wind_farms, predicate="intersects"),
-        how="difference",
-    )
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude shipwrecks...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, shipwrecks_b, predicate="intersects"),
-        how="difference",
-    )
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude frequent shipping routes...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, shipping_b, predicate="intersects"),
-        how="difference",
-    )
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude subsea cables...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, cables_b, predicate="intersects"),
-        how="difference",
-    )
-    print("Number of potential caverns:", len(cavern_df))
-
-    print("-" * 60)
-    print("Exclude salt formation edges...")
-    cavern_dict = {}
-    for h in cavern_df["halite"].unique():
-        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
-        cavern_dict[h] = cavern_dict[h].overlay(
-            gpd.sjoin(cavern_dict[h], buffer_edge[h], predicate="intersects"),
-            how="difference",
-        )
-    cavern_df = pd.concat(cavern_dict.values())
-    print("Number of potential caverns:", len(cavern_df))
-
-    return cavern_df
-
-caverns = generate_caverns_with_constraints(zones, zds, 80)
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "wells": wells_b,
+        "wind_farms": wind_farms,
+        "shipwrecks": shipwrecks_b,
+        "shipping": shipping_b,
+        "cables": cables_b,
+        "edge": edge_buffer,
+    },
+)
 
 caverns.describe()[["Thickness", "TopDepth"]]
 
-# label caverns by height
-conditions = [
-    (caverns["Thickness"] < (155 + 90)),
-    (caverns["Thickness"] >= (155 + 90)) & (caverns["Thickness"] < (311 + 90)),
-    (caverns["Thickness"] >= (311 + 90)),
-]
-choices = ["85", "155", "311"]
-caverns["height"] = np.select(conditions, choices)
-
-# label caverns by depth
-conditions = [
-    (caverns["TopDepth"] < (1000 - 80)),
-    (caverns["TopDepth"] >= (1000 - 80))
-    & (caverns["TopDepth"] <= (1500 - 80)),
-    (caverns["TopDepth"] > (1500 - 80)),
-]
-choices = ["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"]
-caverns["depth"] = np.select(conditions, choices)
+# label caverns by height and depth
+caverns = fns.label_caverns(
+    cavern_df=caverns,
+    heights=[85, 155, 311],
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
 
 # ## Crop data layers
 
 # land boundary
-DATA_DIR = os.path.join(
-    "data", "boundaries", "osi-provinces-ungeneralised-2019.zip"
-)
-
-land = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_DIR}!"
-        + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][0]
+land = fns.read_shapefile_from_zip(
+    data_path=os.path.join(
+        "data", "boundaries", "osi-provinces-ungeneralised-2019.zip"
     )
 )
 
-land = land.dissolve().to_crs(CRS)
+land = land.dissolve().to_crs(fns.CRS)
 
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
@@ -282,6 +131,7 @@ buffer = buffer.overlay(land, how="difference")
 
 # ## Maps
 
+
 def plot_map(dat_xr, var, stat):
     """
     Helper function to plot halite layer and caverns within the zones of
@@ -290,7 +140,7 @@ def plot_map(dat_xr, var, stat):
 
     # initialise figure
     plt.figure(figsize=(12, 8))
-    axis = plt.axes(projection=ccrs.epsg(CRS))
+    axis = plt.axes(projection=ccrs.epsg(fns.CRS))
 
     # configure colour bar based on variable
     if var == "TopTWT":
@@ -338,7 +188,7 @@ def plot_map(dat_xr, var, stat):
         mpatches.Patch(
             facecolor="none",
             linewidth=2,
-            label="Halite boundary",
+            label="Kish Basin boundary",
             edgecolor=sns.color_palette("flare", 4)[-2],
         )
     )
@@ -385,7 +235,7 @@ def plot_map(dat_xr, var, stat):
         )
 
     # add basemap and map elements
-    cx.add_basemap(axis, crs=CRS, source=cx.providers.CartoDB.Voyager)
+    cx.add_basemap(axis, crs=fns.CRS, source=cx.providers.CartoDB.Voyager)
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -402,7 +252,9 @@ def plot_map(dat_xr, var, stat):
     plt.tight_layout()
     plt.show()
 
+
 plot_map(ds, "Thickness", "max")
+
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     """
@@ -410,7 +262,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     """
 
     plt.figure(figsize=(14, 10))
-    axis = plt.axes(projection=ccrs.epsg(CRS))
+    axis = plt.axes(projection=ccrs.epsg(fns.CRS))
     legend_handles = []
 
     # halite boundary - use buffering to smooth the outline
@@ -428,7 +280,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
             facecolor="none",
             linewidth=2,
             edgecolor="darkslategrey",
-            label="Halite boundary",
+            label="Kish Basin boundary",
             alpha=0.5,
         )
     )
@@ -529,7 +381,9 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     plt.xlim(shape.bounds["minx"][0] - 1000, shape.bounds["maxx"][0] + 1000)
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
-    cx.add_basemap(axis, crs=CRS, source=cx.providers.CartoDB.VoyagerNoLabels)
+    cx.add_basemap(
+        axis, crs=fns.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
+    )
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -544,6 +398,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
 
     plt.tight_layout()
     plt.show()
+
 
 plot_map_alt(ds, caverns, zones)
 
@@ -637,4 +492,3 @@ rho_approx = (
     / (hydrogen.compressibility * 8.314 * (20 + 273.15))
     * 100e3
 )
-

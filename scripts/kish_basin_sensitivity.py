@@ -27,6 +27,7 @@ ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 # ## Stats
 
+
 def make_stats_plots(dat_xr, show_plots=True):
     """
     Statistical plots for the halite Xarray dataset
@@ -108,6 +109,7 @@ def make_stats_plots(dat_xr, show_plots=True):
 
     return dat_df
 
+
 df = make_stats_plots(ds, show_plots=False)
 
 df.describe()
@@ -118,6 +120,7 @@ shape = fns.halite_shape(dat_xr=ds)
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
 
 # ## Zones of interest
+
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
@@ -133,8 +136,9 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.tight_layout()
     plt.show()
 
+
 # ### Case 1
-# 
+#
 # height = 311 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
 # separation = 320 m
 
@@ -146,7 +150,7 @@ zones_1, zds_1 = fns.zones_of_interest(
 plot_zones_map(zones_1, extent, CRS)
 
 # ### Case 2
-# 
+#
 # height = 155 m, 1000 m <= depth <= 1,500 m, diameter = 80 m,
 # separation = 320 m
 
@@ -157,7 +161,7 @@ zones_2, zds_2 = fns.zones_of_interest(
 plot_zones_map(zones_2, extent, CRS)
 
 # ### Case 3
-# 
+#
 # height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
 # separation = 320 m
 
@@ -188,9 +192,10 @@ zdf_3 = make_stats_plots(zds_3)
 zdf_3.describe()
 
 # ## Sensitivity analysis
-# 
+#
 # Sensitivity of maximum halite area (i.e. zones of interest) available for
 # cavern construction (without constraints) to depth and thickness
+
 
 def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
     sdf = {}
@@ -276,6 +281,7 @@ def sensitivity(zones_gdf, height_base, min_depth_base, max_depth_base):
 
     return sdf
 
+
 sdf = sensitivity(zones_2, 155, 750, 1750)
 
 for key in sdf.keys():
@@ -314,4 +320,3 @@ for (n, key), c in zip(
 plt.ylim(-110, 110)
 plt.tight_layout()
 plt.show()
-

@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Kish Basin Halite Data
-# 
+#
 # <https://hyss.ie/>
 
 import glob
@@ -99,6 +99,7 @@ plt.show()
 
 # ## XYZ data
 
+
 def read_dat_file(dat_path: str, dat_crs):
     """
     Read XYZ data layers into an Xarray dataset
@@ -146,6 +147,7 @@ def read_dat_file(dat_path: str, dat_crs):
 
     return gdf
 
+
 ds = read_dat_file(DATA_DIR, dat_crs=CRS)
 
 ds
@@ -157,6 +159,7 @@ ds.rio.resolution()
 ds.rio.bounds()
 
 xmin, ymin, xmax, ymax = extent.total_bounds
+
 
 def plot_maps(plot_data):
     """
@@ -188,6 +191,7 @@ def plot_maps(plot_data):
         axis.set_title("\n".join(wrap(title, 34)), fontsize=10)
     plt.show()
 
+
 # ### Halite thickness
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
@@ -207,4 +211,3 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
 # ### Halite top TWT (two-way thickness)
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Millisecond" in x]))
-

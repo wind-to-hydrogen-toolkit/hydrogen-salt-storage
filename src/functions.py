@@ -1,9 +1,11 @@
 """
-Main functions used in the Jupyter Notebooks
+Functions to read and structure data used in the hydrogen salt storage
+optimisation
 """
 
 import glob
 import os
+from zipfile import ZipFile
 
 import geopandas as gpd
 import numpy as np
@@ -12,16 +14,19 @@ import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
 
+# CRS of the Kish Basin dat files
+CRS = 23029
+
 
 def read_dat_file(
-    dat_path: str, dat_crs: int = 23029
+    dat_path: str, dat_crs: int = CRS
 ) -> tuple[xr.Dataset, gpd.GeoSeries]:
     """
     Read XYZ data layers into an Xarray dataset
 
     Parameters
     ----------
-    dat_path : path to the .dat files
+    dat_path : Path to the .dat files
     dat_crs : EPSG CRS
 
     Returns
@@ -118,7 +123,7 @@ def read_dat_file(
 
 
 def halite_shape(
-    dat_xr: xr.Dataset, dat_crs: int = 23029, halite: str = None
+    dat_xr: xr.Dataset, dat_crs: int = CRS, halite: str = None
 ) -> gpd.GeoDataFrame:
     """
     Create a vector shape of the halite data
@@ -161,7 +166,7 @@ def halite_shape(
 def zones_of_interest(
     dat_xr: xr.Dataset,
     constraints: dict[str, float],
-    dat_crs: int = 23029,
+    dat_crs: int = CRS,
     roof_thickness: float = 80,
     floor_thickness: float = 10,
 ) -> tuple[gpd.GeoDataFrame, xr.Dataset]:
@@ -173,9 +178,9 @@ def zones_of_interest(
     ----------
     dat_xr : Xarray dataset of the halite data
     constraints : Dictionary containing the following:
-        - height: cavern height [m]
-        - min_depth: minimum cavern depth [m]
-        - max_depth: maximum cavern depth [m]
+        - height: Cavern height [m]
+        - min_depth: Minimum cavern depth [m]
+        - max_depth: Maximum cavern depth [m]
     dat_crs : EPSG CRS
     roof_thickness : Salt roof thickness [m]
     floor_thickness : Minimum salt floor thickness [m]
@@ -186,38 +191,17 @@ def zones_of_interest(
     - Xarray dataset of the zones of interest
     """
 
-    try:
-        zds = dat_xr.where(
+    zds = dat_xr.where(
+        (
             (
-                (
-                    dat_xr.Thickness
-                    >= constraints["height"] + roof_thickness + floor_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    >= constraints["min_depth"] - roof_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    <= constraints["max_depth"] - roof_thickness
-                )
-            ),
-            drop=True,
-        )
-    except KeyError:
-        zds = dat_xr.where(
-            (
-                (
-                    dat_xr.Thickness
-                    >= constraints["height"] + roof_thickness + floor_thickness
-                )
-                & (
-                    dat_xr.TopDepth
-                    >= constraints["min_depth"] - roof_thickness
-                )
-            ),
-            drop=True,
-        )
+                dat_xr.Thickness
+                >= constraints["height"] + roof_thickness + floor_thickness
+            )
+            & (dat_xr.TopDepth >= constraints["min_depth"] - roof_thickness)
+            & (dat_xr.TopDepth <= constraints["max_depth"] - roof_thickness)
+        ),
+        drop=True,
+    )
 
     # zones of interest polygon
     zdf = (
@@ -239,9 +223,9 @@ def zones_of_interest(
 def generate_caverns_square_grid(
     dat_extent: gpd.GeoSeries,
     zones_df: gpd.GeoDataFrame,
-    diameter: float,
-    separation: float = None,
-    dat_crs: int = 23029,
+    diameter: float = 80,
+    separation: float = 80 * 4,
+    dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
     Generate salt caverns using a regular square grid within the zones of
@@ -251,10 +235,10 @@ def generate_caverns_square_grid(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    zones_df : zones of interest
-    diameter : diameter of the cavern [m]
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    zones_df : Zones of interest
+    diameter : Diameter of the cavern [m]
+    separation : Cavern separation distance [m]
     dat_crs : EPSG CRS
 
     Returns
@@ -263,9 +247,6 @@ def generate_caverns_square_grid(
     """
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-
-    if not separation:
-        separation = diameter * 4
 
     # create the cells in a loop
     grid_cells = []
@@ -304,8 +285,8 @@ def hexgrid_init(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    separation : Cavern separation distance [m]
 
     Returns
     -------
@@ -324,9 +305,9 @@ def hexgrid_init(
 def generate_caverns_hexagonal_grid(
     dat_extent: gpd.GeoSeries,
     zones_df: gpd.GeoDataFrame,
-    diameter: float,
-    separation: float = None,
-    dat_crs: int = 23029,
+    diameter: float = 80,
+    separation: float = 80 * 4,
+    dat_crs: int = CRS,
 ) -> gpd.GeoDataFrame:
     """
     Generate caverns in a regular hexagonal grid as proposed by Williams
@@ -336,19 +317,16 @@ def generate_caverns_hexagonal_grid(
 
     Parameters
     ----------
-    dat_extent : extent of the data
-    zones_df : zones of interest
-    diameter : diameter of the cavern [m]
-    separation : cavern separation distance [m]
+    dat_extent : Extent of the data
+    zones_df : Zones of interest
+    diameter : Diameter of the cavern [m]
+    separation : Cavern separation distance [m]
     dat_crs : EPSG CRS
 
     Returns
     -------
     - A polygon geodataframe of potential caverns
     """
-
-    if not separation:
-        separation = diameter * 4
 
     a, cols, rows = hexgrid_init(dat_extent=dat_extent, separation=separation)
 
@@ -406,10 +384,10 @@ def generate_caverns_hexagonal_grid(
 
 
 def cavern_dataframe(
-    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int = 23029
+    dat_zone: xr.Dataset, cavern_df: gpd.GeoDataFrame, dat_crs: int = CRS
 ) -> gpd.GeoDataFrame:
     """
-    Merge halite data for each cavern location
+    Merge halite data for each cavern location and create a dataframe
 
     Parameters
     ----------
@@ -452,196 +430,364 @@ def cavern_dataframe(
     return cavern_df
 
 
-def constraint_exploration_well(data_path: str):
-    DATA_DIR = os.path.join(
-        data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
-    )
+def read_shapefile_from_zip(data_path: str) -> gpd.GeoDataFrame:
+    """
+    Read the shapefile layer from a Zipfile
 
-    wells = gpd.read_file(
+    Parameters
+    ----------
+    data_path : Path to the exploration well Zip file
+
+    Returns
+    -------
+    - Geodataframe of the shapefile data
+    """
+
+    data_shp = gpd.read_file(
         os.path.join(
-            f"zip://{DATA_DIR}!"
-            + [x for x in ZipFile(DATA_DIR).namelist() if x.endswith(".shp")][
+            f"zip://{data_path}!"
+            + [x for x in ZipFile(data_path).namelist() if x.endswith(".shp")][
                 0
             ]
         )
     )
 
-    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
+    return data_shp
 
-    # 500 m buffer - suggested in draft OREDP II p. 108
-    wells_b = gpd.GeoDataFrame(geometry=wells.buffer(500))
+
+def constraint_exploration_well(
+    data_path: str, dat_crs: int = CRS, buffer: float = 500
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read exploration well data and generate constraint.
+    500 m buffer - suggested in draft OREDP II p. 108.
+
+    Parameters
+    ----------
+    data_path : Path to the Zip file
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    wells = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "Exploration_Wells_Irish_Offshore.shapezip.zip"
+        )
+    )
+
+    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(dat_crs)
+
+    wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
 
     return wells, wells_b
 
 
-def cavern_volume(height: float, diameter: float, theta: float) -> float:
+def constraint_wind_farm(
+    data_path: str, dat_extent: gpd.GeoSeries, dat_crs: int = CRS
+) -> gpd.GeoDataFrame:
     """
-    Calculate the cavern volume. See Williams et al. (2022), eq. (1) and
-    Jannel and Torquet (2022).
-
-    - v_cavern = v_cylinder + 2 * v_cone
-    - v_cylinder = pi * r^2 * h_cylinder = pi * r^2 * (h_cavern - 2 * h_cone)
-    - v_cone = pi * r^2 * h_cone / 3 = pi * r^2 * (r * tan(theta)) / 3
-    - v_cavern = pi * r^2 * (h_cavern - 4 / 3 * r * tan(theta))
-    - v_cavern_corrected = v_cavern * scf * (1 - if * insf * bf)
+    Read data for wind farms.
+    The shapes are used as is without a buffer - suggested for renewable
+    energy test site areas in draft OREDP II p. 109.
 
     Parameters
     ----------
-    height : Cavern height [m]
-    diameter : Cavern diameter [m]
-    theta : Cavern roof angle [deg]
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
 
     Returns
     -------
-    - Corrected cavern volume [m3]
+    - Geodataframes of the dataset
     """
 
-    # calculate ideal cavern volume
-    r = diameter / 2
-    v_cavern = (
-        np.pi * np.square(r) * (height - 4 / 3 * r * np.tan(np.deg2rad(theta)))
+    wind_farms = read_shapefile_from_zip(
+        data_path=os.path.join(data_path, "wind-farms-foreshore-process.zip")
     )
 
-    # apply correction factors
-    v_cavern = v_cavern * 0.7 * (1 - 0.25 * 0.865 * 1.46)
-
-    return v_cavern
-
-
-def temperature_cavern_mid_point(
-    height: float, depth_top: float, t_0: float = 10, t_delta: float = 27
-) -> float:
-    """
-    Volume of stored hydrogen gas. See Williams et al. (2022), eq. (2).
-
-    Parameters
-    ----------
-    height : Cavern height [m]
-    t_0 : Mean annual surface temperature [deg C]
-    t_delta : Geothermal gradient; change in temperature with depth
-        [deg C / km]
-    depth_top : Cavern top depth [m]
-
-    Returns
-    -------
-    - Mid point temperature [deg C]
-    """
-
-    return t_0 + t_delta / 1000 * (depth_top + height / 2)
-
-
-def pressure_operating(
-    thickness_overburden,
-    rho_overburden: float = 2400,
-    rho_salt: float = 2200,
-    minf: float = 0.3,
-    maxf: float = 0.8,
-) -> tuple[float, float]:
-    """
-    Volume of stored hydrogen gas. See Williams et al. (2022), eq. (3) and (4).
-
-    Parameters
-    ----------
-    thickness_overburden : Overburden thickness / halite top depth [m]
-    rho_overburden : Density of the overburden [kg m-3]
-    rho_salt : Density of the halite [kg m-3]
-    minf : Factor of lithostatic pressure for the minimum operating pressure
-    maxf : Factor of lithostatic pressure for the maximum operating pressure
-
-    Returns
-    -------
-    - Operating pressures [Pa]
-    """
-
-    # lithostatic pressure at the casing shoe
-    # thickness of the overburden is the same as the depth to top of salt
-    # thickness of salt above casing shoe = 50 m
-    # acceleration due to gravity = 9.81
-    p_casing = (rho_overburden * thickness_overburden + rho_salt * 50) * 9.81
-
-    p_operating_min = minf * p_casing
-    p_operating_max = maxf * p_casing
-
-    return p_operating_min, p_operating_max
-
-
-def density_hydrogen_gas(
-    p_operating_min: float,
-    p_operating_max: float,
-    t_mid_point: float,
-    compressibility_factor: float = 1.05,
-) -> tuple[float, float]:
-    """
-    Density of hydrogen at cavern conditions. See Williams et al. (2022),
-    s. 3.4.2 and Caglayan et al. (2020), eq. (3).
-
-    http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html
-
-    rho = p * m / (z * r * t)
-    where p: pressure [Pa], m: molar mass of hydrogen gas [kg mol-1], z:
-    compressibility factor, r: universal gas constant [J K-1 mol-1], t:
-    temperature [K]
-
-    Parameters
-    ----------
-    compressibility_factor : compressibility factor
-    p_operating_min : Minimum operating pressure [Pa]
-    p_operating_max : Maximum operating pressure [Pa]
-    t_mid_point : Mid point temperature [deg C]
-
-    Returns
-    -------
-    - Hydrogen gas density [kg m-3]
-    """
-
-    # rho / p = m / (z * r * t)
-    rho_p = (2.01588 / 1000) / (
-        compressibility_factor * 8.314 * (t_mid_point + 273.15)
+    # keep only features near Kish Basin
+    wind_farms = (
+        wind_farms.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+        .sort_values("Name")
     )
 
-    rho_h2_min = p_operating_min * rho_p
-    rho_h2_max = p_operating_max * rho_p
+    wind_farms.drop(columns=["index_right"], inplace=True)
 
-    return rho_h2_min, rho_h2_max
+    return wind_farms
 
 
-def mass_hydrogen_working(
-    rho_h2_min: float, rho_h2_max: float, v_cavern: float
-) -> float:
+def constraint_shipping_routes(
+    data_path: str,
+    dat_extent: gpd.GeoSeries,
+    dat_crs: int = CRS,
+    buffer: float = 1852,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    The working mass of hydrogen in kg. See Williams et al. (2022), eq. (5)
-    and (6).
+    Read frequent shipping route data and generate constraint.
+    1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 
     Parameters
     ----------
-    rho_h2_min : Minimum hydrogen density [kg m-3]
-    rho_h2_max : Maximum hydrogen density [kg m-3]
-    v_cavern : Cavern volume [m3]
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
 
     Returns
     -------
-    - Working mass of hydrogen [kg]
+    - Geodataframes of the dataset and buffer
     """
 
-    # stored mass of hydrogen at min and max operating pressures
-    m_min_operating = rho_h2_min * v_cavern
-    m_max_operating = rho_h2_max * v_cavern
+    shipping = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "shipping_frequently_used_routes.zip"
+        )
+    )
 
-    return m_max_operating - m_min_operating
+    # keep only features near Kish Basin
+    shipping = (
+        shipping.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+    )
+
+    shipping.drop(columns=["index_right"], inplace=True)
+
+    shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(buffer)).dissolve()
+
+    return shipping, shipping_b
 
 
-def energy_storage_capacity(m_working: float, lhv: float = 119.96) -> float:
+def constraint_shipwrecks(
+    data_path: str,
+    dat_extent: gpd.GeoSeries,
+    dat_crs: int = CRS,
+    buffer: float = 100,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    Cavern energy storage capacity in GWh. See Williams et al. (2022), eq. (7).
+    Read shipwreck data and generate constraint.
+    Archaeological Exclusion Zones recommendation - 100 m buffer.
 
     Parameters
     ----------
-    m_working : Working mass of hydrogen [kg]
-    lhv : Lower heating value of hydrogen [MJ kg-1]
+    data_path : Path to the Zip file
+    dat_extent : Extent of the data
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
 
     Returns
     -------
-    - Energy storage capacity of cavern [GWh]
+    - Geodataframes of the dataset and buffer
     """
 
-    return m_working * lhv / 3.6e6
+    shipwrecks = read_shapefile_from_zip(
+        data_path=os.path.join(
+            data_path, "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+        )
+    )
+
+    # keep only features near Kish Basin
+    shipwrecks = (
+        shipwrecks.to_crs(dat_crs)
+        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+        .reset_index()
+    )
+
+    shipwrecks.drop(columns=["index_right"], inplace=True)
+
+    # Archaeological Exclusion Zones recommendation
+    shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(buffer))
+
+    return shipwrecks, shipwrecks_b
+
+
+def constraint_subsea_cables(
+    data_path: str, dat_crs: int = CRS, buffer: float = 750
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Read subsea cable data and generate constraint.
+    750 m buffer - suggested in draft OREDP II p. 109-111.
+
+    Parameters
+    ----------
+    data_path : Path to the GPKG file
+    dat_crs : EPSG CRS
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    cables = gpd.read_file(os.path.join(data_path, "KIS-ORCA.gpkg"))
+
+    cables = cables.to_crs(dat_crs)
+
+    # remove point features
+    cables = cables.drop(range(3)).reset_index(drop=True)
+
+    cables_b = gpd.GeoDataFrame(geometry=cables.buffer(buffer)).dissolve()
+
+    return cables, cables_b
+
+
+def constraint_halite_edge(
+    dat_xr: xr.Dataset, buffer: float = 80 * 3
+) -> dict[str, gpd.GeoDataFrame]:
+    """
+    3 times the cavern diameter, i.e. the pillar width
+    """
+
+    buffer_edge = {}
+    for halite in dat_xr.halite.values:
+        buffer_edge[halite] = halite_shape(dat_xr=dat_xr, halite=halite)
+        buffer_edge[halite] = gpd.GeoDataFrame(
+            geometry=buffer_edge[halite].boundary.buffer(buffer)
+        ).overlay(buffer_edge[halite], how="intersection")
+
+    return buffer_edge
+
+
+def generate_caverns_with_constraints(
+    zones_gdf: gpd.GeoDataFrame,
+    zones_ds: xr.Dataset,
+    dat_extent: gpd.GeoSeries,
+    exclusions: dict[str, gpd.GeoDataFrame],
+    diameter: float = 80,
+    separation: float = 80 * 4,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Add constraints to cavern configuration
+    """
+
+    print("Without constraints...")
+    cavern_df = generate_caverns_hexagonal_grid(
+        dat_extent=dat_extent,
+        zones_df=zones_gdf,
+        diameter=diameter,
+        separation=separation,
+    )
+    cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
+
+    # keep original
+    cavern_all = cavern_df.copy()
+
+    print("-" * 60)
+    print("Exclude exploration wells...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude wind farms...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["wind_farms"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude shipwrecks...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["shipwrecks"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude frequent shipping routes...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["shipping"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude subsea cables...")
+    cavern_df = cavern_df.overlay(
+        gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
+        how="difference",
+    )
+    print("Number of potential caverns:", len(cavern_df))
+
+    print("-" * 60)
+    print("Exclude salt formation edges...")
+    cavern_dict = {}
+    for h in cavern_df["halite"].unique():
+        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
+        cavern_dict[h] = cavern_dict[h].overlay(
+            gpd.sjoin(
+                cavern_dict[h],
+                exclusions["edge"][h],
+                predicate="intersects",
+            ),
+            how="difference",
+        )
+    cavern_df = pd.concat(cavern_dict.values())
+    print("Number of potential caverns:", len(cavern_df))
+
+    # get excluded caverns
+    caverns_excl = cavern_all.overlay(
+        gpd.sjoin(cavern_all, cavern_df, predicate="intersects"),
+        how="difference",
+    )
+
+    return cavern_df, caverns_excl
+
+
+def label_caverns(
+    cavern_df: gpd.GeoDataFrame,
+    heights: list[float],
+    depths: dict[str, float],
+    roof_thickness: float = 80,
+    floor_thickness: float = 10,
+):
+    """
+    Label cavern dataframe by height and depth
+    """
+
+    # label caverns by height
+    conditions = [
+        (
+            cavern_df["Thickness"]
+            < (heights[1] + roof_thickness + floor_thickness)
+        ),
+        (
+            cavern_df["Thickness"]
+            >= (heights[1] + roof_thickness + floor_thickness)
+        )
+        & (
+            cavern_df["Thickness"]
+            < (heights[2] + roof_thickness + floor_thickness)
+        ),
+        (
+            cavern_df["Thickness"]
+            >= (heights[2] + roof_thickness + floor_thickness)
+        ),
+    ]
+    choices = [str(x) for x in heights]
+    cavern_df["height"] = np.select(conditions, choices)
+
+    # label caverns by depth
+    conditions = [
+        (cavern_df["TopDepth"] < (depths["min_opt"] - roof_thickness)),
+        (cavern_df["TopDepth"] >= (depths["min_opt"] - roof_thickness))
+        & (cavern_df["TopDepth"] <= (depths["max_opt"] - roof_thickness)),
+        (cavern_df["TopDepth"] > (depths["max_opt"] - roof_thickness)),
+    ]
+    choices = [
+        f"{depths['min']:,} - {depths['min_opt']:,}",
+        f"{depths['min_opt']:,} - {depths['max_opt']:,}",
+        f"{depths['max_opt']:,} - {depths['max']:,}",
+    ]
+    cavern_df["depth"] = np.select(conditions, choices)
+
+    return cavern_df

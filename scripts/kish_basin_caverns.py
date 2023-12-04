@@ -26,6 +26,7 @@ ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
 
 # ## Zones of interest
 
+
 def plot_zones_map(zdf, dat_extent, dat_crs):
     """
     Plot zones of interest
@@ -44,6 +45,7 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.tight_layout()
     plt.show()
 
+
 # height = 311 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
     dat_xr=ds, constraints={"height": 311, "min_depth": 500, "max_depth": 2000}
@@ -52,6 +54,7 @@ zones, _ = fns.zones_of_interest(
 plot_zones_map(zones, extent, CRS)
 
 # ## Generate potential salt cavern locations
+
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     """
@@ -118,6 +121,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.tight_layout()
     plt.show()
 
+
 # ### Cavern calculations in a regular square grid
 
 # diameter = 80 m, separation = 320 m
@@ -134,4 +138,3 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
-

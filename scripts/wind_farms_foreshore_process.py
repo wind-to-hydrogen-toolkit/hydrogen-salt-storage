@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Wind Farms (Foreshore Process)
-# 
+#
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
 import os
@@ -243,4 +243,3 @@ for i in range(len(wind_farms_)):
         .values[0],
         "m away from Kish Bank",
     )
-
