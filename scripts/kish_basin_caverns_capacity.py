@@ -18,6 +18,7 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 from pyfluids import Fluid, FluidsList, Input
+import matplotlib as mpl
 
 from src import functions as fns
 from src import capacity as cap
@@ -194,35 +195,33 @@ s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
-sns.histplot(
-    caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
-        "TopDepth"
-    ),
-    x="capacity",
-    hue="Cavern top depth [m]",
-    palette="rocket",
-    bins=20,
-    multiple="stack",
-    alpha=1,
+sns.barplot(
+    s.groupby("height").sum(),
+    x="height",
+    y="capacity",
+    edgecolor="black",
     ax=axes[0],
+    order=["85", "155", "311"],
+    color=sns.color_palette("rocket", 256)[127],
+    errorbar=None,
 )
-sns.histplot(
-    caverns.rename(columns={"depth": "Cavern height [m]"}).sort_values(
-        "Thickness"
-    ),
-    x="capacity",
-    hue="Cavern height [m]",
-    palette="rocket",
-    bins=20,
-    multiple="stack",
-    alpha=1,
+sns.barplot(
+    s.groupby("depth").sum(),
+    x="depth",
+    y="capacity",
+    edgecolor="black",
     ax=axes[1],
+    order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
+    color=sns.color_palette("rocket", 256)[127],
+    errorbar=None,
 )
+axes[0].set_xlabel("Cavern height [m]")
+axes[1].set_xlabel("Cavern top depth [m]")
 axes[0].grid(which="major", axis="y")
 axes[1].grid(which="major", axis="y")
+axes[0].set_ylabel("Hydrogen storage capacity [GWh]")
+axes[0].yaxis.set_major_formatter(mpl.ticker.StrMethodFormatter("{x:,.0f}"))
 sns.despine()
-axes[0].set_xlabel("Hydrogen storage capacity [GWh]")
-axes[1].set_xlabel("Hydrogen storage capacity [GWh]")
 plt.tight_layout()
 plt.show()
 
@@ -232,12 +231,12 @@ plt.show()
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-def plot_map_alt(dat_xr, cavern_df, zones_gdf):
+def plot_map_alt(dat_xr, cavern_df, zones_gdf, class_int):
     """
     Helper function to plot caverns within the zones of interest
     """
 
-    plt.figure(figsize=(14, 10))
+    plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(fns.CRS))
     legend_handles = []
 
@@ -309,9 +308,15 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     )
 
     for x, y, z in zip(
-        [0 + 40 * n for n in range(5)],
+        [0 + class_int * n for n in range(5)],
         [0] + [int(256 / 4) + int(256 / 4) * n - 1 for n in range(4)],
-        ["< 40", "40 - 80", "80 - 120", "120 - 160", "≥ 160"],
+        [
+            f"< {class_int}",
+            f"{class_int} - {class_int * 2}",
+            f"{class_int * 2} - {class_int * 3}",
+            f"{class_int * 3} - {class_int * 4}",
+            f"≥ {class_int * 4}",
+        ],
     ):
         if x == 0:
             c = cavern_df[cavern_df["capacity"] < x + 40]
@@ -321,18 +326,44 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
             c = cavern_df[
                 (cavern_df["capacity"] >= x) & (cavern_df["capacity"] < x + 40)
             ]
-        if len(c) > 0:
-            c.centroid.plot(
-                ax=axis,
-                zorder=3,
-                linewidth=0,
-                marker=".",
-                markersize=50,
-                color=sns.color_palette("flare", 256)[y],
-            )
+        for df, markersize in zip(
+            [
+                c[c["depth"] == "500 - 1,000"],
+                c[c["depth"] == "1,000 - 1,500"],
+                c[c["depth"] == "1,500 - 2,000"],
+            ],
+            [20, 50, 20],
+        ):
+            if len(df) > 0:
+                df.centroid.plot(
+                    ax=axis,
+                    zorder=3,
+                    linewidth=0,
+                    marker=".",
+                    markersize=markersize,
+                    color=sns.color_palette("flare", 256)[y],
+                )
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[y], label=z
+            )
+        )
+
+    legend_handles.append(
+        mpatches.Patch(label="Cavern top depth [m]", visible=False)
+    )
+    for markersize, label in zip(
+        [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
+    ):
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                marker=".",
+                linewidth=0,
+                label=label,
+                color="darkslategrey",
+                markersize=markersize,
             )
         )
 
@@ -358,10 +389,92 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     plt.show()
 
 
-# ### All caverns
+plot_map_alt(ds, caverns, zones, 40)
 
-plot_map_alt(ds, caverns, zones)
+# ## Restrict cavern height to 155 m
 
-# ### Caverns at optimal depth
+# height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
+# separation = 320 m
+zones, zds = fns.zones_of_interest(
+    dat_xr=ds, constraints={"height": 155, "min_depth": 500, "max_depth": 2000}
+)
 
-plot_map_alt(ds, caverns[caverns["depth"] == "1,000 - 1,500"], zones)
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "wells": wells_b,
+        "wind_farms": wind_farms,
+        "shipwrecks": shipwrecks_b,
+        "shipping": shipping_b,
+        "cables": cables_b,
+        "edge": edge_buffer,
+    },
+)
+
+# label caverns by height and depth
+caverns = fns.label_caverns(
+    cavern_df=caverns,
+    heights=[155],
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
+
+caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
+
+caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
+    height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
+)
+
+(
+    caverns["p_operating_min"],
+    caverns["p_operating_max"],
+) = cap.pressure_operating(thickness_overburden=caverns["TopDepth"])
+
+caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
+    p_operating_min=caverns["p_operating_min"],
+    p_operating_max=caverns["p_operating_max"],
+    t_mid_point=caverns["t_mid_point"],
+)
+
+caverns["working_mass"] = cap.mass_hydrogen_working(
+    rho_h2_min=caverns["rho_min"],
+    rho_h2_max=caverns["rho_max"],
+    v_cavern=caverns["cavern_volume"],
+)
+
+caverns["capacity"] = cap.energy_storage_capacity(
+    m_working=caverns["working_mass"]
+)
+
+caverns.drop(["x", "y", "TopTWT", "BaseDepth"], axis=1).describe()
+
+# cavern volumes
+list(caverns["cavern_volume"].unique())
+
+# total capacity
+caverns[["capacity"]].sum().iloc[0]
+
+# total capacity at various depth/height combinations
+s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
+s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
+s
+
+ax = sns.barplot(
+    s.groupby("depth").sum(),
+    x="depth",
+    y="capacity",
+    edgecolor="black",
+    order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
+    color=sns.color_palette("rocket", 256)[127],
+    errorbar=None,
+)
+ax.set_xlabel("Cavern top depth [m]")
+ax.grid(which="major", axis="y")
+ax.set_ylabel("Hydrogen storage capacity [GWh]")
+ax.yaxis.set_major_formatter(mpl.ticker.StrMethodFormatter("{x:,.0f}"))
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+plot_map_alt(ds, caverns, zones, 20)

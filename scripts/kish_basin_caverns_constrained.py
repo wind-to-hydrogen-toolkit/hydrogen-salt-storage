@@ -273,7 +273,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     Helper function to plot caverns within the zones of interest
     """
 
-    plt.figure(figsize=(14, 10))
+    plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(fns.CRS))
     legend_handles = []
 
@@ -425,6 +425,7 @@ sns.countplot(
     palette="rocket_r",
     legend=False,
     order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
+    edgecolor="black",
 )
 axes[0].set_xlabel("Cavern top depth [m]")
 sns.countplot(
@@ -434,6 +435,7 @@ sns.countplot(
     hue="halite",
     palette="rocket_r",
     order=["85", "155", "311"],
+    edgecolor="black",
 )
 axes[1].set_xlabel("Cavern height [m]")
 axes[0].set_ylabel("Count")
@@ -450,6 +452,7 @@ ax = sns.countplot(
     hue="height",
     palette="rocket_r",
     order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
+    edgecolor="black",
 )
 ax.set_xlabel("Cavern top depth [m]")
 ax.set_ylabel("Count")

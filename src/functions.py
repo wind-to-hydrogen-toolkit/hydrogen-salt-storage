@@ -741,26 +741,29 @@ def label_caverns(
     """
 
     # label caverns by height
-    conditions = [
-        (
-            cavern_df["Thickness"]
-            < (heights[1] + roof_thickness + floor_thickness)
-        ),
-        (
-            cavern_df["Thickness"]
-            >= (heights[1] + roof_thickness + floor_thickness)
-        )
-        & (
-            cavern_df["Thickness"]
-            < (heights[2] + roof_thickness + floor_thickness)
-        ),
-        (
-            cavern_df["Thickness"]
-            >= (heights[2] + roof_thickness + floor_thickness)
-        ),
-    ]
-    choices = [str(x) for x in heights]
-    cavern_df["height"] = np.select(conditions, choices)
+    if len(heights) == 1:
+        cavern_df["height"] = heights[0]
+    else:
+        conditions = [
+            (
+                cavern_df["Thickness"]
+                < (heights[1] + roof_thickness + floor_thickness)
+            ),
+            (
+                cavern_df["Thickness"]
+                >= (heights[1] + roof_thickness + floor_thickness)
+            )
+            & (
+                cavern_df["Thickness"]
+                < (heights[2] + roof_thickness + floor_thickness)
+            ),
+            (
+                cavern_df["Thickness"]
+                >= (heights[2] + roof_thickness + floor_thickness)
+            ),
+        ]
+        choices = [str(x) for x in heights]
+        cavern_df["height"] = np.select(conditions, choices)
 
     # label caverns by depth
     conditions = [
