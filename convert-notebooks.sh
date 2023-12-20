@@ -1,5 +1,5 @@
 #!/bin/sh
-jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
+# jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
 
 # format notebooks
 black -l 79 */*.ipynb
@@ -22,10 +22,10 @@ mv $f.txt $f
 done
 
 # format scripts
-black -l 79 */*.py
+black -l 79 **/*.py
 
 # sort imports
-isort src/*.py
+isort **/*.py
 
 # copy other stuff to main
 cp -r src temp

@@ -52,10 +52,10 @@ def read_dat_file(
             dat_file
         )[-1][:-4]
 
-    # find data resolution
-    gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
-    resx = gdf_xr["X"][1] - gdf_xr["X"][0]
-    resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
+    # # find data resolution
+    # gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
+    # resx = gdf_xr["X"][1] - gdf_xr["X"][0]
+    # resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
 
     # combine dataframes
     gdf = pd.concat(gdf.values())
@@ -68,8 +68,10 @@ def read_dat_file(
     # convert to Xarray dataset
     xds = make_geocube(
         vector_data=gdf,
-        resolution=(-abs(resy), abs(resx)),
-        align=(abs(resy / 2), abs(resx / 2)),
+        # resolution=(-abs(resy), abs(resx)),
+        # align=(abs(resy / 2), abs(resx / 2)),
+        resolution=(-200, 200),
+        align=(100, 100),
         group_by="data",
     )
 
@@ -780,7 +782,7 @@ def label_caverns(
     cavern_df["depth"] = np.select(conditions, choices)
 
     # create columns for the cavern heights and top depths
-    cavern_df["cavern_height"] = cavern_df["height"].astype(int)
+    cavern_df["cavern_height"] = cavern_df["height"].astype(float)
     cavern_df["cavern_depth"] = cavern_df["TopDepth"] + roof_thickness
 
     return cavern_df
