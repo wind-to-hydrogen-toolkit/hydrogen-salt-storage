@@ -44,10 +44,13 @@ def cavern_volume(
 
 
 def temperature_cavern_mid_point(
-    height: float, depth_top: float, t_0: float = 10, t_delta: float = 27
+    height: float, depth_top: float, t_0: float = 10, t_delta: float = 37.5
 ) -> float:
     """
-    Volume of stored hydrogen gas. See Williams et al. (2022), eq. (2).
+    Mid-point temperature. See Williams et al. (2022), eq. (2).
+
+    t_delta value of 37.5 based on the geothermal gradient of Kish Basin wells
+    in the Mercia Mudstone Group reported in English et al. (2023).
 
     Parameters
     ----------
@@ -59,10 +62,10 @@ def temperature_cavern_mid_point(
 
     Returns
     -------
-    - Mid point temperature [deg C]
+    - Mid-point temperature [K]
     """
 
-    return t_0 + t_delta / 1000 * (depth_top + height / 2)
+    return t_0 + t_delta / 1000 * (depth_top + height / 2) + 273.15
 
 
 def pressure_operating(
@@ -73,7 +76,7 @@ def pressure_operating(
     maxf: float = 0.8,
 ) -> tuple[float, float]:
     """
-    Volume of stored hydrogen gas. See Williams et al. (2022), eq. (3) and (4).
+    Operating pressures. See Williams et al. (2022), eq. (3) and (4).
 
     Parameters
     ----------
@@ -109,6 +112,8 @@ def density_hydrogen_gas(
     Density of hydrogen at cavern conditions. See Williams et al. (2022),
     s. 3.4.2 and Caglayan et al. (2020), eq. (3).
 
+    !Note: Check density values!
+
     http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html
 
     rho = p * m / (z * r * t)
@@ -120,7 +125,7 @@ def density_hydrogen_gas(
     ----------
     p_operating_min : Minimum operating pressure [Pa]
     p_operating_max : Maximum operating pressure [Pa]
-    t_mid_point : Mid point temperature [deg C]
+    t_mid_point : Mid-point temperature [K]
 
     Returns
     -------
@@ -131,18 +136,18 @@ def density_hydrogen_gas(
 
     for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
         h2_min = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_min), Input.temperature(t + 273.15)
+            Input.pressure(p_min), Input.temperature(t)
         )
 
         h2_max = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_max), Input.temperature(t + 273.15)
+            Input.pressure(p_max), Input.temperature(t)
         )
 
         rho_h2.append((h2_min.density, h2_max.density))
 
     # # rho / p = m / (z * r * t)
     # rho_p = (2.01588 / 1000) / (
-    #     compressibility_factor * 8.314 * (t_mid_point + 273.15)
+    #     compressibility_factor * 8.314 * (t_mid_point)
     # )
 
     # rho_h2_min = p_operating_min * rho_p

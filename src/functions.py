@@ -52,10 +52,10 @@ def read_dat_file(
             dat_file
         )[-1][:-4]
 
-    # find data resolution
-    gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
-    resx = gdf_xr["X"][1] - gdf_xr["X"][0]
-    resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
+    # # find data resolution
+    # gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
+    # resx = gdf_xr["X"][1] - gdf_xr["X"][0]
+    # resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
 
     # combine dataframes
     gdf = pd.concat(gdf.values())
@@ -68,8 +68,10 @@ def read_dat_file(
     # convert to Xarray dataset
     xds = make_geocube(
         vector_data=gdf,
-        resolution=(-abs(resy), abs(resx)),
-        align=(abs(resy / 2), abs(resx / 2)),
+        # resolution=(-abs(resy), abs(resx)),
+        # align=(abs(resy / 2), abs(resx / 2)),
+        resolution=(-200, 200),
+        align=(100, 100),
         group_by="data",
     )
 
@@ -665,60 +667,96 @@ def generate_caverns_with_constraints(
     cavern_all = cavern_df.copy()
 
     print("-" * 60)
-    print("Exclude exploration wells...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
-        how="difference",
-    )
-    print(f"Number of potential caverns: {len(cavern_df):,}")
-
-    print("-" * 60)
-    print("Exclude wind farms...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["wind_farms"], predicate="intersects"),
-        how="difference",
-    )
-    print(f"Number of potential caverns: {len(cavern_df):,}")
-
-    print("-" * 60)
-    print("Exclude shipwrecks...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["shipwrecks"], predicate="intersects"),
-        how="difference",
-    )
-    print(f"Number of potential caverns: {len(cavern_df):,}")
+    print("Exclude salt formation edges...")
+    try:
+        cavern_dict = {}
+        for h in cavern_df["halite"].unique():
+            cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
+            cavern_dict[h] = cavern_dict[h].overlay(
+                gpd.sjoin(
+                    cavern_dict[h],
+                    exclusions["edge"][h],
+                    predicate="intersects",
+                ),
+                how="difference",
+            )
+        cavern_df = pd.concat(cavern_dict.values())
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
 
     print("-" * 60)
     print("Exclude frequent shipping routes...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["shipping"], predicate="intersects"),
-        how="difference",
-    )
-    print(f"Number of potential caverns: {len(cavern_df):,}")
-
-    print("-" * 60)
-    print("Exclude subsea cables...")
-    cavern_df = cavern_df.overlay(
-        gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
-        how="difference",
-    )
-    print(f"Number of potential caverns: {len(cavern_df):,}")
-
-    print("-" * 60)
-    print("Exclude salt formation edges...")
-    cavern_dict = {}
-    for h in cavern_df["halite"].unique():
-        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
-        cavern_dict[h] = cavern_dict[h].overlay(
+    try:
+        cavern_df = cavern_df.overlay(
             gpd.sjoin(
-                cavern_dict[h],
-                exclusions["edge"][h],
-                predicate="intersects",
+                cavern_df, exclusions["shipping"], predicate="intersects"
             ),
             how="difference",
         )
-    cavern_df = pd.concat(cavern_dict.values())
-    print(f"Number of potential caverns: {len(cavern_df):,}")
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
+
+    print("-" * 60)
+    print("Exclude subsea cables...")
+    try:
+        cavern_df = cavern_df.overlay(
+            gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
+            how="difference",
+        )
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
+
+    print("-" * 60)
+    print("Exclude wind farms...")
+    try:
+        cavern_df = cavern_df.overlay(
+            gpd.sjoin(
+                cavern_df, exclusions["wind_farms"], predicate="intersects"
+            ),
+            how="difference",
+        )
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
+
+    print("-" * 60)
+    print("Exclude exploration wells...")
+    try:
+        cavern_df = cavern_df.overlay(
+            gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
+            how="difference",
+        )
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
+
+    print("-" * 60)
+    print("Exclude shipwrecks...")
+    try:
+        cavern_df = cavern_df.overlay(
+            gpd.sjoin(
+                cavern_df, exclusions["shipwrecks"], predicate="intersects"
+            ),
+            how="difference",
+        )
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
 
     # get excluded caverns
     caverns_excl = cavern_all.overlay(
@@ -780,7 +818,7 @@ def label_caverns(
     cavern_df["depth"] = np.select(conditions, choices)
 
     # create columns for the cavern heights and top depths
-    cavern_df["cavern_height"] = cavern_df["height"].astype(int)
+    cavern_df["cavern_height"] = cavern_df["height"].astype(float)
     cavern_df["cavern_depth"] = cavern_df["TopDepth"] + roof_thickness
 
     return cavern_df

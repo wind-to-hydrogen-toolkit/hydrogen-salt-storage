@@ -46,9 +46,10 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
-# height = 311 m, 500 m <= depth <= 2,000 m
+# height = 155 m, 1,000 m <= depth <= 1,500 m
 zones, _ = fns.zones_of_interest(
-    dat_xr=ds, constraints={"height": 311, "min_depth": 500, "max_depth": 2000}
+    dat_xr=ds,
+    constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
 )
 
 plot_zones_map(zones, extent, CRS)
@@ -126,7 +127,7 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # diameter = 80 m, separation = 320 m
 caverns = fns.generate_caverns_square_grid(
-    dat_extent=extent, zones_df=zones, diameter=80
+    dat_extent=extent, zones_df=zones, diameter=80, separation=80 * 4
 )
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
@@ -138,3 +139,7 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 plot_map(ds, extent, CRS, caverns, "Thickness", "max")
+
+# percentage increase in the number of caverns when using a regular hexagonal
+# grid configuration compared to a square grid
+(941 - 819) / 819 * 100

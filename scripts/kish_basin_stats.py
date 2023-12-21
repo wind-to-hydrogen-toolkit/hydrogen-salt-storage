@@ -199,6 +199,7 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
             "pad": 0.125,
             "extendfrac": 0.2,
             "label": "Halite " + dat_xr[v].attrs["long_name"] + " [m]",
+            "format": lambda x, _: f"{x:,.0f}",
         },
     )
 

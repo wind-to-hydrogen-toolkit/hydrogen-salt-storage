@@ -3,25 +3,19 @@
 
 # # Cavern storage capacity
 
-import importlib
 import os
-from zipfile import ZipFile
 
 import cartopy.crs as ccrs
 import contextily as cx
-import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
-from pyfluids import Fluid, FluidsList, Input
-import matplotlib as mpl
 
-from src import functions as fns
 from src import capacity as cap
+from src import functions as fns
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -171,56 +165,54 @@ list(caverns["cavern_volume"].unique())
 # total capacity
 caverns[["capacity"]].sum().iloc[0]
 
-# total capacity at different cavern heights
-s = (
-    caverns.sort_values("Thickness")
-    .groupby("height", sort=False)[["capacity"]]
-    .sum()
-)
-s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
-s
-
-# total capacity at different cavern depths
-s = (
-    caverns.sort_values("TopDepth")
-    .groupby("depth", sort=False)[["capacity"]]
-    .sum()
-)
-s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
-s
-
 # total capacity at various depth/height combinations
 s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
 s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
+s.groupby("depth").sum()[["capacity"]]
+
+s.groupby("height").sum()[["capacity"]]
+
+# number of caverns
+s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].count()
+s["%"] = s["capacity"] / len(caverns) * 100
+s
+
+s.groupby("depth").sum()[["capacity"]]
+
+s.groupby("height").sum()[["capacity"]]
+
 fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
-sns.barplot(
-    s.groupby("height").sum(),
-    x="height",
-    y="capacity",
-    edgecolor="black",
+sns.histplot(
+    caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
+        "TopDepth"
+    ),
+    x="capacity",
+    hue="Cavern top depth [m]",
+    palette="rocket_r",
+    bins=[0 + 40 * n for n in range(6)],
+    multiple="stack",
+    alpha=1,
     ax=axes[0],
-    order=["85", "155", "311"],
-    color=sns.color_palette("rocket", 256)[127],
-    errorbar=None,
 )
-sns.barplot(
-    s.groupby("depth").sum(),
-    x="depth",
-    y="capacity",
-    edgecolor="black",
+sns.histplot(
+    caverns.rename(columns={"height": "Cavern height [m]"}).sort_values(
+        "Thickness"
+    ),
+    x="capacity",
+    hue="Cavern height [m]",
+    palette="rocket_r",
+    bins=[40 * n for n in range(6)],
+    multiple="stack",
+    alpha=1,
     ax=axes[1],
-    order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
-    color=sns.color_palette("rocket", 256)[127],
-    errorbar=None,
 )
-axes[0].set_xlabel("Cavern height [m]")
-axes[1].set_xlabel("Cavern top depth [m]")
+axes[0].set_xlabel("Hydrogen storage capacity [GWh]")
+axes[1].set_xlabel("Hydrogen storage capacity [GWh]")
 axes[0].grid(which="major", axis="y")
 axes[1].grid(which="major", axis="y")
-axes[0].set_ylabel("Hydrogen storage capacity [GWh]")
-axes[0].yaxis.set_major_formatter(mpl.ticker.StrMethodFormatter("{x:,.0f}"))
+axes[0].set_ylabel("Number of caverns")
 sns.despine()
 plt.tight_layout()
 plt.show()
@@ -231,7 +223,7 @@ plt.show()
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-def plot_map_alt(dat_xr, cavern_df, zones_gdf, class_int):
+def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
     """
     Helper function to plot caverns within the zones of interest
     """
@@ -307,17 +299,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, class_int):
         )
     )
 
-    for x, y, z in zip(
-        [0 + class_int * n for n in range(5)],
-        [0] + [int(256 / 4) + int(256 / 4) * n - 1 for n in range(4)],
-        [
-            f"< {class_int}",
-            f"{class_int} - {class_int * 2}",
-            f"{class_int * 2} - {class_int * 3}",
-            f"{class_int * 3} - {class_int * 4}",
-            f"≥ {class_int * 4}",
-        ],
-    ):
+    for x, y, z in zip(classes, colours, labels):
         if x == 0:
             c = cavern_df[cavern_df["capacity"] < x + 40]
         elif x == 160:
@@ -382,14 +364,24 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, class_int):
         ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
     plt.legend(
-        loc="lower right", bbox_to_anchor=(1, 0.05), handles=legend_handles
+        loc="lower right",
+        bbox_to_anchor=(1, 0.05),
+        handles=legend_handles,
+        fontsize=11.5,
     )
 
     plt.tight_layout()
     plt.show()
 
 
-plot_map_alt(ds, caverns, zones, 40)
+plot_map_alt(
+    ds,
+    caverns,
+    zones,
+    [40 * n for n in range(5)],
+    [0] + [int(256 / 4) + int(256 / 4) * n - 1 for n in range(4)],
+    ["< 40", "40 - 80", "80 - 120", "120 - 160", "≥ 160"],
+)
 
 # ## Restrict cavern height to 155 m
 
@@ -397,6 +389,15 @@ plot_map_alt(ds, caverns, zones, 40)
 # separation = 320 m
 zones, zds = fns.zones_of_interest(
     dat_xr=ds, constraints={"height": 155, "min_depth": 500, "max_depth": 2000}
+)
+
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "shipping": shipping_b,
+    },
 )
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
@@ -460,21 +461,39 @@ s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
 s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
-ax = sns.barplot(
-    s.groupby("depth").sum(),
-    x="depth",
-    y="capacity",
-    edgecolor="black",
-    order=["500 - 1,000", "1,000 - 1,500", "1,500 - 2,000"],
-    color=sns.color_palette("rocket", 256)[127],
-    errorbar=None,
+# total volume at various depth/height combinations
+s = caverns.groupby(["height", "depth"], sort=False)[["cavern_volume"]].sum()
+s["%"] = s["cavern_volume"] / caverns[["cavern_volume"]].sum().iloc[0] * 100
+s
+
+# number of caverns
+s = caverns.groupby(["height", "depth"], sort=False)[["cavern_volume"]].count()
+s["%"] = s["cavern_volume"] / len(caverns) * 100
+s
+
+ax = sns.histplot(
+    caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
+        "TopDepth"
+    ),
+    x="capacity",
+    hue="Cavern top depth [m]",
+    palette="rocket_r",
+    bins=[20 * n for n in range(1, 6)],
+    multiple="stack",
+    alpha=1,
 )
-ax.set_xlabel("Cavern top depth [m]")
+ax.set_xlabel("Hydrogen storage capacity [GWh]")
 ax.grid(which="major", axis="y")
-ax.set_ylabel("Hydrogen storage capacity [GWh]")
-ax.yaxis.set_major_formatter(mpl.ticker.StrMethodFormatter("{x:,.0f}"))
+ax.set_ylabel("Number of caverns")
 sns.despine()
 plt.tight_layout()
 plt.show()
 
-plot_map_alt(ds, caverns, zones, 20)
+plot_map_alt(
+    ds,
+    caverns,
+    zones,
+    [20 * n for n in range(1, 5)],
+    [0] + [int(256 / 3) + int(256 / 3) * n - 1 for n in range(3)],
+    ["20 - 40", "40 - 60", "60 - 80", "≥ 80"],
+)

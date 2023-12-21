@@ -4,14 +4,11 @@
 # # Caverns with constraints
 
 import os
-from zipfile import ZipFile
-
 import cartopy.crs as ccrs
 import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.lines import Line2D
@@ -94,6 +91,33 @@ zones, zds = fns.zones_of_interest(
 )
 
 # ## Generate caverns
+
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "shipping": shipping_b,
+    },
+)
+
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "cables": cables_b,
+    },
+)
+
+caverns, caverns_excl = fns.generate_caverns_with_constraints(
+    zones_gdf=zones,
+    zones_ds=zds,
+    dat_extent=extent,
+    exclusions={
+        "wind_farms": wind_farms,
+    },
+)
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
@@ -405,7 +429,10 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
         ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
     plt.legend(
-        loc="lower right", bbox_to_anchor=(1, 0.05), handles=legend_handles
+        loc="lower right",
+        bbox_to_anchor=(1, 0.05),
+        handles=legend_handles,
+        fontsize=11.5,
     )
 
     plt.tight_layout()
