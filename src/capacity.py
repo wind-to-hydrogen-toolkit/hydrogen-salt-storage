@@ -112,6 +112,8 @@ def density_hydrogen_gas(
     Density of hydrogen at cavern conditions. See Williams et al. (2022),
     s. 3.4.2 and Caglayan et al. (2020), eq. (3).
 
+    !Note: Check density values!
+
     http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html
 
     rho = p * m / (z * r * t)
