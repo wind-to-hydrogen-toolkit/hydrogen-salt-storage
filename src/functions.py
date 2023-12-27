@@ -1,4 +1,4 @@
-"""
+"""functions.py
 Functions to read and structure data used in the hydrogen salt storage
 optimisation
 """
@@ -682,9 +682,8 @@ def generate_caverns_with_constraints(
             )
         cavern_df = pd.concat(cavern_dict.values())
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
@@ -698,9 +697,8 @@ def generate_caverns_with_constraints(
             how="difference",
         )
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
@@ -712,9 +710,8 @@ def generate_caverns_with_constraints(
             how="difference",
         )
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
@@ -728,9 +725,8 @@ def generate_caverns_with_constraints(
             how="difference",
         )
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
@@ -742,9 +738,8 @@ def generate_caverns_with_constraints(
             how="difference",
         )
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
@@ -758,9 +753,8 @@ def generate_caverns_with_constraints(
             how="difference",
         )
         print(f"Number of potential caverns: {len(cavern_df):,}")
-        print(
-            f"Caverns excluded: {(len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100:.2f}%"
-        )
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
 
