@@ -25,8 +25,13 @@ def rotor_area(diameter: float):
 
 
 def power_output_wind_turbine(
-    v: float, area: float, c_power: float, v_i: float = 4, v_r: float = 11,
-    v_o: float = 25, p_rated: float = 15
+    v: float,
+    area: float,
+    c_power: float,
+    v_i: float = 4,
+    v_r: float = 11,
+    v_o: float = 25,
+    p_rated: float = 15,
 ):
     """
     Equation (2) of Dinh et al. (2023).
@@ -46,8 +51,14 @@ def power_output_wind_turbine(
 
 
 def annual_energy_production(
-    n_turbines: int, diameter: float, c_power: float, k: float,
-    c: float, v_i: float = 4, v_o: float = 25, w_loss: float = 0.1
+    n_turbines: int,
+    diameter: float,
+    c_power: float,
+    k: float,
+    c: float,
+    v_i: float = 4,
+    v_o: float = 25,
+    w_loss: float = 0.1,
 ):
     """
     Equation (3) of Dinh et al. (2023).
@@ -55,16 +66,19 @@ def annual_energy_production(
     """
 
     aep = (
-        365 * 24 * n_turbines * (1 - w_loss) *
-        integrate.quad(
+        365
+        * 24
+        * n_turbines
+        * (1 - w_loss)
+        * integrate.quad(
             lambda v: (
                 power_output_wind_turbine(
                     v=v, area=rotor_area(diameter=diameter), c_power=c_power
-                ) *
-                weibull_probability_distribution(k=k, c=c, v=v)
+                )
+                * weibull_probability_distribution(k=k, c=c, v=v)
             ),
             v_i,
-            v_o
+            v_o,
         )
     )
 
