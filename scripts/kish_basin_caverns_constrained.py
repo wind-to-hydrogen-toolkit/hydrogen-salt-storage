@@ -4,6 +4,7 @@
 # # Caverns with constraints
 
 import os
+
 import cartopy.crs as ccrs
 import contextily as cx
 import geopandas as gpd
@@ -92,32 +93,30 @@ zones, zds = fns.zones_of_interest(
 
 # ## Generate caverns
 
+# ### Exclude only shipping routes, wind farms, and cables
+
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={
-        "shipping": shipping_b,
-    },
+    exclusions={"shipping": shipping_b},
 )
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={
-        "cables": cables_b,
-    },
+    exclusions={"cables": cables_b},
 )
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={
-        "wind_farms": wind_farms,
-    },
+    exclusions={"wind_farms": wind_farms},
 )
+
+# ### Exclude all
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
@@ -134,6 +133,9 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
 )
 
 caverns.describe()[["Thickness", "TopDepth"]]
+
+# excluded areas
+caverns_excl.describe()[["Thickness", "TopDepth"]]
 
 # label caverns by height and depth
 caverns = fns.label_caverns(

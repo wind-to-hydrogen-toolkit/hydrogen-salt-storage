@@ -203,7 +203,7 @@ plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
 
-# remove obvious incorrect data lines - Hibernia Atlantic
+# remove incorrect data lines that are obvious - Hibernia Atlantic
 data_ie = data_ie.drop([6]).reset_index(drop=True)
 
 ax = (

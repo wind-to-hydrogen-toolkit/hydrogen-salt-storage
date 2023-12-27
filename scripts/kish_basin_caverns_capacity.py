@@ -396,15 +396,6 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_ds=zds,
     dat_extent=extent,
     exclusions={
-        "shipping": shipping_b,
-    },
-)
-
-caverns, caverns_excl = fns.generate_caverns_with_constraints(
-    zones_gdf=zones,
-    zones_ds=zds,
-    dat_extent=extent,
-    exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
         "shipwrecks": shipwrecks_b,

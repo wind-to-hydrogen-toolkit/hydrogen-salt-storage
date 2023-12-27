@@ -188,19 +188,20 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
         robust=True,
         levels=levels,
         cmap=sns.color_palette("flare", as_cmap=True),
-        figsize=(13, 6),
+        figsize=(6, 8.5),
         subplot_kws={"projection": ccrs.epsg(dat_crs)},
         xlim=(xmin_, xmax_),
         ylim=(ymin_, ymax_),
         cbar_kwargs={
             "location": "bottom",
             "aspect": 20,
-            "shrink": 0.4,
-            "pad": 0.125,
+            "shrink": 0.8,
+            "pad": 0.09,
             "extendfrac": 0.2,
             "label": "Halite " + dat_xr[v].attrs["long_name"] + " [m]",
             "format": lambda x, _: f"{x:,.0f}",
         },
+        col_wrap=2,
     )
 
     # add a basemap
@@ -208,18 +209,16 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
     for n, axis in enumerate(f.axs.flat):
         cx.add_basemap(axis, crs=dat_crs, source=basemap, attribution=False)
         # tick labels and attribution for basemap tiles
-        if n == 0:
+        if n in (0, 2):
             axis.gridlines(draw_labels={"left": "y"}, color="none")
-            axis.text(
-                xmin_ + 1000, ymax_ - 2500, basemap["attribution"], fontsize=9
+        if n in (2, 3):
+            axis.gridlines(
+                draw_labels={"bottom": "x"},
+                color="none",
+                rotate_labels=90,
+                xpadding=20,
+                xformatter=LongitudeFormatter(number_format=".2f"),
             )
-        axis.gridlines(
-            draw_labels={"bottom": "x"},
-            color="none",
-            rotate_labels=90,
-            xpadding=20,
-            xformatter=LongitudeFormatter(number_format=".2f"),
-        )
         if n == 3:
             axis.add_artist(
                 ScaleBar(
@@ -228,6 +227,10 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
                     location="lower right",
                     color="darkslategrey",
                 )
+            )
+        if n == 2:
+            axis.text(
+                xmin_ + 1000, ymin_ + 1000, basemap["attribution"], fontsize=9
             )
     f.set_titles("{value}", weight="semibold")
     plt.show()
