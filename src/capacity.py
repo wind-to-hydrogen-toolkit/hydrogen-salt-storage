@@ -1,4 +1,4 @@
-"""
+"""capacity.py
 Functions to calculate salt cavern volumes and storage capacities
 """
 

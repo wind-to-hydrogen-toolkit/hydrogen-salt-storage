@@ -1,4 +1,4 @@
-"""
+"""functions.py
 Functions to read and structure data used in the hydrogen salt storage
 optimisation
 """
@@ -463,6 +463,7 @@ def constraint_exploration_well(
     """
     Read exploration well data and generate constraint.
     500 m buffer - suggested in draft OREDP II p. 108.
+    https://www.gov.ie/en/publication/71e36-offshore-renewable-energy-development-plan-ii-oredp-ii/
 
     Parameters
     ----------
@@ -491,6 +492,7 @@ def constraint_wind_farm(
     Read data for wind farms.
     The shapes are used as is without a buffer - suggested for renewable
     energy test site areas in draft OREDP II p. 109.
+    https://www.gov.ie/en/publication/71e36-offshore-renewable-energy-development-plan-ii-oredp-ii/
 
     Parameters
     ----------
@@ -526,7 +528,8 @@ def constraint_shipping_routes(
 ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Read frequent shipping route data and generate constraint.
-    1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
+    1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108.
+    https://www.gov.ie/en/publication/71e36-offshore-renewable-energy-development-plan-ii-oredp-ii/
 
     Parameters
     ----------
@@ -565,6 +568,7 @@ def constraint_shipwrecks(
     """
     Read shipwreck data and generate constraint.
     Archaeological Exclusion Zones recommendation - 100 m buffer.
+    https://assets.gov.ie/202763/9160dd51-b119-44cf-a224-8b5302347e7d.pdf
 
     Parameters
     ----------
@@ -601,6 +605,7 @@ def constraint_subsea_cables(
     """
     Read subsea cable data and generate constraint.
     750 m buffer - suggested in draft OREDP II p. 109-111.
+    https://www.gov.ie/en/publication/71e36-offshore-renewable-energy-development-plan-ii-oredp-ii/
 
     Parameters
     ----------
@@ -629,7 +634,18 @@ def constraint_halite_edge(
     dat_xr: xr.Dataset, buffer: float = 80 * 3
 ) -> dict[str, gpd.GeoDataFrame]:
     """
-    3 times the cavern diameter, i.e. the pillar width
+    The edge of each halite member as a constraint.
+    Set to 3 times the cavern diameter, i.e. the pillar width
+
+    Parameters
+    ----------
+    dat_xr : Xarray dataset of the halite data
+    buffer : Buffer [m]
+
+    Returns
+    -------
+    - Dictionary of GeoPandas geodataframes of the halite edge constraint for
+      each halite member
     """
 
     buffer_edge = {}
