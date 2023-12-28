@@ -7,17 +7,32 @@ NREL 15 MW reference turbine: https://doi.org/10.2172/1570430
 
 import numpy as np
 from scipy import integrate
+import pandas as pd
 
 # NREL 15 MW reference turbine specifications
-REF_DIAMETER = 248
-REF_HUB_HEIGHT = 149
-REF_RATED_POWER = 15
-REF_V_CUT_IN = 4
-REF_V_RATED = 11
-REF_V_CUT_OUT = 25
+REF_DIAMETER = 248  # m
+REF_HUB_HEIGHT = 149  # m
+REF_RATED_POWER = 15  # MW
+REF_V_CUT_IN = 4  # m s-1
+REF_V_RATED = 11  # m s-1
+REF_V_CUT_OUT = 25  # m s-1
+
+# power curve data
+pc = pd.DataFrame(
+    {
+        "wind_speed": range(REF_V_CUT_OUT + 1),
+        "power_curve": (
+            [0] * 4 + [499, 1424, 2732, 4469, 6643, 9459, 12975] + [15000] * 15
+        )
+    }
+)
+# for wind speeds between cut-in and rated
+pc["gradient"] = pc["power_curve"] - pc["power_curve"].shift(1)
+pc["intercept"] = pc["power_curve"] - pc["gradient"] * pc["wind_speed"]
+pc = pc[(pc["wind_speed"] > 4) & (pc["wind_speed"] < 12)]
 
 
-def ref_power_curve(v: float):
+def ref_power_curve(v: float) -> float:
     """
     Power curve for the reference wind turbine.
 
@@ -35,28 +50,8 @@ def ref_power_curve(v: float):
     if v < 4:
         power_curve = 0
     elif 4 <= v < 11:
-        if 4 <= v < 5:
-            m = 1424 - 499
-            c = 499 - m * 4
-        elif 5 <= v < 6:
-            m = 2732 - 1424
-            c = 1424 - m * 5
-        elif 6 <= v < 7:
-            m = 4469 - 2732
-            c = 2732 - m * 6
-        elif 7 <= v < 8:
-            m = 6643 - 4469
-            c = 4469 - m * 7
-        elif 8 <= v < 9:
-            m = 9459 - 6643
-            c = 6643 - m * 8
-        elif 9 <= v < 10:
-            m = 12975 - 9459
-            c = 9459 - m * 9
-        elif 10 <= v < 11:
-            m = 15000 - 12975
-            c = 12975 - m * 10
-        power_curve = m * v + c
+        pc_vals = pc[pc["wind_speed"] == np.trunc(v) + 1]
+        power_curve = (pc_vals["gradient"] * v + pc_vals["intercept"]).iloc[0]
     elif 11 <= v <= 25:
         power_curve = 15000
     elif v > 25:
@@ -65,7 +60,7 @@ def ref_power_curve(v: float):
     return power_curve / 1000
 
 
-def rotor_area():
+def rotor_area() -> float:
     """
     Reference wind turbine rotor swept area, from Dinh et al. (2023).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
@@ -78,7 +73,7 @@ def rotor_area():
     return np.pi * np.square(REF_DIAMETER) / 4
 
 
-def power_wind_resource(v: float, rho: float = 1.225):
+def power_wind_resource(v: float, rho: float = 1.225) -> float:
     """
     Total power of the wind resource passing through the reference wind
     turbine rotor
@@ -96,7 +91,7 @@ def power_wind_resource(v: float, rho: float = 1.225):
     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
 
 
-def power_coefficient(v: float):
+def power_coefficient(v: float) -> float:
     """
     Power coefficient curve of the reference wind turbine
 
@@ -117,7 +112,7 @@ def power_coefficient(v: float):
     return coeff
 
 
-def weibull_probability_distribution(k: float, c: float, v: float):
+def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     """
     Equation (1) of Dinh et al. (2023).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
@@ -136,7 +131,7 @@ def weibull_probability_distribution(k: float, c: float, v: float):
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
 
 
-def power_output_wind_turbine(v: float):
+def power_output_wind_turbine(v: float) -> float:
     """
     Equation (2) of Dinh et al. (2023).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
@@ -167,7 +162,7 @@ def annual_energy_production(
     k: float,
     c: float,
     w_loss: float = 0.1,
-):
+) -> float:
     """
     Equation (3) of Dinh et al. (2023).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
@@ -191,7 +186,8 @@ def annual_energy_production(
         * (1 - w_loss)
         * integrate.quad(
             lambda v: (
-                power_output_wind_turbine(v=v)
+                # power_output_wind_turbine(v=v)
+                ref_power_curve(v=v)
                 * weibull_probability_distribution(k=k, c=c, v=v)
             ),
             REF_V_CUT_IN,
@@ -209,7 +205,7 @@ def annual_hydrogen_production(
     e_elec: float,
     eta_conv: float,
     e_pcl: float,
-):
+) -> float:
     """
     Equation (4) of Dinh et al. (2023).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
