@@ -163,7 +163,10 @@ def power_output_wind_turbine(v: float):
 
 
 def annual_energy_production(
-    n_turbines: int, k: float, c: float, w_loss: float = 0.1,
+    n_turbines: int,
+    k: float,
+    c: float,
+    w_loss: float = 0.1,
 ):
     """
     Equation (3) of Dinh et al. (2023).
@@ -182,7 +185,10 @@ def annual_energy_production(
     """
 
     aep = (
-        365 * 24 * n_turbines * (1 - w_loss)
+        365
+        * 24
+        * n_turbines
+        * (1 - w_loss)
         * integrate.quad(
             lambda v: (
                 power_output_wind_turbine(v=v)
@@ -197,8 +203,12 @@ def annual_energy_production(
 
 
 def annual_hydrogen_production(
-    n_turbines: int, k: float, c: float, e_elec: float, eta_conv: float,
-    e_pcl: float
+    n_turbines: int,
+    k: float,
+    c: float,
+    e_elec: float,
+    eta_conv: float,
+    e_pcl: float,
 ):
     """
     Equation (4) of Dinh et al. (2023).
@@ -219,9 +229,8 @@ def annual_hydrogen_production(
     - Annual hydrogen production [kg]
     """
 
-    ahp = (
-        annual_energy_production(n_turbines=n_turbines, k=k, c=c) /
-        ((e_elec / eta_conv) + e_pcl)
+    ahp = annual_energy_production(n_turbines=n_turbines, k=k, c=c) / (
+        (e_elec / eta_conv) + e_pcl
     )
 
     return ahp
