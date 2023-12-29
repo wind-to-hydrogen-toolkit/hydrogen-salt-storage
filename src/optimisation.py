@@ -6,8 +6,8 @@ NREL 15 MW reference turbine: https://doi.org/10.2172/1570430
 """
 
 import numpy as np
-from scipy import integrate
 import pandas as pd
+from scipy import integrate
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -23,7 +23,7 @@ pc = pd.DataFrame(
         "wind_speed": range(REF_V_CUT_OUT + 1),
         "power_curve": (
             [0] * 4 + [499, 1424, 2732, 4469, 6643, 9459, 12975] + [15000] * 15
-        )
+        ),
     }
 )
 # for wind speeds between cut-in and rated
