@@ -20,9 +20,9 @@ REF_V_CUT_OUT = 25  # m s-1
 # power curve data
 pc = pd.DataFrame(
     {
-        "wind_speed": range(REF_V_CUT_OUT + 1),
+        "wind_speed": range(REF_V_RATED + 2),
         "power_curve": (
-            [0] * 4 + [499, 1424, 2732, 4469, 6643, 9459, 12975] + [15000] * 15
+            [0] * 4 + [499, 1424, 2732, 4469, 6643, 9459, 12975] + [15000] * 2
         ),
     }
 )
@@ -62,58 +62,6 @@ def ref_power_curve(v: float) -> float:
     return power_curve / 1000
 
 
-# def rotor_area() -> float:
-#     """
-#     Reference wind turbine rotor swept area, from Dinh et al. (2023).
-#     https://doi.org/10.1016/j.ijhydene.2023.01.016
-
-#     Returns
-#     -------
-#     - Wind turbine rotor swept area [m2]
-#     """
-
-#     return np.pi * np.square(REF_DIAMETER) / 4
-
-
-# def power_wind_resource(v: float, rho: float = 1.225) -> float:
-#     """
-#     Total power of the wind resource passing through the reference wind
-#     turbine rotor
-
-#     Parameters
-#     ----------
-#     v : Wind speed [m s-1]
-#     rho : Air density [kg m-3]
-
-#     Returns
-#     -------
-#     - Power contained in the wind resource [MW]
-#     """
-
-#     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
-
-
-# def power_coefficient(v: float) -> float:
-#     """
-#     Power coefficient curve of the reference wind turbine
-
-#     Parameters
-#     ----------
-#     v : Wind speed [m s-1]
-
-#     Returns
-#     -------
-#     - Power coefficient
-#     """
-
-#     try:
-#         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
-#     except ZeroDivisionError:
-#         coeff = 0
-
-#     return coeff
-
-
 def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     """
     Equation (1) of Dinh et al. (2023).
@@ -131,54 +79,6 @@ def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     """
 
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
-
-
-# def power_output_wind_turbine(v: float) -> float:
-#     """
-#     Equation (2) of Dinh et al. (2023).
-#     https://doi.org/10.1016/j.ijhydene.2023.01.016
-
-#     Parameters
-#     ----------
-#     v : Wind speed [m s-1]
-
-#     Returns
-#     -------
-#     - Power output of wind turbine [MW]
-#     """
-
-#     if v < REF_V_CUT_IN:
-#         power_wt = 0
-#     elif REF_V_CUT_IN <= v < REF_V_RATED:
-#         power_wt = power_wind_resource(v=v) * power_coefficient(v=v)
-#     elif REF_V_RATED <= v <= REF_V_CUT_OUT:
-#         power_wt = REF_RATED_POWER
-#     elif v > REF_V_CUT_OUT:
-#         power_wt = 0
-
-#     return power_wt
-
-
-# def power_curve_weibull(k: float, c: float, v: float) -> float:
-#     """
-#     Power curve with Weibull equation applied
-
-#     Parameters
-#     ----------
-#     k : Shape (Weibull distribution parameter)
-#     c : Scale (Weibull distribution parameter) [m s-1]
-#     v : Wind speed [m s-1]
-
-#     Returns
-#     -------
-#     - Power curve multiplied by the Weibull probability distribution function
-#       [MW s m-1 / M kg m s-2]
-#     """
-
-#     return (
-#         ref_power_curve(v=v) *
-#         weibull_probability_distribution(k=k, c=c, v=v)
-#     )
 
 
 def annual_energy_production(
@@ -240,9 +140,10 @@ def annual_hydrogen_production(
     k : Shape (Weibull distribution parameter)
     c : Scale (Weibull distribution parameter) [m s-1]
     e_elec : Electricity required to supply the electrolyser to produce 1 kg
-      of hydrogen [MWh/kg]
+      of hydrogen [MWh kg-1]
     eta_conv : Conversion efficiency of the electrolyser
-    e_pcl : Electricity consumed by other parts of the hydrogen plant [MWh/kg]
+    e_pcl : Electricity consumed by other parts of the hydrogen plant
+      [MWh kg-1]
 
     Returns
     -------
@@ -254,3 +155,103 @@ def annual_hydrogen_production(
     )
 
     return ahp
+
+
+# def rotor_area() -> float:
+#     """
+#     Reference wind turbine rotor swept area, from Dinh et al. (2023).
+#     https://doi.org/10.1016/j.ijhydene.2023.01.016
+
+#     Returns
+#     -------
+#     - Wind turbine rotor swept area [m2]
+#     """
+
+#     return np.pi * np.square(REF_DIAMETER) / 4
+
+
+# def power_wind_resource(v: float, rho: float = 1.225) -> float:
+#     """
+#     Total power of the wind resource passing through the reference wind
+#     turbine rotor
+
+#     Parameters
+#     ----------
+#     v : Wind speed [m s-1]
+#     rho : Air density [kg m-3]
+
+#     Returns
+#     -------
+#     - Power contained in the wind resource [MW]
+#     """
+
+#     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
+
+
+# def power_coefficient(v: float) -> float:
+#     """
+#     Power coefficient curve of the reference wind turbine
+
+#     Parameters
+#     ----------
+#     v : Wind speed [m s-1]
+
+#     Returns
+#     -------
+#     - Power coefficient
+#     """
+
+#     try:
+#         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
+#     except ZeroDivisionError:
+#         coeff = 0
+
+#     return coeff
+
+
+# def power_output_wind_turbine(v: float) -> float:
+#     """
+#     Equation (2) of Dinh et al. (2023).
+#     https://doi.org/10.1016/j.ijhydene.2023.01.016
+
+#     Parameters
+#     ----------
+#     v : Wind speed [m s-1]
+
+#     Returns
+#     -------
+#     - Power output of wind turbine [MW]
+#     """
+
+#     if v < REF_V_CUT_IN:
+#         power_wt = 0
+#     elif REF_V_CUT_IN <= v < REF_V_RATED:
+#         power_wt = power_wind_resource(v=v) * power_coefficient(v=v)
+#     elif REF_V_RATED <= v <= REF_V_CUT_OUT:
+#         power_wt = REF_RATED_POWER
+#     elif v > REF_V_CUT_OUT:
+#         power_wt = 0
+
+#     return power_wt
+
+
+# def power_curve_weibull(k: float, c: float, v: float) -> float:
+#     """
+#     Power curve with Weibull equation applied
+
+#     Parameters
+#     ----------
+#     k : Shape (Weibull distribution parameter)
+#     c : Scale (Weibull distribution parameter) [m s-1]
+#     v : Wind speed [m s-1]
+
+#     Returns
+#     -------
+#     - Power curve multiplied by the Weibull probability distribution function
+#       [MW s m-1 / M kg m s-2]
+#     """
+
+#     return (
+#         ref_power_curve(v=v) *
+#         weibull_probability_distribution(k=k, c=c, v=v)
+#     )
