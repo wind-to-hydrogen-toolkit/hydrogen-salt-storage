@@ -114,7 +114,7 @@ def annual_energy_production(
         a=REF_V_CUT_IN,
         b=REF_V_CUT_OUT,
         limit=100,  # an upper bound on the number of subintervals used
-        epsabs=1.49e-6  # absolute error tolerance
+        epsabs=1.49e-6,  # absolute error tolerance
     )
 
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
