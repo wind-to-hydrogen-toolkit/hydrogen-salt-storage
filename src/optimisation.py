@@ -277,10 +277,14 @@ def capex_pipeline(
     """
 
     return (
-        16000 * (e_cap * p_rate / (rho * v * np.pi)) +
-        1197.2 * np.sqrt(e_cap * p_rate / (rho * v * np.pi)) +
-        329
-    ) * 1000 * 2
+        (
+            16000 * (e_cap * p_rate / (rho * v * np.pi))
+            + 1197.2 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
+            + 329
+        )
+        * 1000
+        * 2
+    )
 
 
 # def rotor_area() -> float:
