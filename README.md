@@ -59,7 +59,7 @@ Kish Basin Halite | HYSS | [Link][hyss] | DAT | 2023-07
 [nbwells]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/offshore_exploration_wells.ipynb
 [nbweibull]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/weibull_parameters_wind_speeds.ipynb
 [nbshipping]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/frequent_shipping_routes.ipynb
-[nbshipwrecks]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/heritage_sites.ipynb
+[nbshipwrecks]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/shipwrecks.ipynb
 [nbcables]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/subsea_cables.ipynb
 [nboptimisation]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/wind_farm_optimisation.ipynb
 [nbsensitivity]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/kish_basin_sensitivity.ipynb
