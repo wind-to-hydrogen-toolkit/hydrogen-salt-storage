@@ -8,8 +8,8 @@ jupyterlab
 mapclassify
 matplotlib-scalebar
 pooch
+pydata_sphinx_theme
 pyfluids
 pylint
 rioxarray
-sphinx
 statsmodels
