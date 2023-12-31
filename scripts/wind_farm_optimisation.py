@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # Wind farm optimisation
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 from src import optimisation as opt
-
-opt.rotor_area()
 
 ref_data = {}
 
@@ -25,30 +25,30 @@ ref_data = pd.DataFrame(ref_data)
 
 ref_data.head()
 
-# opt.annual_energy_production(n_turbines=25, k=2, c=10.9)
+opt.annual_energy_production(n_turbines=40, k=2, c=10.9)
 
-fig, axes = plt.subplots(1, 1, figsize=(12, 6))
-sns.lineplot(
-    data=ref_data,
+ax = ref_data.plot(
     x="wind_speed",
     y="power_curve",
-    legend=False,
+    label="Power",
+    ylabel="Power [MW]",
+    linewidth=2,
     color="crimson",
+    figsize=(12, 6),
 )
-axes.grid(axis="y")
-axes.set_xlim(0, 30)
-sns.despine()
-axes.set_xlabel("Wind speed [m s-1]")
-axes.set_ylabel("Power [MW]")
-plt.show()
-
-fig, axes = plt.subplots(1, 1, figsize=(12, 6))
-sns.lineplot(
-    data=ref_data, x="wind_speed", y="weibull", legend=False, color="crimson"
+ref_data.plot(
+    x="wind_speed",
+    y="weibull",
+    label="Weibull",
+    ylabel=(
+        "Weibull probability distribution function "
+        + "[s m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]"
+    ),
+    linewidth=2,
+    color="royalblue",
+    linestyle="dashed",
+    secondary_y=True,
+    ax=ax,
 )
-axes.grid(axis="y")
-axes.set_xlim(0, 30)
-sns.despine()
-axes.set_xlabel("Wind speed [m s-1]")
-axes.set_ylabel("Weibull probability distribution function [s m-1]")
-plt.show()
+ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
+sns.despine(top=True, right=False)
