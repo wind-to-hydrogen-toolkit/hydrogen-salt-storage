@@ -432,7 +432,9 @@ def cavern_dataframe(
     return cavern_df
 
 
-def read_shapefile_from_zip(data_path: str) -> gpd.GeoDataFrame:
+def read_shapefile_from_zip(
+    data_path: str, endswith: str = ".shp"
+) -> gpd.GeoDataFrame:
     """
     Read the shapefile layer from a Zipfile
 
@@ -448,9 +450,11 @@ def read_shapefile_from_zip(data_path: str) -> gpd.GeoDataFrame:
     data_shp = gpd.read_file(
         os.path.join(
             f"zip://{data_path}!"
-            + [x for x in ZipFile(data_path).namelist() if x.endswith(".shp")][
-                0
-            ]
+            + [
+                x
+                for x in ZipFile(data_path).namelist()
+                if x.endswith(endswith)
+            ][0]
         )
     )
 
