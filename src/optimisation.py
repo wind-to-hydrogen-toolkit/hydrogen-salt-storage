@@ -83,7 +83,7 @@ def read_weibull_data(
 
     Returns
     -------
-    - Geodataframes of the dataset and buffer
+    - Dataframe of k and c values for each wind farm
     """
 
     weibull_df = {}
@@ -137,7 +137,7 @@ def read_weibull_data(
 
 def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     """
-    Equation (1) of Dinh et al. (2023).
+    Equation (1) of Dinh et al. (2023a).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
 
     Parameters
@@ -161,7 +161,7 @@ def annual_energy_production(
     w_loss: float = 0.1,
 ) -> float:
     """
-    Equation (3) of Dinh et al. (2023).
+    Equation (3) of Dinh et al. (2023a).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
 
     In the integration, both the limit and absolute error tolerance have
@@ -176,9 +176,9 @@ def annual_energy_production(
 
     Returns
     -------
-    - Annual energy production of wind farm [GWh]
+    - Annual energy production of wind farm [MWh]
     - Integral [MW]
-    - Absolute error
+    - Absolute error [MW]
     """
 
     integration = integrate.quad(
@@ -194,26 +194,27 @@ def annual_energy_production(
 
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
 
-    return aep / 1000, integration[0], integration[1]
+    return aep, integration[0], integration[1]
 
 
 def annual_hydrogen_production(
-    n_turbines: int,
-    k: float,
-    c: float,
-    e_elec: float,
-    eta_conv: float,
-    e_pcl: float,
+    aep: float,
+    e_elec: float = 0.05,
+    eta_conv: float = 0.93,
+    e_pcl: float = 0.003,
 ) -> float:
     """
-    Equation (4) of Dinh et al. (2023).
+    Equation (4) of Dinh et al. (2023a).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
+    Based on Dinh et al. (2021).
+    https://doi.org/10.1016/j.ijhydene.2020.04.232
+
+    Constant values are based on Table 3 of Dinh et al. (2021) for PEM
+    electrolysers in 2030.
 
     Parameters
     ----------
-    n_turbines : Number of wind turbines in wind farm
-    k : Shape (Weibull distribution parameter)
-    c : Scale (Weibull distribution parameter) [m s-1]
+    aep : Annual energy production of wind farm [MWh]
     e_elec : Electricity required to supply the electrolyser to produce 1 kg
       of hydrogen [MWh kg-1]
     eta_conv : Conversion efficiency of the electrolyser
@@ -225,16 +226,70 @@ def annual_hydrogen_production(
     - Annual hydrogen production [kg]
     """
 
-    ahp = annual_energy_production(n_turbines=n_turbines, k=k, c=c) / (
-        (e_elec / eta_conv) + e_pcl
-    )
+    ahp = aep / ((e_elec / eta_conv) + e_pcl)
 
     return ahp
 
 
+def capex_pipeline(
+    e_cap,
+    p_rate: float = 0.0055,
+    rho: float = 8,
+    v: float = 15,
+) -> float:
+    """
+    Capital expenditure (CAPEX) for the pipeline.
+    See Equation (18) of Dinh et al. (2023a):
+    https://doi.org/10.1016/j.ijhydene.2023.01.016
+    and section 3.1 of Dinh et al. (2023b).
+
+    The estimation of offshore pipeline costs is based on the onshore pipeline
+    calculations of Baufumé et al. (2013), multiplied by a factor of two to
+    reflect the estimated cost scaling of onshore to expected offshore costs,
+    as suggested by the International Renewable Energy Agency.
+
+    In the reference case, the resulting capital expenditure for transmission
+    pipelines and associated recompression stations was represented by a
+    second order polynomial function.
+
+    The electrolyser production rate was based on the Siemens - Silyzer 300.
+
+    Because the electrolyser plant is assumed to be operating at full capacity
+    at all times, the CAPEX was calculated considering a 75% utilization
+    rate, i.e. the pipeline capacity is 33% oversized (International Energy
+    Agency, 2019).
+
+    - https://doi.org/10.1016/j.ijhydene.2012.12.147
+    - https://www.irena.org/publications/2022/Apr/Global-hydrogen-trade-Part-II
+    - https://www.iea.org/reports/the-future-of-hydrogen
+    - https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
+
+    Parameters
+    ----------
+    e_cap : Electrolyser capacity [MW]
+    p_rate : Electrolyser production rate [kg s-1 MW-1]
+    rho : Mass density of hydrogen [kg m-3]
+    v : Average fluid velocity [m s-1]
+
+    Returns
+    -------
+    - CAPEX of the pipeline per km of pipeline [€ km-1]
+    """
+
+    return (
+        (
+            16000 * (e_cap * p_rate / (rho * v * np.pi))
+            + 1197.2 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
+            + 329
+        )
+        * 1000
+        * 2
+    )
+
+
 # def rotor_area() -> float:
 #     """
-#     Reference wind turbine rotor swept area, from Dinh et al. (2023).
+#     Reference wind turbine rotor swept area, from Dinh et al. (2023a).
 #     https://doi.org/10.1016/j.ijhydene.2023.01.016
 
 #     Returns
@@ -286,7 +341,7 @@ def annual_hydrogen_production(
 
 # def power_output_wind_turbine(v: float) -> float:
 #     """
-#     Equation (2) of Dinh et al. (2023).
+#     Equation (2) of Dinh et al. (2023a).
 #     https://doi.org/10.1016/j.ijhydene.2023.01.016
 
 #     Parameters
@@ -323,7 +378,7 @@ def annual_hydrogen_production(
 #     Returns
 #     -------
 #     - Power curve multiplied by the Weibull probability distribution function
-#       [MW s m-1 / M kg m s-2]
+#       [MW s m-1 = M kg m s-2]
 #     """
 
 #     return (
