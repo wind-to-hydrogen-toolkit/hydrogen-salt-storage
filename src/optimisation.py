@@ -5,9 +5,12 @@ turbines
 NREL 15 MW reference turbine: https://doi.org/10.2172/1570430
 """
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 from scipy import integrate
+
+from src import functions as fns
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -62,6 +65,76 @@ def ref_power_curve(v: float) -> float:
     return power_curve / 1000
 
 
+def read_weibull_data(
+    data_path_weibull: str,
+    data_path_wind_farms: str,
+    dat_extent: gpd.GeoSeries,
+    dat_crs: int = fns.CRS,
+) -> pd.DataFrame:
+    """
+    Extract Weibull parameters of wind speeds
+
+    Parameters
+    ----------
+    data_path_weibull : Path to the Weibull parameter data Zip file
+    data_path_weibull : Path to the wind farm data Zip file
+    dat_extent : Extent of the Kish Basin data
+    dat_crs : EPSG CRS
+
+    Returns
+    -------
+    - Geodataframes of the dataset and buffer
+    """
+
+    weibull_df = {}
+
+    for w in ["c", "k"]:
+        # read Weibull parameter data
+        weibull_df[w] = fns.read_shapefile_from_zip(
+            data_path=data_path_weibull, endswith=f"{w}_ITM.shp"
+        )
+
+        # read wind farm data
+        wind_farms = fns.constraint_wind_farm(
+            data_path=data_path_wind_farms,
+            dat_extent=dat_extent,
+        )
+
+        # combine Codling wind farm polygons
+        wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
+
+        # convert CRS and keep areas intersecting with wind farms
+        weibull_df[w] = (
+            weibull_df[w]
+            .to_crs(dat_crs)
+            .overlay(wind_farms, how="intersection")
+        )
+
+        # rename column
+        weibull_df[w].rename(columns={"Value": w}, inplace=True)
+
+        # average c and k over wind farms
+        weibull_df[w] = wind_farms.dissolve(by="Name_").merge(
+            weibull_df[w].dissolve(
+                by="Name_", aggfunc={w: ["min", "max", "mean"]}
+            ),
+            on="Name_",
+        )
+
+        # keep only relevant columns
+        weibull_df[w] = weibull_df[w][
+            ["Name", (w, "min"), (w, "max"), (w, "mean")]
+        ]
+
+        # reset index
+        weibull_df[w] = weibull_df[w].reset_index(drop=True)
+
+    # merge
+    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
+
+    return weibull_df
+
+
 def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     """
     Equation (1) of Dinh et al. (2023).
@@ -104,6 +177,8 @@ def annual_energy_production(
     Returns
     -------
     - Annual energy production of wind farm [GWh]
+    - Integral [MW]
+    - Absolute error
     """
 
     integration = integrate.quad(
@@ -119,7 +194,7 @@ def annual_energy_production(
 
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
 
-    return aep / 1000, integration
+    return aep / 1000, integration[0], integration[1]
 
 
 def annual_hydrogen_production(
