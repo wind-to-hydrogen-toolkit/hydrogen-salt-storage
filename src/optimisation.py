@@ -83,7 +83,7 @@ def read_weibull_data(
 
     Returns
     -------
-    - Geodataframes of the dataset and buffer
+    - Dataframe of k and c values for each wind farm
     """
 
     weibull_df = {}
@@ -176,9 +176,9 @@ def annual_energy_production(
 
     Returns
     -------
-    - Annual energy production of wind farm [GWh]
+    - Annual energy production of wind farm [MWh]
     - Integral [MW]
-    - Absolute error
+    - Absolute error [MW]
     """
 
     integration = integrate.quad(
@@ -194,13 +194,11 @@ def annual_energy_production(
 
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
 
-    return aep / 1000, integration[0], integration[1]
+    return aep, integration[0], integration[1]
 
 
 def annual_hydrogen_production(
-    n_turbines: int,
-    k: float,
-    c: float,
+    aep: float,
     e_elec: float,
     eta_conv: float,
     e_pcl: float,
@@ -211,9 +209,7 @@ def annual_hydrogen_production(
 
     Parameters
     ----------
-    n_turbines : Number of wind turbines in wind farm
-    k : Shape (Weibull distribution parameter)
-    c : Scale (Weibull distribution parameter) [m s-1]
+    aep : Annual energy production of wind farm [MWh]
     e_elec : Electricity required to supply the electrolyser to produce 1 kg
       of hydrogen [MWh kg-1]
     eta_conv : Conversion efficiency of the electrolyser
@@ -225,9 +221,7 @@ def annual_hydrogen_production(
     - Annual hydrogen production [kg]
     """
 
-    ahp = annual_energy_production(n_turbines=n_turbines, k=k, c=c) / (
-        (e_elec / eta_conv) + e_pcl
-    )
+    ahp = aep / ((e_elec / eta_conv) + e_pcl)
 
     return ahp
 
@@ -323,7 +317,7 @@ def annual_hydrogen_production(
 #     Returns
 #     -------
 #     - Power curve multiplied by the Weibull probability distribution function
-#       [MW s m-1 / M kg m s-2]
+#       [MW s m-1 = M kg m s-2]
 #     """
 
 #     return (
