@@ -163,7 +163,7 @@ plt.show()
 #
 # <https://xyzservices.readthedocs.io/en/stable/gallery.html>
 
-# bounding box limits with a ~50000 m buffer
+# bounding box limits with a ~50,000 m buffer
 bbox = ie.to_crs(23029).buffer(5e4).envelope
 xmin, ymin, xmax, ymax = bbox.to_crs(3857).total_bounds
 
