@@ -25,8 +25,9 @@ pc = pd.DataFrame(
     {
         "wind_speed": range(REF_V_RATED + 2),
         "power_curve": (
-            [0] * 4 + [0.499, 1.424, 2.732, 4.469, 6.643, 9.459, 12.975] +
-            [REF_RATED_POWER] * 2
+            [0] * 4
+            + [0.499, 1.424, 2.732, 4.469, 6.643, 9.459, 12.975]
+            + [REF_RATED_POWER] * 2
         ),
     }
 )
