@@ -1,11 +1,5 @@
 # Hydrogen storage in salt caverns in the Irish Sea
 
-## Method
-
-Weibull probability distribution function - eq. (1) of Dinh et al. (2023a):
-
-$$f(v)=\frac{k}{C}\left(\frac{v}{C}\right)^{k-1}\exp\left(-\left(\frac{v}{C}^k\right)\right)$$
-
 ## Notebooks
 
 Notebooks can be viewed [here](https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/tree/ipynb/notebooks).
