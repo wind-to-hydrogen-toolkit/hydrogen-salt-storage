@@ -154,14 +154,11 @@ def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     Notes
     -----
     The Weibull probability distribution function, :math:`f(v)` [s m-1] is
-    based on equation (1) of Dinh et al.[1]_, where :math:`k` and :math:`C`
+    based on equation (1) of Dinh et al. [1]_, where :math:`k` and :math:`C`
     are the shape and scale [m s-1] Weibull distribution parameters,
     respectively, and :math:`v` is the wind speed.
 
-    .. math::
-
-        f(v)=\frac{k}{C}\left(\frac{v}{C}\right)^{k-1}
-        \exp\left(-\left(\frac{v}{C}^k\right)\right)
+    .. math:: f(v)=\\frac{k}{C}\\left(\\frac{v}{C}\\right)^{k-1}\\exp\\left(-\\left(\\frac{v}{C}^k\\right)\\right)
 
     .. [1] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
        and Leahy, P. G. (2023). ‘A geospatial method for estimating the
@@ -235,10 +232,10 @@ def annual_hydrogen_production(
     ----------
     aep : Annual energy production of wind farm [MWh]
     e_elec : Electricity required to supply the electrolyser to produce 1 kg
-      of hydrogen [MWh kg-1]
+    of hydrogen [MWh kg-1]
     eta_conv : Conversion efficiency of the electrolyser
     e_pcl : Electricity consumed by other parts of the hydrogen plant
-      [MWh kg-1]
+    [MWh kg-1]
 
     Returns
     -------

@@ -57,7 +57,7 @@ def temperature_cavern_mid_point(
     height : Cavern height [m]
     t_0 : Mean annual surface temperature [deg C]
     t_delta : Geothermal gradient; change in temperature with depth
-        [deg C / km]
+    [deg C / km]
     depth_top : Cavern top depth [m]
 
     Returns

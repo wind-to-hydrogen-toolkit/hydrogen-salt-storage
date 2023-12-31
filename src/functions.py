@@ -180,9 +180,9 @@ def zones_of_interest(
     ----------
     dat_xr : Xarray dataset of the halite data
     constraints : Dictionary containing the following:
-        - height: Cavern height [m]
-        - min_depth: Minimum cavern depth [m]
-        - max_depth: Maximum cavern depth [m]
+    - height: Cavern height [m]
+    - min_depth: Minimum cavern depth [m]
+    - max_depth: Maximum cavern depth [m]
     dat_crs : EPSG CRS
     roof_thickness : Salt roof thickness [m]
     floor_thickness : Minimum salt floor thickness [m]
