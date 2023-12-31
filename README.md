@@ -1,5 +1,11 @@
 # Hydrogen storage in salt caverns in the Irish Sea
 
+## Method
+
+Weibull probability distribution function - eq. (1) of Dinh et al. (2023a):
+
+$$f(v)=\frac{k}{C}\left(\frac{v}{C}\right)^{k-1}\exp\left(-\left(\frac{v}{C}^k\right)\right)$$
+
 ## Notebooks
 
 Notebooks can be viewed [here](https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/tree/ipynb/notebooks).
@@ -33,7 +39,7 @@ Dataset | Source | Metadata | Format | Version
 -- | -- | -- | -- | --
 Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [Link][owf]; [Link][owf2] | Shapefile | 2023-09-11
 Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [Link][wells]; [Link][wells2] | Shapefile | 2021-02-01
-Shipwrecks in Irish Waters | INFOMAR / National Monuments Service / Department of Housing, Local Government and Heritage | [Link][shipwrecks] | Shapefile | 2023-10-24
+Shipwrecks in Irish Waters | INFOMAR / Geological Survey Ireland / Marine Institute / National Monuments Service / Department of Housing, Local Government and Heritage | [Link][shipwrecks] | Shapefile | 2023-10-24
 Frequently Used Routes (300 gross tonnes and above) | Department of Housing, Local Government and Heritage / EMODnet | [Link][shippingroutes]; [Link][shippingroutes2] | Shapefile | 2022-07-19
 Irish Sea Subsea Cables and Renewable Energy Structures | KIS-ORCA | [Link][cables] | Olex Fishing Plotter File | 2023-02-27
 Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level | Sustainable Energy Authority of Ireland | [Link][weibull]; [Link][weibull2] | Shapefile | 2021-06-30
