@@ -90,10 +90,8 @@ sns.despine()
 # max wind farm capacity
 weibull["capacity"] = [1300, 824, 500]
 
-# approximate number of 15 MW turbines
+# number of 15 MW turbines, rounded down to the nearest integer
 weibull["n_turbines"] = (weibull["capacity"] / 15).astype(int)
-
-weibull
 
 aep = []
 integral = []

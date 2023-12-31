@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Weibull Parameters of Wind Speeds 2001 to 2010 -- 150m above ground level
+# # Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level
 #
 # <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
 
@@ -86,6 +86,7 @@ ax = weibull_c.to_crs(3857).plot(
     cmap="flare",
     figsize=(6, 6),
     legend=True,
+    legend_kwds={"label": "c"},
 )
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
 plt.tick_params(labelbottom=False, labelleft=False)
@@ -97,6 +98,7 @@ ax = weibull_k.to_crs(3857).plot(
     cmap="flare",
     figsize=(6, 6),
     legend=True,
+    legend_kwds={"label": "k"},
 )
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
 plt.tick_params(labelbottom=False, labelleft=False)
@@ -129,10 +131,10 @@ land = fns.read_shapefile_from_zip(
 land = land.dissolve().to_crs(fns.CRS)
 
 # crop to wind farm and basin extent
-extent_wf = gpd.GeoDataFrame(geometry=wind_farms.dissolve().envelope)
 extent_wf = gpd.GeoDataFrame(
     geometry=(
-        extent_wf.overlay(gpd.GeoDataFrame(geometry=extent), how="union")
+        gpd.GeoDataFrame(geometry=wind_farms.dissolve().envelope)
+        .overlay(gpd.GeoDataFrame(geometry=extent), how="union")
         .dissolve()
         .envelope
     )
@@ -144,121 +146,83 @@ weibull_k = weibull_k.to_crs(fns.CRS).overlay(extent_wf, how="intersection")
 weibull_c = weibull_c.overlay(land, how="difference")
 weibull_k = weibull_k.overlay(land, how="difference")
 
-plt.figure(figsize=(10, 10))
-ax = plt.axes(projection=ccrs.epsg(fns.CRS))
 
-# add halite boundary - use buffering to smooth the outline
-shape.buffer(1000).buffer(-1000).boundary.plot(
-    ax=ax, color="black", linewidth=2
-)
+def plot_map(df, label):
+    plt.figure(figsize=(10, 10))
+    ax = plt.axes(projection=ccrs.epsg(fns.CRS))
 
-# wind farms
-colours = ["lime", "lime", "black", "deepskyblue"]
-for index, colour in zip(range(len(wind_farms)), colours):
-    wind_farms.iloc[[index]].to_crs(fns.CRS).plot(
+    # add halite boundary - use buffering to smooth the outline
+    shape.buffer(1000).buffer(-1000).boundary.plot(
+        ax=ax, color="black", linewidth=2
+    )
+
+    # wind farms
+    colours = ["lime", "lime", "darkslategrey", "deepskyblue"]
+    for index, colour in zip(range(len(wind_farms)), colours):
+        wind_farms.iloc[[index]].plot(
+            ax=ax,
+            hatch="///",
+            facecolor="none",
+            edgecolor=colour,
+            linewidth=2,
+            zorder=2,
+        )
+    legend_handles = [
+        mpatches.Patch(
+            facecolor="none",
+            hatch="////",
+            edgecolor=colours[1:][x],
+            label=list(wind_farms.dissolve("Name_")["Name"])[x],
+        )
+        for x in range(len(wind_farms.dissolve("Name_")))
+    ]
+
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            edgecolor="black",
+            label="Kish Basin halite",
+            linewidth=2,
+        )
+    )
+
+    df.plot(
+        column="Value",
+        cmap="flare",
+        figsize=(6, 6),
+        legend=True,
         ax=ax,
-        hatch="///",
-        facecolor="none",
-        edgecolor=colour,
-        linewidth=2,
-        zorder=2,
+        zorder=1,
+        legend_kwds={"label": label},
     )
-legend_handles = [
-    mpatches.Patch(
-        facecolor="none",
-        hatch="////",
-        edgecolor=colours[1:][x],
-        label=list(wind_farms.dissolve("Name_")["Name"])[x],
+
+    cx.add_basemap(
+        ax, crs=fns.CRS, source=cx.providers.CartoDB.Voyager, zoom=10
     )
-    for x in range(len(wind_farms.dissolve("Name_")))
-]
-
-legend_handles.append(
-    mpatches.Patch(
-        facecolor="none",
-        edgecolor="black",
-        label="Kish Basin halite",
-        linewidth=2,
+    ax.gridlines(
+        draw_labels={"bottom": "x", "left": "y"},
+        alpha=0.25,
+        color="darkslategrey",
     )
-)
-
-weibull_c.to_crs(fns.CRS).plot(
-    column="Value", cmap="flare", figsize=(6, 6), legend=True, ax=ax, zorder=1
-)
-
-cx.add_basemap(ax, crs=fns.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
-ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
-)
-ax.add_artist(
-    ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
-)
-ax.legend(handles=legend_handles, loc="upper right")
-
-plt.title(None)
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(10, 10))
-ax = plt.axes(projection=ccrs.epsg(fns.CRS))
-
-# add halite boundary - use buffering to smooth the outline
-shape.buffer(1000).buffer(-1000).boundary.plot(
-    ax=ax, color="black", linewidth=2
-)
-
-# wind farms
-colours = ["lime", "lime", "black", "deepskyblue"]
-for index, colour in zip(range(len(wind_farms)), colours):
-    wind_farms.iloc[[index]].to_crs(fns.CRS).plot(
-        ax=ax,
-        hatch="///",
-        facecolor="none",
-        edgecolor=colour,
-        linewidth=2,
-        zorder=2,
+    ax.add_artist(
+        ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
-legend_handles = [
-    mpatches.Patch(
-        facecolor="none",
-        hatch="////",
-        edgecolor=colours[1:][x],
-        label=list(wind_farms.dissolve("Name_")["Name"])[x],
-    )
-    for x in range(len(wind_farms.dissolve("Name_")))
-]
+    ax.legend(handles=legend_handles, loc="upper right")
 
-legend_handles.append(
-    mpatches.Patch(
-        facecolor="none",
-        edgecolor="black",
-        label="Kish Basin halite",
-        linewidth=2,
-    )
-)
+    plt.title(None)
+    plt.tight_layout()
+    plt.show()
 
-weibull_k.to_crs(fns.CRS).plot(
-    column="Value", cmap="flare", figsize=(6, 6), legend=True, ax=ax, zorder=1
-)
 
-cx.add_basemap(ax, crs=fns.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
-ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
-)
-ax.add_artist(
-    ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
-)
-ax.legend(handles=legend_handles, loc="upper right")
+plot_map(weibull_c, "c")
 
-plt.title(None)
-plt.tight_layout()
-plt.show()
+plot_map(weibull_k, "k")
 
 # areas intersecting with wind farms
 weibull_c = weibull_c.overlay(wind_farms, how="intersection")
 weibull_k = weibull_k.overlay(wind_farms, how="intersection")
 
-# average c and k over wind farms
+# compute c and k over wind farms
 weibull_c = wind_farms.dissolve(by="Name_").merge(
     weibull_c.dissolve(by="Name_", aggfunc={"Value": ["min", "max", "mean"]}),
     on="Name_",
