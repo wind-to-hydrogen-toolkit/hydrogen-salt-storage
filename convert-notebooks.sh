@@ -30,3 +30,4 @@ isort **/*.py
 # copy other stuff to main
 cp -r src temp
 cp requirements.txt temp
+cp README.md temp
