@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Marine protected sites
+# # Shipwrecks in Irish Waters
+#
+# <https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
 
 import os
 from datetime import datetime, timezone
@@ -12,21 +14,16 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pooch
 
-# ## Dublin Bay Biosphere Marine Zones
-#
-# <https://data.gov.ie/dataset/dublin-bay-biosphere-marine-zones>
-
 # base data download directory
-DATA_DIR = os.path.join("data", "marine")
+DATA_DIR = os.path.join("data", "heritage")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
-    "https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::"
-    "dublin-bay-biosphere-marine-zones.zip?"
-    "outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D"
+    "https://gsi.geodata.gov.ie/downloads/Marine/Data/Downloads/Shapefiles/"
+    "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
 )
 KNOWN_HASH = None
-FILE_NAME = "dublin-bay-biosphere-marine-zones.zip"
+FILE_NAME = "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 # basemap cache directory
@@ -49,37 +46,27 @@ with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
 
 ZipFile(DATA_FILE).namelist()
 
-data = gpd.read_file(
+data3 = gpd.read_file(
     os.path.join(
         f"zip://{DATA_FILE}!"
         + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
     )
 )
 
-data
+data3.head()
 
-data.shape
+data3.shape
 
-data.crs
+data3.crs
 
-ax = data.plot(
+ax = data3.to_crs(3857).plot(
     figsize=(7.5, 7.5),
-    column="zone",
-    legend=True,
-    cmap="Accent",
-    alpha=0.55,
-    legend_kwds={"loc": "upper left"},
+    edgecolor="darkslategrey",
+    markersize=15,
+    color="chartreuse",
 )
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=11)
-plt.title("Dublin Bay Biosphere")
-
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
-
-ax = data.dissolve().plot(figsize=(7.5, 7.5), alpha=0.55)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=11)
-plt.title("Dublin Bay Biosphere")
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
+plt.title("Shipwrecks in Irish Waters")
 
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()

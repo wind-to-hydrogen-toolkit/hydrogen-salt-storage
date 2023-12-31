@@ -15,7 +15,7 @@ from src import optimisation as opt
 
 importlib.reload(opt)
 
-# ## Power curve and Weibull wind speed distribution
+# ## Power curve [MW] and Weibull wind speed distribution
 
 ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
@@ -85,7 +85,7 @@ ax.set_ylabel(
 )
 sns.despine()
 
-# ## Annual energy production
+# ## Annual energy production [MWh]
 
 # max wind farm capacity
 weibull["capacity"] = [1300, 824, 500]
@@ -108,5 +108,11 @@ aep = pd.DataFrame(aep)
 aep.columns = ["AEP", "integral", "abserr"]
 
 aep = pd.concat([weibull, aep], axis=1)
+
+aep
+
+# ## Annual hydrogen production [kg]
+
+aep["AHP"] = opt.annual_hydrogen_production(aep=aep["AEP"])
 
 aep

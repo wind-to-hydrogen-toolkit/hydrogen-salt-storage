@@ -25,7 +25,9 @@ pc = pd.DataFrame(
     {
         "wind_speed": range(REF_V_RATED + 2),
         "power_curve": (
-            [0] * 4 + [499, 1424, 2732, 4469, 6643, 9459, 12975] + [15000] * 2
+            [0] * 4
+            + [0.499, 1.424, 2.732, 4.469, 6.643, 9.459, 12.975]
+            + [REF_RATED_POWER] * 2
         ),
     }
 )
@@ -58,11 +60,11 @@ def ref_power_curve(v: float) -> float:
         pc_vals = pc[pc["wind_speed"] == np.trunc(v) + 1]
         power_curve = (pc_vals["gradient"] * v + pc_vals["intercept"]).iloc[0]
     elif REF_V_RATED <= v <= REF_V_CUT_OUT:
-        power_curve = 15000
+        power_curve = REF_RATED_POWER
     elif v > REF_V_CUT_OUT:
         power_curve = 0
 
-    return power_curve / 1000
+    return power_curve
 
 
 def read_weibull_data(
@@ -210,7 +212,7 @@ def annual_hydrogen_production(
     https://doi.org/10.1016/j.ijhydene.2020.04.232
 
     Constant values are based on Table 3 of Dinh et al. (2021) for PEM
-    electrolysers in 2030.
+    electrolysers predicted for 2030.
 
     Parameters
     ----------
