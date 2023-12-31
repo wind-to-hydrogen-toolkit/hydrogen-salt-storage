@@ -11,4 +11,5 @@ pooch
 pyfluids
 pylint
 rioxarray
+sphinx
 statsmodels
