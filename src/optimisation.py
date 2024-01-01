@@ -47,11 +47,14 @@ def ref_power_curve(v: float) -> float:
 
     Parameters
     ----------
-    v : Wind speed [m s-1]
+    v : float
+        Wind speed [m s-1]
 
     Returns
     -------
-    - Wind turbine power output at a given wind speed from the power curve [MW]
+    float
+        Wind turbine power output at a given wind speed from the power curve
+        [MW]
     """
 
     if v < REF_V_CUT_IN:
@@ -78,14 +81,19 @@ def read_weibull_data(
 
     Parameters
     ----------
-    data_path_weibull : Path to the Weibull parameter data Zip file
-    data_path_weibull : Path to the wind farm data Zip file
-    dat_extent : Extent of the Kish Basin data
-    dat_crs : EPSG CRS
+    data_path_weibull : str
+        Path to the Weibull parameter data Zip file
+    data_path_weibull : str
+        Path to the wind farm data Zip file
+    dat_extent : gpd.GeoSeries
+        Extent of the Kish Basin data
+    dat_crs : int
+        EPSG CRS
 
     Returns
     -------
-    - Dataframe of k and c values for each wind farm
+    pd.DataFrame
+        Dataframe of k and c values for each wind farm
     """
 
     weibull_df = {}
@@ -143,13 +151,17 @@ def weibull_probability_distribution(k: float, c: float, v: float) -> float:
 
     Parameters
     ----------
-    k : Shape (Weibull distribution parameter)
-    c : Scale (Weibull distribution parameter) [m s-1]
-    v : Wind speed [m s-1]
+    k : float
+        Shape (Weibull distribution parameter)
+    c : float
+        Scale (Weibull distribution parameter) [m s-1]
+    v : float
+        Wind speed [m s-1]
 
     Returns
     -------
-    - Weibull probability distribution function [s m-1]
+    float
+        Weibull probability distribution function [s m-1]
 
     Notes
     -----
@@ -158,13 +170,15 @@ def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     are the shape and scale [m s-1] Weibull distribution parameters,
     respectively, and :math:`v` is the wind speed.
 
-    .. math:: f(v)=\\frac{k}{C}\\left(\\frac{v}{C}\\right)^{k-1}\\exp\\left(-\\left(\\frac{v}{C}^k\\right)\\right)
+    .. math::
+        f(v)=\\frac{k}{C}\\left(\\frac{v}{C}\\right)^{k-1}\\exp\\left(-
+        \\left(\\frac{v}{C}^k\\right)\\right)
 
     .. [1] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
        and Leahy, P. G. (2023). ‘A geospatial method for estimating the
        levelised cost of hydrogen production from offshore wind’,
        *International Journal of Hydrogen Energy*, 48(40), pp. 15000–15013.
-       DOI: 10.1016/j.ijhydene.2023.01.016.
+       https://doi.org/10.1016/j.ijhydene.2023.01.016.
     """
 
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
@@ -175,7 +189,7 @@ def annual_energy_production(
     k: float,
     c: float,
     w_loss: float = 0.1,
-) -> float:
+) -> tuple[float, float, float]:
     """
     Equation (3) of Dinh et al. (2023a).
     https://doi.org/10.1016/j.ijhydene.2023.01.016
@@ -185,16 +199,21 @@ def annual_energy_production(
 
     Parameters
     ----------
-    n_turbines : Number of wind turbines in wind farm
-    k : Shape (Weibull distribution parameter)
-    c : Scale (Weibull distribution parameter) [m s-1]
-    w_loss : Wake loss
+    n_turbines : int
+        Number of wind turbines in wind farm
+    k : float
+        Shape (Weibull distribution parameter)
+    c : float
+        Scale (Weibull distribution parameter) [m s-1]
+    w_loss : float
+        Wake loss
 
     Returns
     -------
-    - Annual energy production of wind farm [MWh]
-    - Integral [MW]
-    - Absolute error [MW]
+    tuple[float, float, float]
+        Annual energy production of wind farm [MWh]
+        Integral [MW]
+        Absolute error [MW]
     """
 
     integration = integrate.quad(
@@ -230,16 +249,20 @@ def annual_hydrogen_production(
 
     Parameters
     ----------
-    aep : Annual energy production of wind farm [MWh]
-    e_elec : Electricity required to supply the electrolyser to produce 1 kg
-    of hydrogen [MWh kg-1]
-    eta_conv : Conversion efficiency of the electrolyser
-    e_pcl : Electricity consumed by other parts of the hydrogen plant
-    [MWh kg-1]
+    aep : float
+        Annual energy production of wind farm [MWh]
+    e_elec : float
+        Electricity required to supply the electrolyser to produce 1 kg
+        of hydrogen [MWh kg-1]
+    eta_conv : float
+        Conversion efficiency of the electrolyser
+    e_pcl : float
+        Electricity consumed by other parts of the hydrogen plant [MWh kg-1]
 
     Returns
     -------
-    - Annual hydrogen production [kg]
+    float
+        Annual hydrogen production [kg]
     """
 
     ahp = aep / ((e_elec / eta_conv) + e_pcl)
@@ -259,6 +282,24 @@ def capex_pipeline(
     https://doi.org/10.1016/j.ijhydene.2023.01.016
     and section 3.1 of Dinh et al. (2023b).
 
+    Parameters
+    ----------
+    e_cap : float
+        Electrolyser capacity [MW]
+    p_rate : float
+        Electrolyser production rate [kg s-1 MW-1]
+    rho : float
+        Mass density of hydrogen [kg m-3]
+    v : float
+        Average fluid velocity [m s-1]
+
+    Returns
+    -------
+    float
+        CAPEX of the pipeline per km of pipeline [€ km-1]
+
+    Notes
+    -----
     The estimation of offshore pipeline costs is based on the onshore pipeline
     calculations of Baufumé et al. (2013), multiplied by a factor of two to
     reflect the estimated cost scaling of onshore to expected offshore costs,
@@ -279,17 +320,6 @@ def capex_pipeline(
     - https://www.irena.org/publications/2022/Apr/Global-hydrogen-trade-Part-II
     - https://www.iea.org/reports/the-future-of-hydrogen
     - https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
-
-    Parameters
-    ----------
-    e_cap : Electrolyser capacity [MW]
-    p_rate : Electrolyser production rate [kg s-1 MW-1]
-    rho : Mass density of hydrogen [kg m-3]
-    v : Average fluid velocity [m s-1]
-
-    Returns
-    -------
-    - CAPEX of the pipeline per km of pipeline [€ km-1]
     """
 
     return (
@@ -310,7 +340,8 @@ def capex_pipeline(
 
 #     Returns
 #     -------
-#     - Wind turbine rotor swept area [m2]
+#     float
+#         Wind turbine rotor swept area [m2]
 #     """
 
 #     return np.pi * np.square(REF_DIAMETER) / 4
@@ -323,12 +354,15 @@ def capex_pipeline(
 
 #     Parameters
 #     ----------
-#     v : Wind speed [m s-1]
-#     rho : Air density [kg m-3]
+#     v : float
+#         Wind speed [m s-1]
+#     rho : float
+#         Air density [kg m-3]
 
 #     Returns
 #     -------
-#     - Power contained in the wind resource [MW]
+#     float
+#         Power contained in the wind resource [MW]
 #     """
 
 #     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
@@ -340,11 +374,13 @@ def capex_pipeline(
 
 #     Parameters
 #     ----------
-#     v : Wind speed [m s-1]
+#     v : float
+#         Wind speed [m s-1]
 
 #     Returns
 #     -------
-#     - Power coefficient
+#     float
+#         Power coefficient
 #     """
 
 #     try:
@@ -362,11 +398,13 @@ def capex_pipeline(
 
 #     Parameters
 #     ----------
-#     v : Wind speed [m s-1]
+#     v : float
+#         Wind speed [m s-1]
 
 #     Returns
 #     -------
-#     - Power output of wind turbine [MW]
+#     float
+#         Power output of wind turbine [MW]
 #     """
 
 #     if v < REF_V_CUT_IN:
@@ -387,14 +425,18 @@ def capex_pipeline(
 
 #     Parameters
 #     ----------
-#     k : Shape (Weibull distribution parameter)
-#     c : Scale (Weibull distribution parameter) [m s-1]
-#     v : Wind speed [m s-1]
+#     k : float
+#         Shape (Weibull distribution parameter)
+#     c : float
+#         Scale (Weibull distribution parameter) [m s-1]
+#     v : float
+#         Wind speed [m s-1]
 
 #     Returns
 #     -------
-#     - Power curve multiplied by the Weibull probability distribution function
-#       [MW s m-1 = M kg m s-2]
+#     float
+#         Power curve multiplied by the Weibull probability distribution
+#         function [MW s m-1 = M kg m s-2]
 #     """
 
 #     return (

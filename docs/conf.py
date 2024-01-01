@@ -18,6 +18,9 @@ author = 'Nithiya Streethran'
 
 extensions = ['sphinx.ext.autodoc']
 
+# disable sorting of functions by alphabetical order
+autodoc_member_order = 'bysource'
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
