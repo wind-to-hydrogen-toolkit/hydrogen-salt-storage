@@ -1,6 +1,7 @@
 black[jupyter]
 cartopy
 contextily
+coverage
 flake8
 geocube
 geopandas
@@ -8,8 +9,9 @@ jupyterlab
 mapclassify
 matplotlib-scalebar
 pooch
-pydata_sphinx_theme
+pydata-sphinx-theme
 pyfluids
 pylint
+pytest
 rioxarray
 statsmodels
