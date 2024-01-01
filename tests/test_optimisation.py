@@ -9,7 +9,6 @@ from src import optimisation as opt
 
 def test_ref_power_curve():
     """Test reference power curve function for a range of wind speeds."""
-
     wind_speeds = list(range(31))
     power_curve = (
         [0] * 4

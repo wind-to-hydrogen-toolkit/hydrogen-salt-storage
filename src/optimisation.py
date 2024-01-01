@@ -1,5 +1,4 @@
-"""Functions to optimise storage locations for a wind farm with reference wind
-turbines. The NREL 15 MW reference turbine [#Musial19]_ is used.
+"""Functions to optimise hydrogen storage locations.
 
 .. rubric:: Footnotes
 .. [#Musial19] Musial, W. D., Beiter, P. C., Nunemaker, J., Heimiller, D. M.,
@@ -115,14 +114,8 @@ def ref_power_curve(v):
     return power_curve
 
 
-def read_weibull_data(
-    data_path_weibull,
-    data_path_wind_farms,
-    dat_extent,
-    dat_crs=fns.CRS,
-):
-    """Extract average, max, and min Weibull parameters of wind speeds for
-    each wind farm in the area of interest.
+def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
+    """Extract mean, max, and min Weibull parameters of wind speeds.
 
     Parameters
     ----------
@@ -132,8 +125,6 @@ def read_weibull_data(
         Path to the wind farm data Zip file
     dat_extent : gpd.GeoSeries
         Extent of the Kish Basin data
-    dat_crs : int
-        EPSG CRS
 
     Returns
     -------
@@ -142,7 +133,9 @@ def read_weibull_data(
 
     Notes
     -----
-    Datasets used: [#SEAI13]_ and [#DHLGH21]_.
+    Datasets used: [#SEAI13]_ and [#DHLGH21]_. Data extracted for each wind
+    farm in the area of interest, i.e. Kish Basin: Codling, Dublin Array, and
+    NISA.
     """
     weibull_df = {}
 
@@ -158,13 +151,13 @@ def read_weibull_data(
             dat_extent=dat_extent,
         )
 
-        # combine Codling wind farm polygons
+        # for combining Codling wind farm polygons
         wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
             weibull_df[w]
-            .to_crs(dat_crs)
+            .to_crs(fns.CRS)
             .overlay(wind_farms, how="intersection")
         )
 
@@ -213,7 +206,7 @@ def weibull_probability_distribution(k, c, v):
     Notes
     -----
     The Weibull probability distribution function, :math:`f(v)` [s m⁻¹] is
-    based on equation (1) of [#Dinh23a]_, where :math:`k` and :math:`C`
+    based on Eqn. (1) of [#Dinh23a]_, where :math:`k` and :math:`C`
     [m s⁻¹] are the shape and scale Weibull distribution parameters,
     respectively, and :math:`v` is the wind speed.
 
@@ -246,7 +239,7 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
 
     Notes
     -----
-    The annual energy production, :math:`AEP` [MWh], is based on equation (3)
+    The annual energy production, :math:`AEP` [MWh], is based on Eqn. (3)
     of [#Dinh23a]_, where :math:`n_T` is the number of turbines in the wind
     farm, :math:`w_{loss}` is the wake loss, which is assumed to be a constant
     value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in and
@@ -299,7 +292,7 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
 
     Notes
     -----
-    Equation (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are
+    Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are
     based on Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
     """
     return aep / ((e_elec / eta_conv) + e_pcl)
@@ -326,7 +319,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
     Notes
     -----
-    See Equation (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_, from
+    See Eqn. (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_, from
     which the following text has been taken.
 
     The estimation of offshore pipeline costs is based on the onshore pipeline
@@ -364,8 +357,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
 
 # def power_wind_resource(v, rho=1.225):
-#     """Total power of the wind resource passing through the reference wind
-#     turbine rotor.
+#     """Total wind resource power passing through the rotor.
 
 #     Parameters
 #     ----------
@@ -418,7 +410,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
 #     Notes
 #     -----
-#     Equation (2) of Dinh et al. [#Dinh23a]_.
+#     Eqn. (2) of Dinh et al. [#Dinh23a]_.
 #     """
 #     if v < REF_V_CUT_IN:
 #         power_wt = 0
