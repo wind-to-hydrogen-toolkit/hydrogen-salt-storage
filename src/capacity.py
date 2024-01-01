@@ -1,5 +1,5 @@
-"""capacity.py
-Functions to calculate salt cavern volumes and storage capacities
+"""Functions to calculate salt cavern volumes and storage capacities
+
 """
 
 import numpy as np
@@ -11,14 +11,7 @@ def cavern_volume(
     height: float, diameter: float = 80, theta: float = 20
 ) -> float:
     """
-    Calculate the cavern volume. See Williams et al. (2022), eq. (1) and
-    Jannel and Torquet (2022).
-
-    - v_cavern = v_cylinder + 2 * v_cone
-    - v_cylinder = pi * r^2 * h_cylinder = pi * r^2 * (h_cavern - 2 * h_cone)
-    - v_cone = pi * r^2 * h_cone / 3 = pi * r^2 * (r * tan(theta)) / 3
-    - v_cavern = pi * r^2 * (h_cavern - 4 / 3 * r * tan(theta))
-    - v_cavern_corrected = v_cavern * scf * (1 - if * insf * bf)
+    Calculate the cavern volume.
 
     Parameters
     ----------
@@ -29,8 +22,17 @@ def cavern_volume(
     Returns
     -------
     - Corrected cavern volume [m3]
-    """
 
+    Notes
+    -----
+    See Williams et al. (2022), eq. (1) and Jannel and Torquet (2022).
+
+    - v_cavern = v_cylinder + 2 * v_cone
+    - v_cylinder = pi * r^2 * h_cylinder = pi * r^2 * (h_cavern - 2 * h_cone)
+    - v_cone = pi * r^2 * h_cone / 3 = pi * r^2 * (r * tan(theta)) / 3
+    - v_cavern = pi * r^2 * (h_cavern - 4 / 3 * r * tan(theta))
+    - v_cavern_corrected = v_cavern * scf * (1 - if * insf * bf)
+    """
     # calculate ideal cavern volume
     r = diameter / 2
     v_cavern = (
