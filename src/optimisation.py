@@ -1,8 +1,55 @@
 """optimisation.py
-Functions to optimise storage locations for a wind farm with reference wind
-turbines
 
-NREL 15 MW reference turbine: https://doi.org/10.2172/1570430
+Functions to optimise storage locations for a wind farm with reference wind
+turbines. The NREL 15 MW reference turbine [#Musial19]_ is used.
+
+.. rubric:: Footnotes
+.. [#Musial19] Musial, W. D., Beiter, P. C., Nunemaker, J., Heimiller, D. M.,
+    Ahmann, J., and Busch, J. (2019). Oregon Offshore Wind Site Feasibility
+    and Cost Study. Technical Report NREL/TP-5000-74597. Golden, CO: National
+    Renewable Energy Laboratory. https://doi.org/10.2172/1570430.
+.. [#SEAI13] Sustainable Energy Authority of Ireland (2013). ‘Weibull
+    Parameters of Wind Speeds 2001 to 2010 - 150m above ground level’.
+    data.gov.ie. Available at:
+    https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level
+    (Accessed: 28 December 2023).
+.. [#DHLGH21] Department of Housing, Local Government and Heritage (2021).
+    ‘Wind Farms (Foreshore Process)’. data.gov.ie. Available at:
+    https://data.gov.ie/dataset/wind-farms-foreshore-process
+    (Accessed: 9 November 2023).
+.. [#Dinh23a] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
+    and Leahy, P. G. (2023). ‘A geospatial method for estimating the
+    levelised cost of hydrogen production from offshore wind’,
+    International Journal of Hydrogen Energy, 48(40), pp. 15000–15013.
+    https://doi.org/10.1016/j.ijhydene.2023.01.016.
+.. [#Dinh21] Dinh, V. N., Leahy, P., McKeogh, E., Murphy, J., and Cummins, V.
+    (2021). ‘Development of a viability assessment model for hydrogen
+    production from dedicated offshore wind farms’, International Journal of
+    Hydrogen Energy, 46(48), pp. 24620–24631.
+    https://doi.org/10.1016/j.ijhydene.2020.04.232.
+.. [#Dinh23b] Dinh, Q. V., Todesco Pereira, P. H., Dinh, V. N., Nagle, A. J.,
+    and Leahy, P. G. (2023). ‘Optimising the levelised cost of transmission
+    for green hydrogen and ammonia in new-build offshore energy
+    infrastructure: pipelines, tankers, and HVDC’.
+.. [#Baufume13] Baufumé, S., Grüger, F., Grube, T., Krieg, D., Linssen, J.,
+    Weber, M., Hake, J.-F., and Stolten, D. (2013). ‘GIS-based scenario
+    calculations for a nationwide German hydrogen pipeline infrastructure’,
+    International Journal of Hydrogen Energy, 38(10), pp. 3813–3829.
+    https://doi.org/10.1016/j.ijhydene.2012.12.147.
+.. [#IRENA22] International Renewable Energy Agency (2022). Global Hydrogen
+    Trade to Meet the 1.5°C Climate Goal: Technology Review of Hydrogen
+    Carriers. Abu Dhabi: International Renewable Energy Agency.
+    ISBN 978-92-9260-431-8. Available at:
+    https://www.irena.org/publications/2022/Apr/Global-hydrogen-trade-Part-II
+    (Accessed: 31 December 2023).
+.. [#Siemens] Siemens Energy (n.d.). Silyzer 300. Datasheet. Erlangen.
+    Available at:
+    https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
+    (Accessed: 31 December 2023).
+.. [#IEA19] International Energy Agency (2019). The Future of Hydrogen:
+    Seizing today’s opportunities. Paris: International Energy Agency.
+    Available at: https://www.iea.org/reports/the-future-of-hydrogen
+    (Accessed: 14 August 2023).
 """
 
 import geopandas as gpd
@@ -40,21 +87,22 @@ pc = pc[
 
 
 def ref_power_curve(v: float) -> float:
-    """
-    Power curve for the reference wind turbine.
-
-    NREL 15 MW reference turbine: https://doi.org/10.2172/1570430
+    """Power curve for the reference wind turbine.
 
     Parameters
     ----------
     v : float
-        Wind speed [m s-1]
+        Wind speed [m s⁻¹]
 
     Returns
     -------
     float
         Wind turbine power output at a given wind speed from the power curve
         [MW]
+
+    Notes
+    -----
+    NREL 15 MW reference wind turbine [#Musial19]_.
     """
 
     if v < REF_V_CUT_IN:
@@ -76,8 +124,8 @@ def read_weibull_data(
     dat_extent: gpd.GeoSeries,
     dat_crs: int = fns.CRS,
 ) -> pd.DataFrame:
-    """
-    Extract Weibull parameters of wind speeds
+    """Extract average, max, and min Weibull parameters of wind speeds for
+    each wind farm in the area of interest.
 
     Parameters
     ----------
@@ -94,6 +142,10 @@ def read_weibull_data(
     -------
     pd.DataFrame
         Dataframe of k and c values for each wind farm
+
+    Notes
+    -----
+    Datasets used: [#SEAI13]_ and [#DHLGH21]_.
     """
 
     weibull_df = {}
@@ -146,39 +198,32 @@ def read_weibull_data(
 
 
 def weibull_probability_distribution(k: float, c: float, v: float) -> float:
-    """
-    Weibull probability distribution function.
+    """Weibull probability distribution function.
 
     Parameters
     ----------
     k : float
         Shape (Weibull distribution parameter)
     c : float
-        Scale (Weibull distribution parameter) [m s-1]
+        Scale (Weibull distribution parameter) [m s⁻¹]
     v : float
-        Wind speed [m s-1]
+        Wind speed [m s⁻¹]
 
     Returns
     -------
     float
-        Weibull probability distribution function [s m-1]
+        Weibull probability distribution function [s m⁻¹]
 
     Notes
     -----
-    The Weibull probability distribution function, :math:`f(v)` [s m-1] is
-    based on equation (1) of Dinh et al. [1]_, where :math:`k` and :math:`C`
-    are the shape and scale [m s-1] Weibull distribution parameters,
-    respectively, and :math:`v` is the wind speed.
+    The Weibull probability distribution function, :math:`f(v)` [s m⁻¹] is
+    based on equation (1) of [#Dinh23a]_, where :math:`k` and :math:`C` are
+    the shape and scale [m s⁻¹] Weibull distribution parameters, respectively,
+    and :math:`v` is the wind speed.
 
     .. math::
         f(v)=\\frac{k}{C}\\left(\\frac{v}{C}\\right)^{k-1}\\exp\\left(-
         \\left(\\frac{v}{C}^k\\right)\\right)
-
-    .. [1] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
-       and Leahy, P. G. (2023). ‘A geospatial method for estimating the
-       levelised cost of hydrogen production from offshore wind’,
-       *International Journal of Hydrogen Energy*, 48(40), pp. 15000–15013.
-       https://doi.org/10.1016/j.ijhydene.2023.01.016.
     """
 
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
@@ -190,12 +235,7 @@ def annual_energy_production(
     c: float,
     w_loss: float = 0.1,
 ) -> tuple[float, float, float]:
-    """
-    Equation (3) of Dinh et al. (2023a).
-    https://doi.org/10.1016/j.ijhydene.2023.01.016
-
-    In the integration, both the limit and absolute error tolerance have
-    been increased.
+    """Annual energy production of the wind farm.
 
     Parameters
     ----------
@@ -204,16 +244,22 @@ def annual_energy_production(
     k : float
         Shape (Weibull distribution parameter)
     c : float
-        Scale (Weibull distribution parameter) [m s-1]
+        Scale (Weibull distribution parameter) [m s⁻¹]
     w_loss : float
         Wake loss
 
     Returns
     -------
     tuple[float, float, float]
-        Annual energy production of wind farm [MWh]
-        Integral [MW]
-        Absolute error [MW]
+        Annual energy production of wind farm [MWh], integral [MW], and
+        absolute error [MW]
+
+    Notes
+    -----
+    Equation (3) of [#Dinh23a]_.
+
+    In the integration, both the limit and absolute error tolerance have
+    been increased.
     """
 
     integration = integrate.quad(
@@ -238,31 +284,29 @@ def annual_hydrogen_production(
     eta_conv: float = 0.93,
     e_pcl: float = 0.003,
 ) -> float:
-    """
-    Equation (4) of Dinh et al. (2023a).
-    https://doi.org/10.1016/j.ijhydene.2023.01.016
-    Based on Dinh et al. (2021).
-    https://doi.org/10.1016/j.ijhydene.2020.04.232
-
-    Constant values are based on Table 3 of Dinh et al. (2021) for PEM
-    electrolysers predicted for 2030.
+    """Annual hydrogen production from the wind farm's energy.
 
     Parameters
     ----------
     aep : float
         Annual energy production of wind farm [MWh]
     e_elec : float
-        Electricity required to supply the electrolyser to produce 1 kg
-        of hydrogen [MWh kg-1]
+        Electricity required to supply the electrolyser to produce 1 kg of
+        hydrogen [MWh kg⁻¹]
     eta_conv : float
         Conversion efficiency of the electrolyser
     e_pcl : float
-        Electricity consumed by other parts of the hydrogen plant [MWh kg-1]
+        Electricity consumed by other parts of the hydrogen plant [MWh kg⁻¹]
 
     Returns
     -------
     float
         Annual hydrogen production [kg]
+
+    Notes
+    -----
+    Equation (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are
+    based on Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
     """
 
     ahp = aep / ((e_elec / eta_conv) + e_pcl)
@@ -276,50 +320,43 @@ def capex_pipeline(
     rho: float = 8,
     v: float = 15,
 ) -> float:
-    """
-    Capital expenditure (CAPEX) for the pipeline.
-    See Equation (18) of Dinh et al. (2023a):
-    https://doi.org/10.1016/j.ijhydene.2023.01.016
-    and section 3.1 of Dinh et al. (2023b).
+    """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
     ----------
     e_cap : float
         Electrolyser capacity [MW]
     p_rate : float
-        Electrolyser production rate [kg s-1 MW-1]
+        Electrolyser production rate [kg s⁻¹ MW⁻¹]
     rho : float
-        Mass density of hydrogen [kg m-3]
+        Mass density of hydrogen [kg m⁻³]
     v : float
-        Average fluid velocity [m s-1]
+        Average fluid velocity [m s⁻¹]
 
     Returns
     -------
     float
-        CAPEX of the pipeline per km of pipeline [€ km-1]
+        CAPEX of the pipeline per km of pipeline [€ km⁻¹]
 
     Notes
     -----
+    See Equation (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_.
+
     The estimation of offshore pipeline costs is based on the onshore pipeline
-    calculations of Baufumé et al. (2013), multiplied by a factor of two to
-    reflect the estimated cost scaling of onshore to expected offshore costs,
-    as suggested by the International Renewable Energy Agency.
+    calculations of [#Baufume13]_, multiplied by a factor of two to reflect the
+    estimated cost scaling of onshore to expected offshore costs, as suggested
+    by [#IRENA22]_.
 
     In the reference case, the resulting capital expenditure for transmission
     pipelines and associated recompression stations was represented by a
     second order polynomial function.
 
-    The electrolyser production rate was based on the Siemens - Silyzer 300.
+    The electrolyser production rate was based on the Siemens - Silyzer 300
+    [#Siemens]_.
 
     Because the electrolyser plant is assumed to be operating at full capacity
-    at all times, the CAPEX was calculated considering a 75% utilization
-    rate, i.e. the pipeline capacity is 33% oversized (International Energy
-    Agency, 2019).
-
-    - https://doi.org/10.1016/j.ijhydene.2012.12.147
-    - https://www.irena.org/publications/2022/Apr/Global-hydrogen-trade-Part-II
-    - https://www.iea.org/reports/the-future-of-hydrogen
-    - https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
+    at all times, the CAPEX was calculated considering a 75% utilization rate,
+    i.e. the pipeline capacity is 33% oversized [#IEA19]_.
     """
 
     return (
@@ -334,30 +371,27 @@ def capex_pipeline(
 
 
 # def rotor_area() -> float:
-#     """
-#     Reference wind turbine rotor swept area, from Dinh et al. (2023a).
-#     https://doi.org/10.1016/j.ijhydene.2023.01.016
+#     """Reference wind turbine rotor swept area.
 
 #     Returns
 #     -------
 #     float
-#         Wind turbine rotor swept area [m2]
+#         Wind turbine rotor swept area [m²]
 #     """
 
 #     return np.pi * np.square(REF_DIAMETER) / 4
 
 
 # def power_wind_resource(v: float, rho: float = 1.225) -> float:
-#     """
-#     Total power of the wind resource passing through the reference wind
-#     turbine rotor
+#     """Total power of the wind resource passing through the reference wind
+#     turbine rotor.
 
 #     Parameters
 #     ----------
 #     v : float
-#         Wind speed [m s-1]
+#         Wind speed [m s⁻¹]
 #     rho : float
-#         Air density [kg m-3]
+#         Air density [kg m⁻³]
 
 #     Returns
 #     -------
@@ -369,13 +403,12 @@ def capex_pipeline(
 
 
 # def power_coefficient(v: float) -> float:
-#     """
-#     Power coefficient curve of the reference wind turbine
+#     """Power coefficient curve of the reference wind turbine.
 
 #     Parameters
 #     ----------
 #     v : float
-#         Wind speed [m s-1]
+#         Wind speed [m s⁻¹]
 
 #     Returns
 #     -------
@@ -392,19 +425,21 @@ def capex_pipeline(
 
 
 # def power_output_wind_turbine(v: float) -> float:
-#     """
-#     Equation (2) of Dinh et al. (2023a).
-#     https://doi.org/10.1016/j.ijhydene.2023.01.016
+#     """Power output of wind turbine.
 
 #     Parameters
 #     ----------
 #     v : float
-#         Wind speed [m s-1]
+#         Wind speed [m s⁻¹]
 
 #     Returns
 #     -------
 #     float
 #         Power output of wind turbine [MW]
+
+#     Notes
+#     -----
+#     Equation (2) of Dinh et al. [#Dinh23a]_.
 #     """
 
 #     if v < REF_V_CUT_IN:
@@ -420,23 +455,22 @@ def capex_pipeline(
 
 
 # def power_curve_weibull(k: float, c: float, v: float) -> float:
-#     """
-#     Power curve with Weibull equation applied
+#     """Power curve with Weibull equation applied.
 
 #     Parameters
 #     ----------
 #     k : float
 #         Shape (Weibull distribution parameter)
 #     c : float
-#         Scale (Weibull distribution parameter) [m s-1]
+#         Scale (Weibull distribution parameter) [m s⁻¹]
 #     v : float
-#         Wind speed [m s-1]
+#         Wind speed [m s⁻¹]
 
 #     Returns
 #     -------
 #     float
 #         Power curve multiplied by the Weibull probability distribution
-#         function [MW s m-1 = M kg m s-2]
+#         function [MW s m⁻¹ = M kg m s⁻²]
 #     """
 
 #     return (
