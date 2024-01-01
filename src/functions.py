@@ -1,6 +1,6 @@
 """Functions to read and structure data and generate caverns.
 
-.. rubric:: Footnotes
+.. rubric:: References
 .. [#Brennan20] Brennan, J. (2020). ‘Fast and easy gridding of point data with
     geopandas’, 16 March. Available at:
     https://james-brennan.github.io/posts/fast_gridding_geopandas/
@@ -199,9 +199,9 @@ def zones_of_interest(
         Xarray dataset of the halite data
     constraints : dict[str, float]
         Dictionary containing the following:
-        - height: Cavern height [m]
-        - min_depth: Minimum cavern depth [m]
-        - max_depth: Maximum cavern depth [m]
+        `"height"`: cavern height [m];
+        `"min_depth"`: minimum cavern depth [m];
+        `"max_depth"`: Maximum cavern depth [m]
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
@@ -692,13 +692,13 @@ def generate_caverns_with_constraints(
         Extent of the data
     exclusions : dict[str, gpd.GeoDataFrame]
         A dictionary of exclusions data. If any of the following keys do not
-        exist in the dictionary, the exclusion will be skipped.
-        - "edge": Halite edge : dict[str, gpd.GeoDataFrame]
-        - "shipping": Frequent shipping routes
-        - "cables": Subsea cables
-        - "wind_farms": Offshore wind farms
-        - "wells": Exporation wells
-        - "shipwrecks": Shipwrecks
+        exist in the dictionary, the exclusion will be skipped:
+        `"edge"`: halite edge, dict[str, gpd.GeoDataFrame];
+        `"shipping"`: frequent shipping routes;
+        `"cables"`: subsea cables;
+        `"wind_farms"`: offshore wind farms;
+        `"wells"`: exporation wells;
+        `"shipwrecks"`: shipwrecks
     diameter : float
         Diameter of the cavern [m]
     separation : float

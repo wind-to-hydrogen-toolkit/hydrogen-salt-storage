@@ -2,7 +2,7 @@
 
 """
 
-import os
+# import os
 
 from src import optimisation as opt
 

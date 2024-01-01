@@ -8,6 +8,7 @@ geopandas
 jupyterlab
 mapclassify
 matplotlib-scalebar
+myst-nb
 pooch
 pydata-sphinx-theme
 pyfluids

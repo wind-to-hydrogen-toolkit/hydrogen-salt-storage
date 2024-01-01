@@ -1,15 +1,17 @@
-*.csv
-*.dat
-# *.py
-*.zip
-__pycache__/
-.pytest_cache/
-.ipynb_checkpoints/
-.venv/
-data/*
-scripts/
-# src/
-temp/
-!data/README.md
 _build/
 .coverage
+*.csv
+*.dat
+data/*
+!data/README.md
+.ipynb_checkpoints/
+# *.py
+__pycache__/
+.pytest_cache/
+scripts/
+# src/
+_static/
+temp/
+_templates/
+.venv/
+*.zip
