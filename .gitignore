@@ -3,6 +3,7 @@
 # *.py
 *.zip
 __pycache__/
+.pytest_cache/
 .ipynb_checkpoints/
 .venv/
 data/*
@@ -11,3 +12,4 @@ scripts/
 temp/
 !data/README.md
 _build/
+.coverage
