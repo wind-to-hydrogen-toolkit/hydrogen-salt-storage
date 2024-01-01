@@ -10,9 +10,8 @@ Welcome to hydrogen-salt-storage-optimisation's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   functions
-   capacity
-   optimisation
+   methods
+   notebooks
 
 
 Indices and tables
