@@ -5,7 +5,6 @@
 __pycache__/
 .ipynb_checkpoints/
 .venv/
-.vscode/
 data/*
 scripts/
 # src/
