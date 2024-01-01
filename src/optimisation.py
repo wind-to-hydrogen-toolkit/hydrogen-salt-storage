@@ -1,6 +1,4 @@
-"""optimisation.py
-
-Functions to optimise storage locations for a wind farm with reference wind
+"""Functions to optimise storage locations for a wind farm with reference wind
 turbines. The NREL 15 MW reference turbine [#Musial19]_ is used.
 
 .. rubric:: Footnotes
@@ -47,12 +45,11 @@ turbines. The NREL 15 MW reference turbine [#Musial19]_ is used.
     https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
     (Accessed: 31 December 2023).
 .. [#IEA19] International Energy Agency (2019). The Future of Hydrogen:
-    Seizing today’s opportunities. Paris: International Energy Agency.
+    Seizing today's opportunities. Paris: International Energy Agency.
     Available at: https://www.iea.org/reports/the-future-of-hydrogen
     (Accessed: 14 August 2023).
 """
 
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 from scipy import integrate
@@ -86,7 +83,7 @@ pc = pc[
 ]
 
 
-def ref_power_curve(v: float) -> float:
+def ref_power_curve(v):
     """Power curve for the reference wind turbine.
 
     Parameters
@@ -102,9 +99,9 @@ def ref_power_curve(v: float) -> float:
 
     Notes
     -----
-    NREL 15 MW reference wind turbine [#Musial19]_.
+    The NREL 15 MW reference wind turbine is used; see [#Musial19]_, Appendix
+    D, p. 84, for the data used to generate the power curve.
     """
-
     if v < REF_V_CUT_IN:
         power_curve = 0
     elif REF_V_CUT_IN <= v < REF_V_RATED:
@@ -119,11 +116,8 @@ def ref_power_curve(v: float) -> float:
 
 
 def read_weibull_data(
-    data_path_weibull: str,
-    data_path_wind_farms: str,
-    dat_extent: gpd.GeoSeries,
-    dat_crs: int = fns.CRS,
-) -> pd.DataFrame:
+    data_path_weibull, data_path_wind_farms, dat_extent, dat_crs=fns.CRS,
+):
     """Extract average, max, and min Weibull parameters of wind speeds for
     each wind farm in the area of interest.
 
@@ -147,7 +141,6 @@ def read_weibull_data(
     -----
     Datasets used: [#SEAI13]_ and [#DHLGH21]_.
     """
-
     weibull_df = {}
 
     for w in ["c", "k"]:
@@ -197,7 +190,7 @@ def read_weibull_data(
     return weibull_df
 
 
-def weibull_probability_distribution(k: float, c: float, v: float) -> float:
+def weibull_probability_distribution(k, c, v):
     """Weibull probability distribution function.
 
     Parameters
@@ -217,24 +210,18 @@ def weibull_probability_distribution(k: float, c: float, v: float) -> float:
     Notes
     -----
     The Weibull probability distribution function, :math:`f(v)` [s m⁻¹] is
-    based on equation (1) of [#Dinh23a]_, where :math:`k` and :math:`C` are
-    the shape and scale [m s⁻¹] Weibull distribution parameters, respectively,
-    and :math:`v` is the wind speed.
+    based on equation (1) of [#Dinh23a]_, where :math:`k` and :math:`C`
+    [m s⁻¹] are the shape and scale Weibull distribution parameters,
+    respectively, and :math:`v` is the wind speed.
 
     .. math::
-        f(v)=\\frac{k}{C}\\left(\\frac{v}{C}\\right)^{k-1}\\exp\\left(-
-        \\left(\\frac{v}{C}^k\\right)\\right)
+        f(v) = \\frac{k}{C} \\left(\\frac{v}{C}\\right)^{k-1}
+        \\exp\\left(-\\left(\\frac{v}{C}^k\\right)\\right)
     """
-
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
 
 
-def annual_energy_production(
-    n_turbines: int,
-    k: float,
-    c: float,
-    w_loss: float = 0.1,
-) -> tuple[float, float, float]:
+def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     """Annual energy production of the wind farm.
 
     Parameters
@@ -256,12 +243,22 @@ def annual_energy_production(
 
     Notes
     -----
-    Equation (3) of [#Dinh23a]_.
+    The annual energy production, :math:`AEP` [MWh], is based on equation (3)
+    of [#Dinh23a]_, where :math:`n_T` is the number of turbines in the wind
+    farm, :math:`w_{loss}` is the wake loss, which is assumed to be a constant
+    value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in and
+    cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
+    the wind turbine power output, and :math:`f(v)` [s m⁻¹] is the Weibull
+    probability distribution function.
 
-    In the integration, both the limit and absolute error tolerance have
-    been increased.
+    .. math::
+        AEP = 365 \\times 24 \\times n_T \\times
+        \\left(1 - w_{loss}\\right) \\times
+        \\int\\limits_{v_i}^{v_o} P(v) f(v)\\,\\mathrm{d}v
+
+    In the function's implementation, both the limit and absolute error
+    tolerance for the integration have been increased.
     """
-
     integration = integrate.quad(
         lambda v: (
             ref_power_curve(v=v)
@@ -272,18 +269,12 @@ def annual_energy_production(
         limit=100,  # an upper bound on the number of subintervals used
         epsabs=1.49e-6,  # absolute error tolerance
     )
-
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
 
     return aep, integration[0], integration[1]
 
 
-def annual_hydrogen_production(
-    aep: float,
-    e_elec: float = 0.05,
-    eta_conv: float = 0.93,
-    e_pcl: float = 0.003,
-) -> float:
+def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     """Annual hydrogen production from the wind farm's energy.
 
     Parameters
@@ -308,18 +299,10 @@ def annual_hydrogen_production(
     Equation (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are
     based on Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
     """
-
-    ahp = aep / ((e_elec / eta_conv) + e_pcl)
-
-    return ahp
+    return aep / ((e_elec / eta_conv) + e_pcl)
 
 
-def capex_pipeline(
-    e_cap,
-    p_rate: float = 0.0055,
-    rho: float = 8,
-    v: float = 15,
-) -> float:
+def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -340,7 +323,8 @@ def capex_pipeline(
 
     Notes
     -----
-    See Equation (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_.
+    See Equation (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_, from
+    which the following text has been taken.
 
     The estimation of offshore pipeline costs is based on the onshore pipeline
     calculations of [#Baufume13]_, multiplied by a factor of two to reflect the
@@ -355,22 +339,20 @@ def capex_pipeline(
     [#Siemens]_.
 
     Because the electrolyser plant is assumed to be operating at full capacity
-    at all times, the CAPEX was calculated considering a 75% utilization rate,
+    at all times, the CAPEX was calculated considering a 75% utilisation rate,
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
     """
-
     return (
         (
-            16000 * (e_cap * p_rate / (rho * v * np.pi))
-            + 1197.2 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
-            + 329
+            16000000 * (e_cap * p_rate / (rho * v * np.pi))
+            + 1197200 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
+            + 329000
         )
-        * 1000
         * 2
     )
 
 
-# def rotor_area() -> float:
+# def rotor_area():
 #     """Reference wind turbine rotor swept area.
 
 #     Returns
@@ -378,11 +360,10 @@ def capex_pipeline(
 #     float
 #         Wind turbine rotor swept area [m²]
 #     """
-
 #     return np.pi * np.square(REF_DIAMETER) / 4
 
 
-# def power_wind_resource(v: float, rho: float = 1.225) -> float:
+# def power_wind_resource(v, rho=1.225):
 #     """Total power of the wind resource passing through the reference wind
 #     turbine rotor.
 
@@ -398,11 +379,10 @@ def capex_pipeline(
 #     float
 #         Power contained in the wind resource [MW]
 #     """
-
 #     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
 
 
-# def power_coefficient(v: float) -> float:
+# def power_coefficient(v):
 #     """Power coefficient curve of the reference wind turbine.
 
 #     Parameters
@@ -415,7 +395,6 @@ def capex_pipeline(
 #     float
 #         Power coefficient
 #     """
-
 #     try:
 #         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
 #     except ZeroDivisionError:
@@ -424,7 +403,7 @@ def capex_pipeline(
 #     return coeff
 
 
-# def power_output_wind_turbine(v: float) -> float:
+# def power_output_wind_turbine(v):
 #     """Power output of wind turbine.
 
 #     Parameters
@@ -441,7 +420,6 @@ def capex_pipeline(
 #     -----
 #     Equation (2) of Dinh et al. [#Dinh23a]_.
 #     """
-
 #     if v < REF_V_CUT_IN:
 #         power_wt = 0
 #     elif REF_V_CUT_IN <= v < REF_V_RATED:
@@ -454,7 +432,7 @@ def capex_pipeline(
 #     return power_wt
 
 
-# def power_curve_weibull(k: float, c: float, v: float) -> float:
+# def power_curve_weibull(k, c, v):
 #     """Power curve with Weibull equation applied.
 
 #     Parameters
@@ -472,7 +450,6 @@ def capex_pipeline(
 #         Power curve multiplied by the Weibull probability distribution
 #         function [MW s m⁻¹ = M kg m s⁻²]
 #     """
-
 #     return (
 #         ref_power_curve(v=v) *
 #         weibull_probability_distribution(k=k, c=c, v=v)
