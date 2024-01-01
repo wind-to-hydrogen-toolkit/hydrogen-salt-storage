@@ -127,8 +127,11 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
 
 
 def pressure_operating(
-    thickness_overburden, rho_overburden=2400, rho_salt=2200, minf=0.3,
-    maxf=0.8
+    thickness_overburden,
+    rho_overburden=2400,
+    rho_salt=2200,
+    minf=0.3,
+    maxf=0.8,
 ):
     """Cavern operating pressures.
 
