@@ -1,6 +1,6 @@
 """Functions to optimise hydrogen storage locations.
 
-.. rubric:: Footnotes
+.. rubric:: References
 .. [#Musial19] Musial, W. D., Beiter, P. C., Nunemaker, J., Heimiller, D. M.,
     Ahmann, J., and Busch, J. (2019). Oregon Offshore Wind Site Feasibility
     and Cost Study. Technical Report NREL/TP-5000-74597. Golden, CO: National
@@ -44,7 +44,7 @@
     https://assets.siemens-energy.com/siemens/assets/api/uuid:a193b68f-7ab4-4536-abe2-c23e01d0b526/datasheet-silyzer300.pdf
     (Accessed: 31 December 2023).
 .. [#IEA19] International Energy Agency (2019). The Future of Hydrogen:
-    Seizing today's opportunities. Paris: International Energy Agency.
+    Seizing today’s opportunities. Paris: International Energy Agency.
     Available at: https://www.iea.org/reports/the-future-of-hydrogen
     (Accessed: 14 August 2023).
 """
