@@ -1,10 +1,12 @@
+_build/
+.coverage
 *.csv
 *.dat
-*.zip
-__pycache__/
-.venv/
-# .vscode/
 data/
+.ipynb_checkpoints/
 notebooks/
+__pycache__/
+.pytest_cache/
 temp/
-_build/
+.venv/
+*.zip
