@@ -115,11 +115,9 @@ def ref_power_curve(v):
     return power_curve
 
 
-def read_weibull_data(
-    data_path_weibull, data_path_wind_farms, dat_extent, dat_crs=fns.CRS,
-):
-    """Extract average, max, and min Weibull parameters of wind speeds for
-    each wind farm in the area of interest.
+def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
+    """Extract mean, max, and min Weibull parameters of wind speeds for each
+    wind farm in the area of interest, i.e. Kish Basin.
 
     Parameters
     ----------
@@ -129,8 +127,6 @@ def read_weibull_data(
         Path to the wind farm data Zip file
     dat_extent : gpd.GeoSeries
         Extent of the Kish Basin data
-    dat_crs : int
-        EPSG CRS
 
     Returns
     -------
@@ -139,7 +135,8 @@ def read_weibull_data(
 
     Notes
     -----
-    Datasets used: [#SEAI13]_ and [#DHLGH21]_.
+    Datasets used: [#SEAI13]_ and [#DHLGH21]_. There are three wind farms in
+    the area of interest: Codling, Dublin Array, and NISA.
     """
     weibull_df = {}
 
@@ -155,13 +152,13 @@ def read_weibull_data(
             dat_extent=dat_extent,
         )
 
-        # combine Codling wind farm polygons
+        # for combining Codling wind farm polygons
         wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
             weibull_df[w]
-            .to_crs(dat_crs)
+            .to_crs(fns.CRS)
             .overlay(wind_farms, how="intersection")
         )
 
