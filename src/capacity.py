@@ -31,7 +31,8 @@
     https://github.com/portyanikhin/PyFluids (Accessed: 1 January 2024).
 .. [#CoolProp] Bell, I. H. and the CoolProp Team (n.d.). Hydrogen - CoolProp
     documentation. Available at:
-    http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html.
+    http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html
+    (Accessed: 10 December 2023).
 """
 
 import numpy as np
@@ -67,8 +68,8 @@ def cavern_volume(height, diameter=80, theta=20):
     calculating the volume of a cylinder of the cavern height,
     :math:`h_{cavern}` [m] and deducting 4/3 of the volume of a cone of height
     :math:`h_{cone}`. :math:`r` [m] is the radius of the cavern and
-    :math:`h_{cone}` is therefore equivalent to
-    :math:`r \\tan(\\theta)`.
+    :math:`h_{cone}` is therefore equivalent to :math:`r \\tan(\\theta)`,
+    where :math:`\\theta` [°] is the cavern roof angle.
 
     .. math::
         V_{ideal} = \\pi \\times r^2 \\times h_{cavern}
@@ -192,16 +193,21 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
 
     Notes
     -----
-    See [#Williams22]_, Section 3.4.2 and [#Caglayan20]_, Eqn. (3).
-    This uses the CoolProp [#Bell14]_ wrapper PyFluids [#PyFluids]_.
+    See [#Williams22]_, Section 3.4.2 and [#Caglayan20]_, Eqn. (3) (shown
+    below). This uses the CoolProp [#Bell14]_ wrapper PyFluids [#PyFluids]_.
     See the CoolProp documentation for hydrogen [#CoolProp]_.
 
-    !Note: Check density values!
+    :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is the
+    universal gas constant [J K⁻¹ mol⁻¹], :math:`P` is the pressure [Pa],
+    :math:`T` is the temperature [K], :math:`Z` is the compressibility factor,
+    and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
 
-    rho = p * m / (z * r * t)
-    where p: pressure [Pa], m: molar mass of hydrogen gas [kg mol⁻¹], z:
-    compressibility factor, r: universal gas constant [J K⁻¹ mol⁻¹], t:
-    temperature [K]
+    .. math::
+        \\rho = \\frac{P \\times M}{Z \\times R \\times T}
+
+    The `pyfluids.ini` configuration file has been set such that the default
+    units used by PyFluids are SI units. PyFluids can also be used to just
+    derive :math:`Z`.
     """
     rho_h2 = []
 
