@@ -12,6 +12,7 @@ Welcome to hydrogen-salt-storage-optimisation's documentation!
 
    methods
    notebooks
+   tests
 
 
 Indices and tables

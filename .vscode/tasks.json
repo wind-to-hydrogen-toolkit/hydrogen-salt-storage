@@ -21,6 +21,15 @@
             "group": {
                 "kind": "test"
             }
+        },
+        {
+            "label": "docs-clean",
+            "type": "shell",
+            "command": "source .venv/bin/activate && cd docs && make clean html",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
         }
     ]
 }
