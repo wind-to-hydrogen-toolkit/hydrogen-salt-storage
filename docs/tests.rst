@@ -6,3 +6,4 @@ Tests
    :caption: Contents:
 
    tests/test_capacity
+   tests/test_optimisation

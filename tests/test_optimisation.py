@@ -1,8 +1,6 @@
-"""test_functions.py
+"""test `src.optimisation` functions.
 
 """
-
-# import os
 
 from src import optimisation as opt
 

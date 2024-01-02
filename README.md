@@ -40,6 +40,30 @@ Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level | Susta
 Provinces - National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | [Link][boundary]; [Link][boundary2] | Shapefile | 2022-07-07
 Kish Basin Halite | HYSS | [Link][hyss] | DAT | 2023-07
 
+## Installation
+
+This project uses Python 3.11.
+
+Create a virtual environment and install all requirements:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+To run tests:
+
+```sh
+python -m pytest
+```
+
+To generate a coverage report with the tests:
+
+```sh
+python -m coverage run -m pytest && coverage report -m
+```
+
 [owf]: https://data.gov.ie/dataset/wind-farms-foreshore-process
 [owf2]: https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process
 [wells]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171

@@ -88,6 +88,8 @@ def cavern_volume(height, diameter=80, theta=20):
     .. math::
         V_{cavern} = V_{ideal} \\times SCF \\times (1 - IF \\times INSF
         \\times BF)
+    .. math::
+        = V_{ideal} \\times 0.7 \\times (1 - 0.25 \\times 0.865 \\times 1.46)
     """
     # calculate ideal cavern volume
     r = diameter / 2
@@ -96,7 +98,8 @@ def cavern_volume(height, diameter=80, theta=20):
     )
 
     # apply correction factors
-    v_cavern = v_cavern * 0.7 * (1 - 0.25 * 0.865 * 1.46)
+    correction_factors = 0.7 * (1 - 0.25 * 0.865 * 1.46)
+    v_cavern = v_cavern * correction_factors
 
     return v_cavern
 
@@ -127,6 +130,9 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
     A :math:`T_\\Delta` [°C km⁻¹] value of 37.5 is used based on the geothermal
     gradient of Kish Basin wells in the Mercia Mudstone Group reported in
     [#English23]_.
+    Note that the cavern top depth is used instead of the casing shoe depth,
+    as the casing shoe is 30 m above the cavern top depth in this study,
+    rather than at the cavern top depth.
     """
     return t_0 + t_delta / 1000 * (depth_top + height / 2) + 273.15
 
@@ -156,7 +162,7 @@ def pressure_operating(
     Returns
     -------
     tuple[float, float]
-        Operating pressures [Pa]
+        Min and max operating pressures [Pa]
 
     Notes
     -----
@@ -189,7 +195,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     Returns
     -------
     tuple[float, float]
-        Hydrogen gas density [kg m⁻³]
+        Min and max hydrogen gas density [kg m⁻³]
 
     Notes
     -----
@@ -209,20 +215,27 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     units used by PyFluids are SI units. PyFluids can also be used to just
     derive :math:`Z`.
     """
-    rho_h2 = []
+    if p_operating_min < p_operating_max:
+        rho_h2 = []
 
-    for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
-        h2_min = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_min), Input.temperature(t)
+        for p_min, p_max, t in zip(
+            p_operating_min, p_operating_max, t_mid_point
+        ):
+            h2_min = Fluid(FluidsList.Hydrogen).with_state(
+                Input.pressure(p_min), Input.temperature(t)
+            )
+
+            h2_max = Fluid(FluidsList.Hydrogen).with_state(
+                Input.pressure(p_max), Input.temperature(t)
+            )
+
+            rho_h2.append((h2_min.density, h2_max.density))
+
+        rho_h2 = pd.DataFrame(rho_h2)
+    else:
+        print(
+            "Error: p_operating_min seems to be larger than p_operating_max!"
         )
-
-        h2_max = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_max), Input.temperature(t)
-        )
-
-        rho_h2.append((h2_min.density, h2_max.density))
-
-    rho_h2 = pd.DataFrame(rho_h2)
 
     return rho_h2[0], rho_h2[1]
 
@@ -249,8 +262,11 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     See [#Williams22]_, Eqn. (5) and (6).
     """
     # stored mass of hydrogen at min and max operating pressures
-    m_min_operating = rho_h2_min * v_cavern
-    m_max_operating = rho_h2_max * v_cavern
+    if rho_h2_min < rho_h2_max:
+        m_min_operating = rho_h2_min * v_cavern
+        m_max_operating = rho_h2_max * v_cavern
+    else:
+        print("Error: rho_h2_min seems to be larger than rho_h2_max!")
 
     return m_max_operating - m_min_operating
 

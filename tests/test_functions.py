@@ -1,4 +1,4 @@
-"""test_functions.py
+"""Test `src.functions` functions.
 
 """
 
