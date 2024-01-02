@@ -319,8 +319,8 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
     Notes
     -----
-    See Eqn. (18) of [#Dinh23a]_ and section 3.1 of [#Dinh23b]_, from
-    which the following text has been taken.
+    See Eqn. (18) of [#Dinh23a]_ and Section 3.1 of [#Dinh23b]_, from which
+    the following text has been taken.
 
     The estimation of offshore pipeline costs is based on the onshore pipeline
     calculations of [#Baufume13]_, multiplied by a factor of two to reflect the

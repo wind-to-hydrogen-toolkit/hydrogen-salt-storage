@@ -48,7 +48,7 @@ CRS = 23029
 
 
 def read_dat_file(dat_path):
-    """Read XYZ data layers into an Xarray dataset
+    """Read XYZ halite data layers into an Xarray dataset
 
     Parameters
     ----------
@@ -58,7 +58,7 @@ def read_dat_file(dat_path):
     Returns
     -------
     tuple[xr.Dataset, gpd.GeoSeries]
-        Xarray dataset and GeoPandas GeoSeries of the extent
+        Xarray dataset of the XYZ data and GeoPandas GeoSeries of the extent
     """
     gdf = {}
     # for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
