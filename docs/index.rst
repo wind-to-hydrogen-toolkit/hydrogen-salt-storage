@@ -3,20 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to hydrogen-salt-storage-optimisation's documentation!
-==============================================================
+Hydrogen storage in salt caverns in the Irish Sea
+=================================================
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    methods
    notebooks
-   tests
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

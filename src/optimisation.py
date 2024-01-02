@@ -19,6 +19,10 @@
     levelised cost of hydrogen production from offshore wind’,
     International Journal of Hydrogen Energy, 48(40), pp. 15000–15013.
     https://doi.org/10.1016/j.ijhydene.2023.01.016.
+.. [#Pryor18] Pryor, S. C., Shepherd, T. J., and Barthelmie, R. J. (2018).
+    ‘Interannual variability of wind climates and wind turbine annual energy
+    production’, Wind Energy Science, 3(2), pp. 651–665.
+    https://doi.org/10.5194/wes-3-651-2018.
 .. [#Dinh21] Dinh, V. N., Leahy, P., McKeogh, E., Murphy, J., and Cummins, V.
     (2021). ‘Development of a viability assessment model for hydrogen
     production from dedicated offshore wind farms’, International Journal of
@@ -211,8 +215,10 @@ def weibull_probability_distribution(k, c, v):
     respectively, and :math:`v` is the wind speed.
 
     .. math::
-        f(v) = \\frac{k}{C} \\left(\\frac{v}{C}\\right)^{k-1}
-        \\exp\\left(-\\left(\\frac{v}{C}^k\\right)\\right)
+        f(v) = \\frac{k}{C} \\left( \\frac{v}{C} \\right)^{k-1}
+        \\exp \\left( -\\left( \\frac{v}{C}^k \\right) \\right)
+
+    See also [#Pryor18]_, Eqn. (2).
     """
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
 
@@ -249,7 +255,7 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
 
     .. math::
         AEP = 365 \\times 24 \\times n_T \\times
-        \\left(1 - w_{loss}\\right) \\times
+        \\left( 1 - w_{loss} \\right) \\times
         \\int\\limits_{v_i}^{v_o} P(v) f(v)\\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -292,8 +298,17 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
 
     Notes
     -----
-    Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are
-    based on Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
+    Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are based on
+    Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
+    :math:`AHP` is the annual hydrogen production [kg], :math:`AEP` is the
+    annual energy production of wind farm [MWh], :math:`E_{elec}` is the
+    electricity required to supply the electrolyser to produce 1 kg of
+    hydrogen [MWh kg⁻¹], :math:`\\eta_{conv}` is the conversion efficiency of
+    the electrolyser, and :math:`E_{pcl}` is the electricity consumed by other
+    parts of the hydrogen plant [MWh kg⁻¹].
+
+    .. math::
+        AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
     """
     return aep / ((e_elec / eta_conv) + e_pcl)
 
@@ -337,112 +352,113 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
     Because the electrolyser plant is assumed to be operating at full capacity
     at all times, the CAPEX was calculated considering a 75% utilisation rate,
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
+
+    .. math::
+        CAPEX_{pipe} = 2 \\times \\left( 16,000,000 \\frac{E_{cap}
+        \\times P_{rate}}{\\rho \\times v \\times \\pi} \\times 1,197,200
+        \\sqrt{\\frac{E_{cap} \\times P_{rate}}{\\rho \\times v \\times \\pi}
+        + 329,000} \\right)
     """
-    return (
-        16000000 * (e_cap * p_rate / (rho * v * np.pi))
-        + 1197200 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
-        + 329000
-    ) * 2
+    return 2 * (
+        16000e3 * (e_cap * p_rate / (rho * v * np.pi))
+        + 1197.2e3 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
+        + 329e3
+    )
 
 
-# def rotor_area():
-#     """Reference wind turbine rotor swept area.
+def lcot_pipeline(
+    capex,
+    transmission_distance,
+    prod_h2,
+    opex_factor=0.02,
+    discount_rate=0.08,
+    lifetime=30,
+):
+    """Levelised cost of transmission (LCOT) of hydrogen in pipelines.
 
-#     Returns
-#     -------
-#     float
-#         Wind turbine rotor swept area [m²]
-#     """
-#     return np.pi * np.square(REF_DIAMETER) / 4
+    Parameters
+    ----------
+    capex : float
+        Capital expenditure (CAPEX) of the pipeline [€ km⁻¹]
+    transmission_distance : float
+        Transmission distance [km]
+    prod_h2 : float
+        Hydrogen production [kg]
+    opex_factor : float
+        Ratio of the operational expenditure (OPEX) to the CAPEX
+    discount_rate : float
+        Discount rate
+    lifetime
+        Lifetime of the pipeline [years]
 
+    Returns
+    -------
+    float
+        LCOT of the pipeline [€ kg⁻¹]
 
-# def power_wind_resource(v, rho=1.225):
-#     """Total wind resource power passing through the rotor.
-
-#     Parameters
-#     ----------
-#     v : float
-#         Wind speed [m s⁻¹]
-#     rho : float
-#         Air density [kg m⁻³]
-
-#     Returns
-#     -------
-#     float
-#         Power contained in the wind resource [MW]
-#     """
-#     return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
-
-
-# def power_coefficient(v):
-#     """Power coefficient curve of the reference wind turbine.
-
-#     Parameters
-#     ----------
-#     v : float
-#         Wind speed [m s⁻¹]
-
-#     Returns
-#     -------
-#     float
-#         Power coefficient
-#     """
-#     try:
-#         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
-#     except ZeroDivisionError:
-#         coeff = 0
-
-#     return coeff
+    Notes
+    -----
+    See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
+    (22) of [#Dinh23b]_.
+    """
+    f1 = sum(
+        1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
+    )
+    return (capex * transmission_distance + (capex * opex_factor) * f1) / (
+        prod_h2 * f1
+    )
 
 
-# def power_output_wind_turbine(v):
-#     """Power output of wind turbine.
+def rotor_area():
+    """Reference wind turbine rotor swept area.
 
-#     Parameters
-#     ----------
-#     v : float
-#         Wind speed [m s⁻¹]
+    Returns
+    -------
+    float
+        Wind turbine rotor swept area [m²]
 
-#     Returns
-#     -------
-#     float
-#         Power output of wind turbine [MW]
-
-#     Notes
-#     -----
-#     Eqn. (2) of Dinh et al. [#Dinh23a]_.
-#     """
-#     if v < REF_V_CUT_IN:
-#         power_wt = 0
-#     elif REF_V_CUT_IN <= v < REF_V_RATED:
-#         power_wt = power_wind_resource(v=v) * power_coefficient(v=v)
-#     elif REF_V_RATED <= v <= REF_V_CUT_OUT:
-#         power_wt = REF_RATED_POWER
-#     elif v > REF_V_CUT_OUT:
-#         power_wt = 0
-
-#     return power_wt
+    Notes
+    -----
+    .. math::
+        A = \\frac{\\pi \\times D^2}{4}
+    """
+    return np.pi * np.square(REF_DIAMETER) / 4
 
 
-# def power_curve_weibull(k, c, v):
-#     """Power curve with Weibull equation applied.
+def power_wind_resource(v, rho=1.225):
+    """Total wind resource power passing through the rotor.
 
-#     Parameters
-#     ----------
-#     k : float
-#         Shape (Weibull distribution parameter)
-#     c : float
-#         Scale (Weibull distribution parameter) [m s⁻¹]
-#     v : float
-#         Wind speed [m s⁻¹]
+    Parameters
+    ----------
+    v : float
+        Wind speed [m s⁻¹]
+    rho : float
+        Air density [kg m⁻³]
 
-#     Returns
-#     -------
-#     float
-#         Power curve multiplied by the Weibull probability distribution
-#         function [MW s m⁻¹ = M kg m s⁻²]
-#     """
-#     return (
-#         ref_power_curve(v=v) *
-#         weibull_probability_distribution(k=k, c=c, v=v)
-#     )
+    Returns
+    -------
+    float
+        Power contained in the wind resource [MW]
+    """
+    return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
+
+
+def power_coefficient(v):
+    """Power coefficient curve of the reference wind turbine.
+
+    Parameters
+    ----------
+    v : float
+        Wind speed [m s⁻¹]
+
+    Returns
+    -------
+    float
+        Power coefficient
+    """
+    try:
+        coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
+    except ZeroDivisionError:
+        coeff = 0
+
+    return coeff

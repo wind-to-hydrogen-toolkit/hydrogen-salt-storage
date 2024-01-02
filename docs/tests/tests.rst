@@ -5,5 +5,5 @@ Tests
    :maxdepth: 2
    :caption: Contents:
 
-   tests/test_capacity
-   tests/test_optimisation
+   test_capacity
+   test_optimisation

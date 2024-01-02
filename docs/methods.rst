@@ -8,3 +8,4 @@ Methods
    methods/functions
    methods/capacity
    methods/optimisation
+   tests/tests

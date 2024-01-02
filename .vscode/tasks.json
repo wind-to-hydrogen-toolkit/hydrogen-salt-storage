@@ -30,6 +30,16 @@
             "group": {
                 "kind": "test"
             }
-        }
+        },
+        {
+            "label": "format-py",
+            "type": "shell",
+            "command": "source .venv/bin/activate && black -l 79 **/*.py && isort **/*.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
     ]
 }
