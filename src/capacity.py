@@ -215,12 +215,10 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     units used by PyFluids are SI units. PyFluids can also be used to just
     derive :math:`Z`.
     """
-    if p_operating_min < p_operating_max:
-        rho_h2 = []
+    rho_h2 = []
 
-        for p_min, p_max, t in zip(
-            p_operating_min, p_operating_max, t_mid_point
-        ):
+    for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
+        if p_min < p_max:
             h2_min = Fluid(FluidsList.Hydrogen).with_state(
                 Input.pressure(p_min), Input.temperature(t)
             )
@@ -230,12 +228,13 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
             )
 
             rho_h2.append((h2_min.density, h2_max.density))
+        else:
+            print(
+                "Error: p_operating_min seems to be larger than"
+                "p_operating_max!"
+            )
 
-        rho_h2 = pd.DataFrame(rho_h2)
-    else:
-        print(
-            "Error: p_operating_min seems to be larger than p_operating_max!"
-        )
+    rho_h2 = pd.DataFrame(rho_h2)
 
     return rho_h2[0], rho_h2[1]
 
@@ -289,5 +288,11 @@ def energy_storage_capacity(m_working, lhv=119.96):
     Notes
     -----
     See [#Williams22]_, Eqn. (7).
+    The energy storage capacity of the cavern, :math:`E` [GWh] is a function
+    of the working mass of hydrogen, :math:`m_{working}` [kg] and the lower
+    heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
+
+    .. math::
+        E = m_{working} \\times \\frac{LHV}{3,600,000}
     """
     return m_working * lhv / 3.6e6

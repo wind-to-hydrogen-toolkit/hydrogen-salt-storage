@@ -91,9 +91,9 @@ def test_density_hydrogen_gas():
     .. math::
         \\rho = \\frac{P \\times M}{Z \\times R \\times T}
     """
-    p_operating_min = [2.03e7, 3.698e7, 3.29e6, 3e7, 5.5e6]
-    p_operating_max = [3.698e7, 3.29e6, 7.62e6, 5.5e6, 2e7]
-    t_mid_point = [327.4, 303.1, 362.75, 300, 358.9]
+    p_operating_min = [2.03e7, 3.29e6, 3.29e6, 5.5e6, 1.5e6, 7.5e6]
+    p_operating_max = [3.698e7, 2.98e7, 7.62e6, 3.9e7, 2e7, 6e6]
+    t_mid_point = [327.4, 303.1, 362.75, 300, 358.9, 300]
 
     m = 0.00201588  # molar mass of hydrogen gas [kg mol⁻¹]
     r = 8.314  # universal gas constant [J K⁻¹ mol⁻¹]
@@ -101,17 +101,18 @@ def test_density_hydrogen_gas():
     rho_h2 = []
 
     for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
-        h2_min = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_min), Input.temperature(t)
-        )
-        h2_max = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(p_max), Input.temperature(t)
-        )
+        if p_min < p_max:
+            h2_min = Fluid(FluidsList.Hydrogen).with_state(
+                Input.pressure(p_min), Input.temperature(t)
+            )
+            h2_max = Fluid(FluidsList.Hydrogen).with_state(
+                Input.pressure(p_max), Input.temperature(t)
+            )
 
-        rho_approx_min = p_min * m / (h2_min.compressibility * r * t)
-        rho_approx_max = p_max * m / (h2_max.compressibility * r * t)
+            rho_approx_min = p_min * m / (h2_min.compressibility * r * t)
+            rho_approx_max = p_max * m / (h2_max.compressibility * r * t)
 
-        rho_h2.append((rho_approx_min, rho_approx_max))
+            rho_h2.append((rho_approx_min, rho_approx_max))
 
     rho_h2_func = cap.density_hydrogen_gas(
         p_operating_min=p_operating_min,
@@ -143,7 +144,7 @@ def test_mass_hydrogen_working():
                 )
             )
         except UnboundLocalError:
-            print(f"min ({mi}) more than max ({ma})!")
+            print(f"rho_h2_min ({mi}) more than rho_h2_max ({ma})!")
 
     assert m_working_func == m_working
 
