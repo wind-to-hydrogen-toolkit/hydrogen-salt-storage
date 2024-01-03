@@ -8,7 +8,7 @@ from src import optimisation as opt
 
 
 def test_ref_power_curve():
-    """Test the `src.optimisation.ref_power_curve` function."""
+    """Test the `src.optimisation.ref_power_curve` function"""
     wind_speeds = list(range(31))
     power_curve = (
         [0] * 4
@@ -22,11 +22,15 @@ def test_ref_power_curve():
         assert isinstance(opt.ref_power_curve(v=v), (float, int))
 
 
+# def test_weibull_probability_distribution():
+#     """Test the `src.optimisation.weibull_probability_distribution` function"""
+
+
 def test_lcot_pipeline():
-    """Test the `src.optimisation.lcot_pipeline` function."""
+    """Test the `src.optimisation.lcot_pipeline` function"""
     capex = 1000
     transmission_distance = 100
-    prod_h2 = 500
+    ahp = 500
     opex_factor = 0.03
     discount_rate = 0.05
     lifetime = 40
@@ -39,13 +43,13 @@ def test_lcot_pipeline():
             for year in range(lifetime + 1)
         )
     ) / sum(
-        prod_h2 / np.power((1 + discount_rate), year)
+        ahp / np.power((1 + discount_rate), year)
         for year in range(lifetime + 1)
     )
     lcot_func = opt.lcot_pipeline(
         capex=capex,
         transmission_distance=transmission_distance,
-        prod_h2=prod_h2,
+        ahp=ahp,
         opex_factor=opex_factor,
         discount_rate=discount_rate,
         lifetime=lifetime,

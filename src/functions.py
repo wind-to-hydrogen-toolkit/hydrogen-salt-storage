@@ -666,7 +666,6 @@ def constraint_halite_edge(dat_xr, buffer=80 * 3):
     -----
     Set the buffer to 3 times the cavern diameter, i.e. the pillar width.
     """
-
     buffer_edge = {}
     for halite in dat_xr.halite.values:
         buffer_edge[halite] = halite_shape(dat_xr=dat_xr, halite=halite)
