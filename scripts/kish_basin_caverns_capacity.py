@@ -119,6 +119,9 @@ caverns = fns.label_caverns(
 # ### Volume
 
 caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
+caverns["cavern_volume"] = cap.corrected_cavern_volume(
+    v_cavern=caverns["cavern_volume"]
+)
 
 # ### Mid-point temperature
 
@@ -411,6 +414,9 @@ caverns = fns.label_caverns(
 )
 
 caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
+caverns["cavern_volume"] = cap.corrected_cavern_volume(
+    v_cavern=caverns["cavern_volume"]
+)
 
 caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
     height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]

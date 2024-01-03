@@ -11,8 +11,10 @@ sys.path.append("..")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "hydrogen-salt-storage-optimisation"
-copyright = "2023, Nithiya Streethran"
+copyright = "2023-2024, Nithiya Streethran"
 author = "Nithiya Streethran"
+
+github_url = f"https://github.com/nmstreethran/{project}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -50,8 +52,9 @@ html_theme_options = {
             # Label for this link
             "name": "GitHub",
             # URL where the link will redirect
-            "url": "https://github.com/nmstreethran/hydrogen-salt-storage-optimisation",  # required
-            # Icon class (if 'type': 'fontawesome'), or path to local image (if 'type': 'local')
+            "url": github_url,  # required
+            # Icon class (if 'type': 'fontawesome'), or path to local image
+            # (if 'type': 'local')
             "icon": "fa-brands fa-github",
             # The type of image to be used (see below for details)
             "type": "fontawesome",
