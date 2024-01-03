@@ -55,7 +55,7 @@ def cavern_volume(height, diameter=80, theta=20):
     Returns
     -------
     float
-        Corrected cavern volume [m³]
+        Ideal cavern volume [m³]
 
     Notes
     -----
@@ -73,13 +73,44 @@ def cavern_volume(height, diameter=80, theta=20):
 
     .. math::
         V_{ideal} = \\pi \\cdot r^2 \\cdot h_{cavern}
-        - \\frac{4}{3} \\pi \\cdot r^2 \\cdot h_{cone}
+        - \\frac{4}{3} \\times \\pi \\cdot r^2 \\cdot h_{cone}
     .. math::
         V_{ideal} = \\pi \\cdot r^2
-        \\left(h_{cavern} - \\frac{4}{3} h_{cone}\\right)
+        \\left(h_{cavern} - \\frac{4}{3} \\times h_{cone}\\right)
     .. math::
-        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} r \\cdot
-        \\tan(\\theta)\\right)
+        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\times
+        r \\cdot \\tan(\\theta)\\right)
+    """
+    r = diameter / 2
+    v_cavern = (
+        np.pi * np.square(r) * (height - 4 / 3 * r * np.tan(np.deg2rad(theta)))
+    )
+    return v_cavern
+
+
+def corrected_cavern_volume(
+    v_cavern, f_scf=0.7, f_if=0.25, f_insf=0.865, f_bf=1.46
+):
+    """Apply correction factors to the cavern volume.
+
+    Parameters
+    ----------
+    v_cavern : float
+        Ideal cavern volume [m³]
+    f_scf : float
+        Shape correction factor
+    f_if : float
+        Insoluble fraction
+    f_insf : float
+        Correction for the fraction of insoluble material that remains in the
+        cavern after mechanical sweeping
+    f_bf : float
+        Bulking factor
+
+    Returns
+    -------
+    float
+        Corrected cavern volume [m³]
 
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
     applying several correction factors as detailed in [#Williams22]_, Eqn.
@@ -94,17 +125,8 @@ def cavern_volume(height, diameter=80, theta=20):
     .. math::
         V_{cavern} \\approx 0.48 \\times V_{ideal}
     """
-    # calculate ideal cavern volume
-    r = diameter / 2
-    v_cavern = (
-        np.pi * np.square(r) * (height - 4 / 3 * r * np.tan(np.deg2rad(theta)))
-    )
-
-    # apply correction factors
-    correction_factors = 0.7 * (1 - 0.25 * 0.865 * 1.46)
-    v_cavern = v_cavern * correction_factors
-
-    return v_cavern
+    correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
+    return v_cavern * correction_factors
 
 
 def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
@@ -142,6 +164,7 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
 
 def pressure_operating(
     thickness_overburden,
+    thickness_salt=50,
     rho_overburden=2400,
     rho_salt=2200,
     minf=0.3,
@@ -153,6 +176,8 @@ def pressure_operating(
     ----------
     thickness_overburden : float
         Overburden thickness / halite top depth [m]
+    thickness_salt : float
+        Thickness of the salt above the casing shoe [m]
     rho_overburden : float
         Density of the overburden [kg m⁻³]
     rho_salt : float
@@ -170,12 +195,15 @@ def pressure_operating(
     Notes
     -----
     See [#Williams22]_, Eqn. (3) and (4).
+    Lithostatic pressure at the casing shoe.
+    Thickness of the overburden is the same as the depth to top of salt.
+    Thickness of salt above casing shoe = 50 m.
+    Acceleration due to gravity = 9.81 m s⁻².
     """
-    # lithostatic pressure at the casing shoe
-    # thickness of the overburden is the same as the depth to top of salt
-    # thickness of salt above casing shoe = 50 m
-    # acceleration due to gravity = 9.81
-    p_casing = (rho_overburden * thickness_overburden + rho_salt * 50) * 9.81
+
+    p_casing = (
+        rho_overburden * thickness_overburden + rho_salt * thickness_salt
+    ) * 9.81
 
     p_operating_min = minf * p_casing
     p_operating_max = maxf * p_casing
@@ -202,40 +230,38 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
 
     Notes
     -----
-    See [#Williams22]_, Section 3.4.2 and [#Caglayan20]_, Eqn. (3) (shown
-    below). This uses the CoolProp [#Bell14]_ wrapper PyFluids [#PyFluids]_.
-    See the CoolProp documentation for hydrogen [#CoolProp]_.
+    This function uses the CoolProp [#Bell14]_ wrapper called PyFluids
+    [#PyFluids]_. See [#Williams22]_, Section 3.4.2 and also the CoolProp
+    documentation for useful information on hydrogen [#CoolProp]_.
+    The `pyfluids.ini` configuration file has been set such that the default
+    units used by PyFluids are SI units. PyFluids can also be used to derive
+    the compressibility factor.
 
-    :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is the
-    universal gas constant [J K⁻¹ mol⁻¹], :math:`P` is the pressure [Pa],
-    :math:`T` is the temperature [K], :math:`Z` is the compressibility factor,
-    and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
+    Based on [#Caglayan20]_, Eqn. (3), the density can be approximated using
+    the following equation.
 
     .. math::
         \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
 
-    The `pyfluids.ini` configuration file has been set such that the default
-    units used by PyFluids are SI units. PyFluids can also be used to just
-    derive :math:`Z`.
+    where :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is
+    the universal gas constant [J K⁻¹ mol⁻¹], :math:`P` is the pressure [Pa],
+    :math:`T` is the temperature [K], :math:`Z` is the compressibility factor,
+    and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
     """
     rho_h2 = []
 
     for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
-        if p_min < p_max:
-            h2_min = Fluid(FluidsList.Hydrogen).with_state(
-                Input.pressure(p_min), Input.temperature(t)
-            )
+        if p_min > p_max:
+            print("WARNING! p_min seems to be larger than p_max!")
+        h2_min = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(p_min), Input.temperature(t)
+        )
 
-            h2_max = Fluid(FluidsList.Hydrogen).with_state(
-                Input.pressure(p_max), Input.temperature(t)
-            )
+        h2_max = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(p_max), Input.temperature(t)
+        )
 
-            rho_h2.append((h2_min.density, h2_max.density))
-        else:
-            print(
-                "Error: p_operating_min seems to be larger than"
-                "p_operating_max!"
-            )
+        rho_h2.append((h2_min.density, h2_max.density))
 
     rho_h2 = pd.DataFrame(rho_h2)
 
@@ -243,7 +269,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
 
 
 def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
-    """The working mass of hydrogen in kg.
+    """The working mass of hydrogen.
 
     Parameters
     ----------
@@ -262,14 +288,13 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     Notes
     -----
     See [#Williams22]_, Eqn. (5) and (6).
+    The difference between the stored mass of hydrogen at max and min
+    operating pressures.
     """
-    # stored mass of hydrogen at min and max operating pressures
-    if rho_h2_min < rho_h2_max:
-        m_min_operating = rho_h2_min * v_cavern
-        m_max_operating = rho_h2_max * v_cavern
-    else:
-        print("Error: rho_h2_min seems to be larger than rho_h2_max!")
-
+    if rho_h2_min > rho_h2_max:
+        print("WARNING! rho_h2_min seems to be larger than rho_h2_max!")
+    m_min_operating = rho_h2_min * v_cavern
+    m_max_operating = rho_h2_max * v_cavern
     return m_max_operating - m_min_operating
 
 

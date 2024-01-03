@@ -59,5 +59,23 @@
                 "kind": "test"
             }
         },
+        {
+            "label": "pytest-optimisation",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest tests/test_optimisation.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "pytest-capacity",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest tests/test_capacity.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
     ]
 }

@@ -189,7 +189,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
     return weibull_df
 
 
-def weibull_probability_distribution(k, c, v):
+def weibull_probability_distribution(v, k, c):
     """Weibull probability distribution function.
 
     Parameters
@@ -220,6 +220,38 @@ def weibull_probability_distribution(k, c, v):
     See also [#Pryor18]_, Eqn. (2).
     """
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
+
+
+def weibull_power_curve(v, k, c):
+    """Weibull probability distribution function multiplied by the power curve.
+
+    Parameters
+    ----------
+    k : float
+        Shape (Weibull distribution parameter, k)
+    c : float
+        Scale (Weibull distribution parameter, C) [m s⁻¹]
+    v : float
+        Wind speed between cut-in and cut-out [m s⁻¹]
+
+    Returns
+    -------
+    float
+        Weibull probability distribution multiplied by the power curve
+        [MW s m⁻¹]
+    """
+    if REF_V_CUT_IN <= v < REF_V_RATED:
+        pc_vals = pc[pc["wind_speed"] == np.trunc(v) + 1]
+        power_curve = (pc_vals["gradient"] * v + pc_vals["intercept"]).iloc[
+            0
+        ] * weibull_probability_distribution(v=v, k=k, c=c)
+    elif REF_V_RATED <= v <= REF_V_CUT_OUT:
+        power_curve = REF_RATED_POWER * weibull_probability_distribution(
+            v=v, k=k, c=c
+        )
+    else:
+        print("WARNING! v seems to be outside the operational speeds!")
+    return power_curve
 
 
 def annual_energy_production(n_turbines, k, c, w_loss=0.1):
@@ -364,8 +396,8 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
     :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`v` is
     the average fluid velocity [m s⁻¹].
     """
-    f1 = e_cap * p_rate / (rho * v * np.pi)
-    return 2e3 * (16000 * f1 + 1197.2 * np.sqrt(f1) + 329)
+    f = e_cap * p_rate / (rho * v * np.pi)
+    return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
 
 def lcot_pipeline(
@@ -385,13 +417,14 @@ def lcot_pipeline(
     transmission_distance : float
         Pipeline transmission distance [km]
     ahp : float
-        Hydrogen production [kg]
+        Annual hydrogen production [kg]
     opex_factor : float
-        Ratio of the operational expenditure (OPEX) to the CAPEX
+        Ratio of the operational expenditure (OPEX) to the CAPEX; the OPEX is
+        calculated as a percentage of the CAPEX
     discount_rate : float
         Discount rate
     lifetime : int
-        Lifetime of the pipeline [years]
+        Lifetime of the pipeline [year]
 
     Returns
     -------
@@ -405,32 +438,35 @@ def lcot_pipeline(
     used.
 
     .. math::
-        LCOT = \\frac{\\mathrm{total lifecycle costs of all components}}
-        {\\mathrm{lifetime hydrogen transported}}
-    .. math::
-        LCOT = \\frac{CAPEX + \\sum_{l=0}^{L} \\frac{OPEX}{1 + DR}^l}
-        {\\sum_{l=0}^{L} \\frac{AHP}{1 + DR}^l}
+        LCOT = \\frac{\\mathrm{total\\ lifecycle\\ costs\\ of\\ all\\
+        components}}
+        {\\mathrm{lifetime\\ hydrogen\\ transported}}
     .. math::
         LCOT_{pipe} = \\frac{CAPEX_{pipe} \\cdot d + \\sum_{l=0}^{L}
-        \\frac{OPEX}{1 + DR}^l}
-        {\\sum_{l=0}^{L} \\frac{AHP}{1 + DR}^l}
+        \\frac{OPEX_{pipe}}{{(1 + DR)}^l}}
+        {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT_{pipe}` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
     :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`d` is the pipeline transmission distance [km],
-    :math:`OPEX` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
+    :math:`OPEX_{pipe}` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
     discount rate, :math:`AHP` is the annual hydrogen production [kg], and
-    :math:`L` is the lifetime of the pipeline [years].
+    :math:`L` is the lifetime of the pipeline [year].
     """
-    f1 = sum(
+    f = sum(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
     opex = capex * opex_factor
-    return (capex * transmission_distance + opex * f1) / (ahp * f1)
+    return (capex * transmission_distance + opex * f) / (ahp * f)
 
 
-def rotor_area():
-    """Reference wind turbine rotor swept area.
+def rotor_area(diameter=REF_DIAMETER):
+    """Wind turbine rotor swept area.
+
+    Parameters
+    ----------
+    diameter : float
+        Wind turbine rotor diameter [m]
 
     Returns
     -------
@@ -441,12 +477,15 @@ def rotor_area():
     -----
     .. math::
         A = \\frac{\\pi \\cdot D^2}{4}
+
+    where :math:`A` is the wind turbine rotor swept area [m²] and :math:`D` is
+    the rotor diameter [m].
     """
-    return np.pi * np.square(REF_DIAMETER) / 4
+    return np.pi * np.square(diameter) / 4
 
 
-def power_wind_resource(v, rho=1.225):
-    """Total wind resource power passing through the rotor.
+def power_wind_resource(v, rho=1.225, diameter=REF_DIAMETER):
+    """Total wind resource power passing through a wind turbine's rotor.
 
     Parameters
     ----------
@@ -454,17 +493,29 @@ def power_wind_resource(v, rho=1.225):
         Wind speed [m s⁻¹]
     rho : float
         Air density [kg m⁻³]
+    diameter : float
+        Wind turbine rotor diameter [m]
 
     Returns
     -------
     float
         Power contained in the wind resource [MW]
+
+    Notes
+    -----
+    .. math::
+        P_{wind} = \\frac{1}{2} \\times \\rho_{air} \\times A \\times v^3
+        \\times 10^{-6}
+
+    where :math:`P_{wind}` is the power contained in the wind resource [MW],
+    :math:`\\rho_{air}` is the air density [kg m⁻³], :math:`A` is the rotor
+    swept area [m²], and :math:`v` is the wind speed [m s⁻¹].
     """
-    return 0.5 * rho * rotor_area() * np.power(v, 3) / 1000
+    return 0.5 * rho * rotor_area(diameter=diameter) * np.power(v, 3) / 1e6
 
 
 def power_coefficient(v):
-    """Power coefficient curve of the reference wind turbine.
+    """Power coefficient of the reference wind turbine.
 
     Parameters
     ----------
@@ -475,6 +526,21 @@ def power_coefficient(v):
     -------
     float
         Power coefficient
+
+    Notes
+    -----
+    This is specific to the power curve of the NREL 15 MW reference wind
+    turbine [#Musial19]_.
+
+    .. math::
+        C_p = \\frac{P}{P_{wind}} = 2 \\times \\frac{P \\times 10^6}
+        {\\rho_{air} \\times A \\times v^3}
+
+    where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
+    the power contained in the wind resource [MW]:math:`\\rho_{air}` is the
+    air density [kg m⁻³], :math:`A` is the rotor swept area [m²], :math:`v` is
+    the wind speed [m s⁻¹], and :math:`C_p` is the power coefficient of the
+    wind turbine.
     """
     try:
         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
