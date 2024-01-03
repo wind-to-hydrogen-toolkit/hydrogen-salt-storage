@@ -114,7 +114,6 @@ def ref_power_curve(v):
         power_curve = REF_RATED_POWER
     elif v > REF_V_CUT_OUT:
         power_curve = 0
-
     return power_curve
 
 
@@ -133,7 +132,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
     Returns
     -------
     pd.DataFrame
-        Dataframe of k and c values for each wind farm
+        Dataframe of k and C values for each wind farm
 
     Notes
     -----
@@ -196,9 +195,9 @@ def weibull_probability_distribution(k, c, v):
     Parameters
     ----------
     k : float
-        Shape (Weibull distribution parameter)
+        Shape (Weibull distribution parameter, k)
     c : float
-        Scale (Weibull distribution parameter) [m s⁻¹]
+        Scale (Weibull distribution parameter, C) [m s⁻¹]
     v : float
         Wind speed [m s⁻¹]
 
@@ -216,7 +215,7 @@ def weibull_probability_distribution(k, c, v):
 
     .. math::
         f(v) = \\frac{k}{C} \\left( \\frac{v}{C} \\right)^{k-1}
-        \\exp \\left( -\\left( \\frac{v}{C}^k \\right) \\right)
+        \\cdot \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
 
     See also [#Pryor18]_, Eqn. (2).
     """
@@ -272,7 +271,6 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
         epsabs=1.49e-6,  # absolute error tolerance
     )
     aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
-
     return aep, integration[0], integration[1]
 
 
@@ -300,15 +298,16 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     -----
     Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are based on
     Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
-    :math:`AHP` is the annual hydrogen production [kg], :math:`AEP` is the
-    annual energy production of wind farm [MWh], :math:`E_{elec}` is the
+
+    .. math::
+        AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
+
+    where :math:`AHP` is the annual hydrogen production [kg], :math:`AEP` is
+    the annual energy production of wind farm [MWh], :math:`E_{elec}` is the
     electricity required to supply the electrolyser to produce 1 kg of
     hydrogen [MWh kg⁻¹], :math:`\\eta_{conv}` is the conversion efficiency of
     the electrolyser, and :math:`E_{pcl}` is the electricity consumed by other
     parts of the hydrogen plant [MWh kg⁻¹].
-
-    .. math::
-        AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
     """
     return aep / ((e_elec / eta_conv) + e_pcl)
 
@@ -355,21 +354,24 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
     .. math::
         CAPEX_{pipe} = 2 \\times \\left( 16,000,000 \\frac{E_{cap}
-        \\times P_{rate}}{\\rho \\times v \\times \\pi} \\times 1,197,200
-        \\sqrt{\\frac{E_{cap} \\times P_{rate}}{\\rho \\times v \\times \\pi}
-        + 329,000} \\right)
+        \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi} + 1,197,200
+        \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi}}
+        + 329,000 \\right)
+
+    where :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
+    [€ km⁻¹], :math:`E_{cap}` is the electrolyser capacity [MW],
+    :math:`P_{rate}` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
+    :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`v` is
+    the average fluid velocity [m s⁻¹].
     """
-    return 2 * (
-        16000e3 * (e_cap * p_rate / (rho * v * np.pi))
-        + 1197.2e3 * np.sqrt(e_cap * p_rate / (rho * v * np.pi))
-        + 329e3
-    )
+    f1 = e_cap * p_rate / (rho * v * np.pi)
+    return 2e3 * (16000 * f1 + 1197.2 * np.sqrt(f1) + 329)
 
 
 def lcot_pipeline(
     capex,
     transmission_distance,
-    prod_h2,
+    ahp,
     opex_factor=0.02,
     discount_rate=0.08,
     lifetime=30,
@@ -381,32 +383,50 @@ def lcot_pipeline(
     capex : float
         Capital expenditure (CAPEX) of the pipeline [€ km⁻¹]
     transmission_distance : float
-        Transmission distance [km]
-    prod_h2 : float
+        Pipeline transmission distance [km]
+    ahp : float
         Hydrogen production [kg]
     opex_factor : float
         Ratio of the operational expenditure (OPEX) to the CAPEX
     discount_rate : float
         Discount rate
-    lifetime
+    lifetime : int
         Lifetime of the pipeline [years]
 
     Returns
     -------
     float
-        LCOT of the pipeline [€ kg⁻¹]
+        LCOT of hydrogen in the pipeline [€ kg⁻¹]
 
     Notes
     -----
     See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
-    (22) of [#Dinh23b]_.
+    (22) of [#Dinh23b]_; see Tables 2 and 3 for the assumptions and constants
+    used.
+
+    .. math::
+        LCOT = \\frac{\\mathrm{total lifecycle costs of all components}}
+        {\\mathrm{lifetime hydrogen transported}}
+    .. math::
+        LCOT = \\frac{CAPEX + \\sum_{l=0}^{L} \\frac{OPEX}{1 + DR}^l}
+        {\\sum_{l=0}^{L} \\frac{AHP}{1 + DR}^l}
+    .. math::
+        LCOT_{pipe} = \\frac{CAPEX_{pipe} \\cdot d + \\sum_{l=0}^{L}
+        \\frac{OPEX}{1 + DR}^l}
+        {\\sum_{l=0}^{L} \\frac{AHP}{1 + DR}^l}
+
+    where :math:`LCOT_{pipe}` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
+    :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
+    [€ km⁻¹], :math:`d` is the pipeline transmission distance [km],
+    :math:`OPEX` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
+    discount rate, :math:`AHP` is the annual hydrogen production [kg], and
+    :math:`L` is the lifetime of the pipeline [years].
     """
     f1 = sum(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
-    return (capex * transmission_distance + (capex * opex_factor) * f1) / (
-        prod_h2 * f1
-    )
+    opex = capex * opex_factor
+    return (capex * transmission_distance + opex * f1) / (ahp * f1)
 
 
 def rotor_area():
@@ -420,7 +440,7 @@ def rotor_area():
     Notes
     -----
     .. math::
-        A = \\frac{\\pi \\times D^2}{4}
+        A = \\frac{\\pi \\cdot D^2}{4}
     """
     return np.pi * np.square(REF_DIAMETER) / 4
 
@@ -460,5 +480,4 @@ def power_coefficient(v):
         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
     except ZeroDivisionError:
         coeff = 0
-
     return coeff

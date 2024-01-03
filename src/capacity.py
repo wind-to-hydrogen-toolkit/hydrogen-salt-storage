@@ -72,13 +72,13 @@ def cavern_volume(height, diameter=80, theta=20):
     where :math:`\\theta` [°] is the cavern roof angle.
 
     .. math::
-        V_{ideal} = \\pi \\times r^2 \\times h_{cavern}
-        - \\frac{4}{3} \\times \\pi \\times r^2 \\times h_{cone}
+        V_{ideal} = \\pi \\cdot r^2 \\cdot h_{cavern}
+        - \\frac{4}{3} \\pi \\cdot r^2 \\cdot h_{cone}
     .. math::
-        = \\pi \\times r^2
-        \\left(h_{cavern} - \\frac{4}{3} \\times h_{cone}\\right)
+        V_{ideal} = \\pi \\cdot r^2
+        \\left(h_{cavern} - \\frac{4}{3} h_{cone}\\right)
     .. math::
-        = \\pi \\times r^2 \\left(h_{cavern} - \\frac{4}{3} \\times r \\times
+        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} r \\cdot
         \\tan(\\theta)\\right)
 
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
@@ -89,7 +89,10 @@ def cavern_volume(height, diameter=80, theta=20):
         V_{cavern} = V_{ideal} \\times SCF \\times (1 - IF \\times INSF
         \\times BF)
     .. math::
-        = V_{ideal} \\times 0.7 \\times (1 - 0.25 \\times 0.865 \\times 1.46)
+        V_{cavern} = V_{ideal} \\times 0.7 \\times (1 - 0.25 \\times 0.865
+        \\times 1.46)
+    .. math::
+        V_{cavern} \\approx 0.48 \\times V_{ideal}
     """
     # calculate ideal cavern volume
     r = diameter / 2
@@ -132,9 +135,9 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
     [#English23]_.
     Note that the cavern top depth is used instead of the casing shoe depth,
     as the casing shoe is 30 m above the cavern top depth in this study,
-    rather than at the cavern top depth.
+    rather than at the cavern top.
     """
-    return t_0 + t_delta / 1000 * (depth_top + height / 2) + 273.15
+    return t_0 + t_delta * (depth_top + height / 2) / 1000 + 273.15
 
 
 def pressure_operating(
@@ -209,7 +212,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
 
     .. math::
-        \\rho = \\frac{P \\times M}{Z \\times R \\times T}
+        \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
 
     The `pyfluids.ini` configuration file has been set such that the default
     units used by PyFluids are SI units. PyFluids can also be used to just

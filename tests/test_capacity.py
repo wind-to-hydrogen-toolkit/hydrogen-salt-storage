@@ -17,7 +17,7 @@ from src import capacity as cap
 
 
 def test_cavern_volume():
-    """Test the `src.capacity.cavern_volume` function."""
+    """Test the `src.capacity.cavern_volume` function"""
     h_cylinder = [10, 20, 30, 40, 50]
     h_cone = [2, 4, 6, 8, 10]
     roof_angle = [5, 10, 15, 20, 25]
@@ -41,7 +41,7 @@ def test_cavern_volume():
 
 
 def test_temperature_cavern_mid_point():
-    """Test the `src.capacity.temperature_cavern_mid_point` function."""
+    """Test the `src.capacity.temperature_cavern_mid_point` function"""
     heights = [50, 100, 150, 200, 250]
     top_depths = [600, 800, 1100, 1300, 1700]
     t_delta = [35, 37, 39, 41, 43]
@@ -61,7 +61,7 @@ def test_temperature_cavern_mid_point():
 
 
 def test_pressure_operating():
-    """Test the `src.capacity.pressure_operating` function."""
+    """Test the `src.capacity.pressure_operating` function"""
     thickness_overburden = [550, 650, 750, 850, 950]
     p_operating = []
     p_operating_func = []
@@ -89,7 +89,7 @@ def test_density_hydrogen_gas():
     been set such that the default units are SI units.
 
     .. math::
-        \\rho = \\frac{P \\times M}{Z \\times R \\times T}
+        \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
     """
     p_operating_min = [2.03e7, 3.29e6, 3.29e6, 5.5e6, 1.5e6, 7.5e6]
     p_operating_max = [3.698e7, 2.98e7, 7.62e6, 3.9e7, 2e7, 6e6]
@@ -127,7 +127,7 @@ def test_density_hydrogen_gas():
 
 
 def test_mass_hydrogen_working():
-    """Test the `src.capacity.mass_hydrogen_working` function."""
+    """Test the `src.capacity.mass_hydrogen_working` function"""
     rho_h2_min = [2.7, 8.5, 6, 4.563, 3.5, 9]
     rho_h2_max = [20, 12, 16, 6.6, 10.4928, 3]
     v_cavern = [2.7e5, 3.5e5, 4.1234e5, 6e5, 7.2e5, 5e5]
@@ -150,7 +150,7 @@ def test_mass_hydrogen_working():
 
 
 def test_energy_storage_capacity():
-    """Test the `src.capacity.energy_storage_capacity` function."""
+    """Test the `src.capacity.energy_storage_capacity` function"""
     m_working = [6.4e5, 1.5e6, 2.6e6, 8.2e6, 3.5e6]
     capacity = []
     capacity_func = []
