@@ -20,7 +20,7 @@ importlib.reload(opt)
 ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 # extract data for wind farms at 150 m
-weibull = opt.read_weibull_data(
+weibull = fns.read_weibull_data(
     data_path_weibull=os.path.join(
         "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
     ),

@@ -19,7 +19,7 @@
             "command": "source .venv/bin/activate && cd docs && make html",
             "problemMatcher": [],
             "group": {
-                "kind": "test"
+                "kind": "build"
             }
         },
         {
@@ -28,7 +28,7 @@
             "command": "source .venv/bin/activate && cd docs && make clean html",
             "problemMatcher": [],
             "group": {
-                "kind": "test"
+                "kind": "build"
             }
         },
         {
@@ -37,8 +37,44 @@
             "command": "source .venv/bin/activate && black -l 79 **/*.py && isort **/*.py",
             "problemMatcher": [],
             "group": {
-                "kind": "build",
+                "kind": "build"
+            }
+        },
+        {
+            "label": "pytest",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
                 "isDefault": true
+            }
+        },
+        {
+            "label": "pytest-cov",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m coverage run -m pytest && coverage report -m",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "pytest-optimisation",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest tests/test_optimisation.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "pytest-capacity",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest tests/test_capacity.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
             }
         },
     ]
