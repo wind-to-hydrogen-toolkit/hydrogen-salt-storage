@@ -57,16 +57,16 @@ def test_temperature_cavern_mid_point():
     """Test the `src.capacity.temperature_cavern_mid_point` function"""
     heights = [50, 100, 150, 200, 250]
     top_depths = [600, 800, 1100, 1300, 1700]
-    t_delta = [35, 37, 39, 41, 43]
+    delta_t = [35, 37, 39, 41, 43]
     t_0 = [8, 9, 10, 11, 12]
     t_mid_point = []
     t_mid_point_func = []
 
-    for h, d, td, t0 in zip(heights, top_depths, t_delta, t_0):
-        t_mid_point.append(t0 + td * (d + 0.5 * h) / 1000 + 273.15)
+    for h, d, dt, t0 in zip(heights, top_depths, delta_t, t_0):
+        t_mid_point.append(t0 + dt * (d + 0.5 * h) / 1000 + 273.15)
         t_mid_point_func.append(
             cap.temperature_cavern_mid_point(
-                height=h, depth_top=d, t_0=t0, t_delta=td
+                height=h, depth_top=d, t_0=t0, delta_t=dt
             )
         )
 

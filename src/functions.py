@@ -115,7 +115,7 @@ def generate_caverns_square_grid(
     Returns
     -------
     geopandas.GeoDataFrame
-        A polygon geodataframe of potential caverns in the zone of interest.
+        A polygon geodataframe of potential caverns in the zone of interest
 
     Notes
     -----

@@ -204,7 +204,7 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     .. math::
         AEP = 365 \\times 24 \\times n_T \\times
         \\left( 1 - w_{loss} \\right) \\times
-        \\int\\limits_{v_i}^{v_o} P(v) f(v) \\,\\mathrm{d}v
+        \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
     tolerance for the integration have been increased.

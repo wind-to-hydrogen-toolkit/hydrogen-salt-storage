@@ -19,7 +19,7 @@ CRS = 23029
 
 
 def download_data(url, data_dir, file_name, known_hash=None):
-    """Download data and store it in the specified directory.
+    """Download data and store it in the specified directory using Pooch.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def read_dat_file(dat_path):
     Returns
     -------
     tuple[xarray.Dataset, geopandas.GeoSeries]
-        Xarray dataset of the XYZ data and GeoPandas GeoSeries of the extent
+        Xarray dataset of the XYZ data and GeoPandas geoseries of the extent
     """
     gdf = {}
     # for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
