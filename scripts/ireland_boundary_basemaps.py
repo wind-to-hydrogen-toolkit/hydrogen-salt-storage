@@ -4,11 +4,9 @@
 # # Ireland basemaps and boundaries
 
 import os
-from datetime import datetime, timezone
 from zipfile import BadZipFile, ZipFile
 
 import contextily as cx
-import geopandas as gpd
 import matplotlib.pyplot as plt
 
 from src import read_data as rd

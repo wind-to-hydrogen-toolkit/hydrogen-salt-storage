@@ -6,7 +6,6 @@
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
 import os
-from datetime import datetime, timezone
 from zipfile import ZipFile
 
 import cartopy.crs as ccrs
@@ -16,7 +15,6 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import functions as fns
 from src import read_data as rd
 
 # base data download directory

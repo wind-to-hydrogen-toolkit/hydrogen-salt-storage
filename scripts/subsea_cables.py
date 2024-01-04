@@ -9,7 +9,6 @@
 # backfill and multiline conversion was used and no further checks were done
 
 import os
-from datetime import datetime, timezone
 from zipfile import BadZipFile, ZipFile
 
 import contextily as cx

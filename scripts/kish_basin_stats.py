@@ -12,7 +12,6 @@ import seaborn as sns
 from cartopy.mpl.ticker import LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import functions as fns
 from src import read_data as rd
 
 # data directory

@@ -6,7 +6,6 @@
 # <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
 
 import os
-from datetime import datetime, timezone
 from zipfile import ZipFile
 
 import cartopy.crs as ccrs

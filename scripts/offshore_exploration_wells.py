@@ -6,11 +6,9 @@
 # <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
 
 import os
-from datetime import datetime, timezone
 from zipfile import ZipFile
 
 import contextily as cx
-import geopandas as gpd
 import matplotlib.pyplot as plt
 
 from src import read_data as rd

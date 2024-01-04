@@ -7,7 +7,6 @@
 
 import glob
 import os
-from datetime import datetime, timezone
 from textwrap import wrap
 from zipfile import BadZipFile, ZipFile
 

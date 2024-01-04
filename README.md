@@ -61,7 +61,7 @@ python -m pytest
 To generate a coverage report with the tests:
 
 ```sh
-python -m coverage run -m pytest && coverage report -m
+coverage run -m pytest && coverage report -m
 ```
 
 [owf]: https://data.gov.ie/dataset/wind-farms-foreshore-process
