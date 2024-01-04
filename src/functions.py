@@ -757,9 +757,9 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
-            weibull_df[w].to_crs(rd.CRS).overlay(
-                wind_farms, how="intersection"
-            )
+            weibull_df[w]
+            .to_crs(rd.CRS)
+            .overlay(wind_farms, how="intersection")
         )
 
         # rename column
