@@ -1,4 +1,4 @@
-"""Functions to download, read, and structure data.
+"""Functions to download and read data.
 
 """
 
@@ -183,7 +183,6 @@ def read_shapefile_from_zip(data_path, endswith=".shp"):
             ][0]
         )
     )
-
     return data_shp
 
 
@@ -222,5 +221,4 @@ def halite_shape(dat_xr, halite=None):
         .envelope,
         crs=CRS,
     ).dissolve()
-
     return shape

@@ -2,8 +2,6 @@
 
 """
 
-import functools
-
 import numpy as np
 from scipy import integrate
 
@@ -48,6 +46,14 @@ def test_weibull_probability_distribution():
     assert weibull_func == weibull
 
 
+def integrate_lambda(k, c):
+    """Lambda function for the quad integration test below"""
+    return lambda v: (
+        opt.ref_power_curve(v=v)
+        * opt.weibull_probability_distribution(k=k, c=c, v=v)
+    )
+
+
 def test_annual_energy_production():
     """Test the `src.optimisation.annual_energy_production` function"""
     n_turbines = [50, 65, 80, 95]
@@ -63,7 +69,7 @@ def test_annual_energy_production():
             opt.annual_energy_production(n_turbines=n, k=k, c=c)[0]
         )
         integration = integrate.quad(
-            functools.partial(opt.weibull_power_curve, k=k, c=c),
+            integrate_lambda(k=k, c=c),
             a=cut_in,
             b=cut_out,
             limit=100,  # an upper bound on the number of subintervals used
