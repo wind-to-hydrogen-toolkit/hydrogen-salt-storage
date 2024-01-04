@@ -5,15 +5,6 @@
     Ahmann, J., and Busch, J. (2019). Oregon Offshore Wind Site Feasibility
     and Cost Study. Technical Report NREL/TP-5000-74597. Golden, CO: National
     Renewable Energy Laboratory. https://doi.org/10.2172/1570430.
-.. [#SEAI13] Sustainable Energy Authority of Ireland (2013). ‘Weibull
-    Parameters of Wind Speeds 2001 to 2010 - 150m above ground level’.
-    data.gov.ie. Available at:
-    https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level
-    (Accessed: 28 December 2023).
-.. [#DHLGH21] Department of Housing, Local Government and Heritage (2021).
-    ‘Wind Farms (Foreshore Process)’. data.gov.ie. Available at:
-    https://data.gov.ie/dataset/wind-farms-foreshore-process
-    (Accessed: 9 November 2023).
 .. [#Dinh23a] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
     and Leahy, P. G. (2023). ‘A geospatial method for estimating the
     levelised cost of hydrogen production from offshore wind’,
@@ -56,8 +47,6 @@
 import numpy as np
 import pandas as pd
 from scipy import integrate
-
-from src import functions as fns
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -117,89 +106,17 @@ def ref_power_curve(v):
     return power_curve
 
 
-def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
-    """Extract mean, max, and min Weibull parameters of wind speeds.
-
-    Parameters
-    ----------
-    data_path_weibull : str
-        Path to the Weibull parameter data Zip file
-    data_path_weibull : str
-        Path to the wind farm data Zip file
-    dat_extent : gpd.GeoSeries
-        Extent of the Kish Basin data
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe of k and C values for each wind farm
-
-    Notes
-    -----
-    Datasets used: [#SEAI13]_ and [#DHLGH21]_. Data extracted for each wind
-    farm in the area of interest, i.e. Kish Basin: Codling, Dublin Array, and
-    NISA.
-    """
-    weibull_df = {}
-
-    for w in ["c", "k"]:
-        # read Weibull parameter data
-        weibull_df[w] = fns.read_shapefile_from_zip(
-            data_path=data_path_weibull, endswith=f"{w}_ITM.shp"
-        )
-
-        # read wind farm data
-        wind_farms = fns.constraint_wind_farm(
-            data_path=data_path_wind_farms,
-            dat_extent=dat_extent,
-        )
-
-        # for combining Codling wind farm polygons
-        wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
-
-        # convert CRS and keep areas intersecting with wind farms
-        weibull_df[w] = (
-            weibull_df[w]
-            .to_crs(fns.CRS)
-            .overlay(wind_farms, how="intersection")
-        )
-
-        # rename column
-        weibull_df[w].rename(columns={"Value": w}, inplace=True)
-
-        # average c and k over wind farms
-        weibull_df[w] = wind_farms.dissolve(by="Name_").merge(
-            weibull_df[w].dissolve(
-                by="Name_", aggfunc={w: ["min", "max", "mean"]}
-            ),
-            on="Name_",
-        )
-
-        # keep only relevant columns
-        weibull_df[w] = weibull_df[w][
-            ["Name", (w, "min"), (w, "max"), (w, "mean")]
-        ]
-
-        # reset index
-        weibull_df[w] = weibull_df[w].reset_index(drop=True)
-
-    # merge
-    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
-
-    return weibull_df
-
-
 def weibull_probability_distribution(v, k, c):
     """Weibull probability distribution function.
 
     Parameters
     ----------
+    v : float
+        Wind speed [m s⁻¹]
     k : float
         Shape (Weibull distribution parameter, k)
     c : float
         Scale (Weibull distribution parameter, C) [m s⁻¹]
-    v : float
-        Wind speed [m s⁻¹]
 
     Returns
     -------
@@ -227,12 +144,12 @@ def weibull_power_curve(v, k, c):
 
     Parameters
     ----------
+    v : float
+        Wind speed between cut-in and cut-out [m s⁻¹]
     k : float
         Shape (Weibull distribution parameter, k)
     c : float
         Scale (Weibull distribution parameter, C) [m s⁻¹]
-    v : float
-        Wind speed between cut-in and cut-out [m s⁻¹]
 
     Returns
     -------
@@ -249,8 +166,6 @@ def weibull_power_curve(v, k, c):
         power_curve = REF_RATED_POWER * weibull_probability_distribution(
             v=v, k=k, c=c
         )
-    else:
-        print("WARNING! v seems to be outside the operational speeds!")
     return power_curve
 
 
@@ -341,7 +256,7 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     the electrolyser, and :math:`E_{pcl}` is the electricity consumed by other
     parts of the hydrogen plant [MWh kg⁻¹].
     """
-    return aep / ((e_elec / eta_conv) + e_pcl)
+    return aep / (e_elec / eta_conv + e_pcl)
 
 
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
@@ -533,7 +448,7 @@ def power_coefficient(v):
     turbine [#Musial19]_.
 
     .. math::
-        C_p = \\frac{P}{P_{wind}} = 2 \\times \\frac{P \\times 10^6}
+        C_p = \\frac{P}{P_{wind}} = \\frac{2 \\times P \\times 10^6}
         {\\rho_{air} \\times A \\times v^3}
 
     where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
@@ -542,8 +457,8 @@ def power_coefficient(v):
     the wind speed [m s⁻¹], and :math:`C_p` is the power coefficient of the
     wind turbine.
     """
-    try:
+    if REF_V_CUT_IN <= v <= REF_V_CUT_OUT:
         coeff = ref_power_curve(v=v) / power_wind_resource(v=v)
-    except ZeroDivisionError:
+    else:
         coeff = 0
     return coeff

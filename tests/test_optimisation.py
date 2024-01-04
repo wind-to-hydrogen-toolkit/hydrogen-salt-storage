@@ -23,6 +23,8 @@ def test_ref_power_curve():
     for v, p in zip(wind_speeds, power_curve):
         assert round(opt.ref_power_curve(v=v), 3) == p
         assert isinstance(opt.ref_power_curve(v=v), (float, int))
+        power_coeff = opt.power_coefficient(v=v) * opt.power_wind_resource(v=v)
+        assert round(power_coeff, 10) == round(opt.ref_power_curve(v=v), 10)
 
 
 def test_weibull_probability_distribution():
@@ -40,8 +42,8 @@ def test_weibull_probability_distribution():
             opt.weibull_probability_distribution(k=k, c=c, v=v)
         )
 
-    weibull = [round(x, 7) for x in weibull]
-    weibull_func = [round(x, 7) for x in weibull_func]
+    weibull = [round(x, 10) for x in weibull]
+    weibull_func = [round(x, 10) for x in weibull_func]
 
     assert weibull_func == weibull
 
@@ -70,6 +72,29 @@ def test_annual_energy_production():
         aep.append(365 * 24 * n * (1 - w_loss) * integration[0])
 
     assert aep_func == aep
+
+
+def test_annual_hydrogen_production():
+    """Test the `src.optimisation.annual_hydrogen_production` function"""
+    aep = 15e6
+    e_elec = 0.07
+    eta_conv = 0.9
+    e_pcl = 0.004
+    assert opt.annual_hydrogen_production(
+        aep=aep, e_elec=e_elec, eta_conv=eta_conv, e_pcl=e_pcl
+    ) == aep / (e_elec / eta_conv + e_pcl)
+
+
+def test_capex_pipeline():
+    """Test the `src.optimisation.capex_pipeline` function"""
+    e_cap = 500
+    p_rate = 0.006
+    capex = 2 * (
+        16000000 * e_cap * p_rate / (8 * 15 * np.pi)
+        + 1197200 * np.sqrt(e_cap * p_rate / (8 * 15 * np.pi))
+        + 329000
+    )
+    assert opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate) == capex
 
 
 def test_lcot_pipeline():

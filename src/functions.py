@@ -57,7 +57,7 @@ def read_dat_file(dat_path):
 
     Returns
     -------
-    tuple[xr.Dataset, gpd.GeoSeries]
+    tuple[xarray.Dataset, geopandas.GeoSeries]
         Xarray dataset of the XYZ data and GeoPandas GeoSeries of the extent
     """
     gdf = {}
@@ -154,14 +154,14 @@ def halite_shape(dat_xr, halite=None):
 
     Parameters
     ----------
-    dat_xr : xr.Dataset
+    dat_xr : xarray.Dataset
         Xarray dataset of the halite data
     halite : str
         Halite member
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         A (multi)polygon geodataframe of the halite's shape
     """
     if halite:
@@ -195,7 +195,7 @@ def zones_of_interest(
 
     Parameters
     ----------
-    dat_xr : xr.Dataset
+    dat_xr : xarray.Dataset
         Xarray dataset of the halite data
     constraints : dict[str, float]
         Dictionary containing the following:
@@ -209,7 +209,7 @@ def zones_of_interest(
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, xr.Dataset]
+    tuple[geopandas.GeoDataFrame, xarray.Dataset]
         A (multi)polygon geodataframe of the zones of interest and an Xarray
         dataset of the zones of interest
     """
@@ -249,9 +249,9 @@ def generate_caverns_square_grid(
 
     Parameters
     ----------
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
-    zones_df : gpd.GeoDataFrame
+    zones_df : geopandas.GeoDataFrame
         Zones of interest
     diameter : float
         Diameter of the cavern [m]
@@ -260,7 +260,7 @@ def generate_caverns_square_grid(
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         A polygon geodataframe of potential caverns in the zone of interest.
 
     Notes
@@ -300,7 +300,7 @@ def hexgrid_init(dat_extent, separation):
 
     Parameters
     ----------
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
     separation : float
         Cavern separation distance [m]
@@ -326,9 +326,9 @@ def generate_caverns_hexagonal_grid(
 
     Parameters
     ----------
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
-    zones_df : gpd.GeoDataFrame
+    zones_df : geopandas.GeoDataFrame
         Zones of interest
     diameter : float
         Diameter of the cavern [m]
@@ -337,7 +337,7 @@ def generate_caverns_hexagonal_grid(
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         A polygon geodataframe of potential caverns
 
     Notes
@@ -407,14 +407,14 @@ def cavern_dataframe(dat_zone, cavern_df):
 
     Parameters
     ----------
-    dat_zone : xr.Dataset
+    dat_zone : xarray.Dataset
         Xarray dataset for the zone of interest
-    cavern_df : gpd.GeoDataFrame
+    cavern_df : geopandas.GeoDataFrame
         Geodataframe of caverns within the zone of interest
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         The cavern geodataframe with halite height and depth data for only the
         thickest halite layer at each given point
     """
@@ -459,7 +459,7 @@ def read_shapefile_from_zip(data_path, endswith=".shp"):
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         Geodataframe of the Shapefile's data
     """
     data_shp = gpd.read_file(
@@ -488,7 +488,7 @@ def constraint_exploration_well(data_path, buffer=500):
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Geodataframes of the dataset and buffer
 
     Notes
@@ -511,12 +511,12 @@ def constraint_wind_farm(data_path, dat_extent):
     ----------
     data_path : str
         Path to the Zip file
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         Geodataframes of the dataset
 
     Notes
@@ -546,14 +546,14 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
     ----------
     data_path : str
         Path to the Zip file
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
     buffer : float
         Buffer [m]
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Geodataframes of the dataset and buffer
 
     Notes
@@ -584,14 +584,14 @@ def constraint_shipwrecks(data_path, dat_extent, buffer=100):
     ----------
     data_path : str
         Path to the Zip file
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
     buffer : float
         Buffer [m]
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Geodataframes of the dataset and buffer
 
     Notes
@@ -627,7 +627,7 @@ def constraint_subsea_cables(data_path, buffer=750):
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Geodataframes of the dataset and buffer
 
     Notes
@@ -651,14 +651,14 @@ def constraint_halite_edge(dat_xr, buffer=80 * 3):
 
     Parameters
     ----------
-    dat_xr : xr.Dataset
+    dat_xr : xarray.Dataset
         Xarray dataset of the halite data
     buffer : float
         Buffer [m]
 
     Returns
     -------
-    dict[str, gpd.GeoDataFrame]
+    dict[str, geopandas.GeoDataFrame]
         Dictionary of GeoPandas geodataframes of the halite edge constraint
         for each halite member
 
@@ -683,16 +683,16 @@ def generate_caverns_with_constraints(
 
     Parameters
     ----------
-    zones_gdf : gpd.GeoDataFrame
+    zones_gdf : geopandas.GeoDataFrame
         GeoPandas dataframe of zones of interest
-    zones_ds : xr.Dataset
+    zones_ds : xarray.Dataset
         Xarray dataset of zones of interest
-    dat_extent : gpd.GeoSeries
+    dat_extent : geopandas.GeoSeries
         Extent of the data
-    exclusions : dict[str, gpd.GeoDataFrame]
+    exclusions : dict[str, geopandas.GeoDataFrame]
         A dictionary of exclusions data. If any of the following keys do not
         exist in the dictionary, the exclusion will be skipped:
-        `"edge"`: halite edge, dict[str, gpd.GeoDataFrame];
+        `"edge"`: halite edge, dict[str, geopandas.GeoDataFrame];
         `"shipping"`: frequent shipping routes;
         `"cables"`: subsea cables;
         `"wind_farms"`: offshore wind farms;
@@ -705,7 +705,7 @@ def generate_caverns_with_constraints(
 
     Returns
     -------
-    tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Dataframe of available and excluded caverns
     """
     print("Without constraints...")
@@ -828,7 +828,7 @@ def label_caverns(
 
     Parameters
     ----------
-    cavern_df : gpd.GeoDataFrame
+    cavern_df : geopandas.GeoDataFrame
         Dataframe of potential caverns
     heights : list[float]
         List of fixed caverns heights [m] for labelling
@@ -841,7 +841,7 @@ def label_caverns(
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         A dataframe of potential caverns labelled by cavern height and top
         depth ranges
     """
@@ -889,3 +889,72 @@ def label_caverns(
     cavern_df["cavern_depth"] = cavern_df["TopDepth"] + roof_thickness
 
     return cavern_df
+
+
+def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
+    """Extract mean, max, and min Weibull parameters of wind speeds.
+
+    Parameters
+    ----------
+    data_path_weibull : str
+        Path to the Weibull parameter data Zip file
+    data_path_wind_farms : str
+        Path to the wind farm data Zip file
+    dat_extent : geopandas.GeoSeries
+        Extent of the Kish Basin data
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of k and C values for each wind farm
+
+    Notes
+    -----
+    Data extracted for each wind farm in the area of interest, i.e. Kish
+    Basin: Codling, Dublin Array, and NISA.
+    """
+    weibull_df = {}
+
+    for w in ["c", "k"]:
+        # read Weibull parameter data
+        weibull_df[w] = read_shapefile_from_zip(
+            data_path=data_path_weibull, endswith=f"{w}_ITM.shp"
+        )
+
+        # read wind farm data
+        wind_farms = constraint_wind_farm(
+            data_path=data_path_wind_farms,
+            dat_extent=dat_extent,
+        )
+
+        # for combining Codling wind farm polygons
+        wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
+
+        # convert CRS and keep areas intersecting with wind farms
+        weibull_df[w] = (
+            weibull_df[w].to_crs(CRS).overlay(wind_farms, how="intersection")
+        )
+
+        # rename column
+        weibull_df[w].rename(columns={"Value": w}, inplace=True)
+
+        # average c and k over wind farms
+        weibull_df[w] = wind_farms.dissolve(by="Name_").merge(
+            weibull_df[w].dissolve(
+                by="Name_", aggfunc={w: ["min", "max", "mean"]}
+            ),
+            on="Name_",
+        )
+
+        # keep only relevant columns
+        weibull_df[w] = weibull_df[w][
+            ["Name", (w, "min"), (w, "max"), (w, "mean")]
+        ]
+
+        # reset index
+        weibull_df[w] = weibull_df[w].reset_index(drop=True)
+
+    # merge
+    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
+
+    return weibull_df

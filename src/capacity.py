@@ -136,12 +136,12 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
     ----------
     height : float
         Cavern height [m]
+    depth_top : float
+        Cavern top depth [m]
     t_0 : float
         Mean annual surface temperature [°C]
     t_delta : float
         Geothermal gradient; change in temperature with depth [°C km⁻¹]
-    depth_top : float
-        Cavern top depth [m]
 
     Returns
     -------
@@ -226,7 +226,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     Returns
     -------
     tuple[float, float]
-        Min and max hydrogen gas density [kg m⁻³]
+        Min and max hydrogen gas densities [kg m⁻³]
 
     Notes
     -----
@@ -251,8 +251,6 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     rho_h2 = []
 
     for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
-        if p_min > p_max:
-            print("WARNING! p_min seems to be larger than p_max!")
         h2_min = Fluid(FluidsList.Hydrogen).with_state(
             Input.pressure(p_min), Input.temperature(t)
         )
@@ -291,8 +289,6 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     The difference between the stored mass of hydrogen at max and min
     operating pressures.
     """
-    if rho_h2_min > rho_h2_max:
-        print("WARNING! rho_h2_min seems to be larger than rho_h2_max!")
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
     return m_max_operating - m_min_operating
