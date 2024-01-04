@@ -12,12 +12,11 @@ import seaborn as sns
 
 from src import functions as fns
 from src import optimisation as opt
-
-importlib.reload(opt)
+from src import read_data as rd
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
-ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 # extract data for wind farms at 150 m
 weibull = fns.read_weibull_data(

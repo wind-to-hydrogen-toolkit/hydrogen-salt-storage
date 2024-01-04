@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 
 from src import functions as fns
+from src import read_data as rd
 
 # data directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -23,7 +24,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
+ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
 
 # ## Stats
 
@@ -115,7 +116,7 @@ df = make_stats_plots(ds, show_plots=False)
 df.describe()
 
 # surface area
-shape = fns.halite_shape(dat_xr=ds)
+shape = rd.halite_shape(dat_xr=ds)
 
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
 

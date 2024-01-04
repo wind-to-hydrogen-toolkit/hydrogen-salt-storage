@@ -16,13 +16,14 @@ from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import functions as fns
+from src import read_data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -147,13 +148,13 @@ caverns = fns.label_caverns(
 # ## Crop data layers
 
 # land boundary
-land = fns.read_shapefile_from_zip(
+land = rd.read_shapefile_from_zip(
     data_path=os.path.join(
         "data", "boundaries", "osi-provinces-ungeneralised-2019.zip"
     )
 )
 
-land = land.dissolve().to_crs(fns.CRS)
+land = land.dissolve().to_crs(rd.CRS)
 
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
@@ -178,7 +179,7 @@ def plot_map(dat_xr):
 
     # initialise figure
     plt.figure(figsize=(12, 8))
-    axis = plt.axes(projection=ccrs.epsg(fns.CRS))
+    axis = plt.axes(projection=ccrs.epsg(rd.CRS))
 
     # # configure colour bar based on variable
     # if var == "TopTWT":
@@ -203,7 +204,7 @@ def plot_map(dat_xr):
     # )
 
     # halite boundary - use buffering to smooth the outline
-    shape = fns.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
+    shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
 
     # configure map limits
     # plt.xlim(xmin - 1450, xmax + 500)
@@ -273,7 +274,7 @@ def plot_map(dat_xr):
         )
 
     # add basemap and map elements
-    cx.add_basemap(axis, crs=fns.CRS, source=cx.providers.CartoDB.Voyager)
+    cx.add_basemap(axis, crs=rd.CRS, source=cx.providers.CartoDB.Voyager)
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -300,11 +301,11 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     """
 
     plt.figure(figsize=(20, 11.5))
-    axis = plt.axes(projection=ccrs.epsg(fns.CRS))
+    axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
 
     # halite boundary - use buffering to smooth the outline
-    shape = fns.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
+    shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
     shape.plot(
         ax=axis,
         edgecolor="darkslategrey",
@@ -420,7 +421,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf):
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
     cx.add_basemap(
-        axis, crs=fns.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
+        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
     )
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},

@@ -14,21 +14,20 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import pooch
 import seaborn as sns
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import functions as fns
+from src import read_data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")
-os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
     "https://seaiopendata.blob.core.windows.net/wind/"
     "Weibull_150m_params_ITM.zip"
 )
-KNOWN_HASH = None
+
 FILE_NAME = "Weibull_150m_params_ITM.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
@@ -36,28 +35,15 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-# download data if necessary
-if not os.path.isfile(DATA_FILE):
-    pooch.retrieve(
-        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
-    )
-
-    with open(f"{DATA_FILE[:-4]}.txt", "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-            f"Download URL: {URL}"
-        )
-
-with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
-    print(f.read())
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-weibull_c = fns.read_shapefile_from_zip(
+weibull_c = rd.read_shapefile_from_zip(
     data_path=os.path.join(DATA_FILE), endswith="c_ITM.shp"
 )
 
-weibull_k = fns.read_shapefile_from_zip(
+weibull_k = rd.read_shapefile_from_zip(
     data_path=os.path.join(DATA_FILE), endswith="k_ITM.shp"
 )
 
@@ -77,7 +63,7 @@ weibull_c.head()
 
 weibull_k.head()
 
-ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -119,16 +105,16 @@ wind_farms = fns.constraint_wind_farm(
 wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
 
 # shape of the halite
-shape = fns.halite_shape(dat_xr=ds)
+shape = rd.halite_shape(dat_xr=ds)
 
 # land boundary
-land = fns.read_shapefile_from_zip(
+land = rd.read_shapefile_from_zip(
     data_path=os.path.join(
         "data", "boundaries", "osi-provinces-ungeneralised-2019.zip"
     )
 )
 
-land = land.dissolve().to_crs(fns.CRS)
+land = land.dissolve().to_crs(rd.CRS)
 
 # crop to wind farm and basin extent
 extent_wf = gpd.GeoDataFrame(
@@ -139,8 +125,8 @@ extent_wf = gpd.GeoDataFrame(
         .envelope
     )
 )
-weibull_c = weibull_c.to_crs(fns.CRS).overlay(extent_wf, how="intersection")
-weibull_k = weibull_k.to_crs(fns.CRS).overlay(extent_wf, how="intersection")
+weibull_c = weibull_c.to_crs(rd.CRS).overlay(extent_wf, how="intersection")
+weibull_k = weibull_k.to_crs(rd.CRS).overlay(extent_wf, how="intersection")
 
 # crop land boundary from c and k
 weibull_c = weibull_c.overlay(land, how="difference")
@@ -149,7 +135,7 @@ weibull_k = weibull_k.overlay(land, how="difference")
 
 def plot_map(df, label):
     plt.figure(figsize=(10, 10))
-    ax = plt.axes(projection=ccrs.epsg(fns.CRS))
+    ax = plt.axes(projection=ccrs.epsg(rd.CRS))
 
     # add halite boundary - use buffering to smooth the outline
     shape.buffer(1000).buffer(-1000).boundary.plot(
@@ -197,7 +183,7 @@ def plot_map(df, label):
     )
 
     cx.add_basemap(
-        ax, crs=fns.CRS, source=cx.providers.CartoDB.Voyager, zoom=10
+        ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10
     )
     ax.gridlines(
         draw_labels={"bottom": "x", "left": "y"},

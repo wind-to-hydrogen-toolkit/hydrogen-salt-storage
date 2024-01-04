@@ -14,21 +14,20 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import pooch
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import functions as fns
+from src import read_data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "wind-farms-foreshore-process")
-os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
     "https://opendata.arcgis.com/api/v3/datasets/"
     "803a4ecc22aa4cc09111072a0bbc4fac_2/downloads/"
     "data?format=shp&spatialRefId=4326&where=1%3D1"
 )
-KNOWN_HASH = None
+
 FILE_NAME = "wind-farms-foreshore-process.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
@@ -36,29 +35,11 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-# download data if necessary
-if not os.path.isfile(DATA_FILE):
-    pooch.retrieve(
-        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
-    )
-
-    with open(f"{DATA_FILE[:-4]}.txt", "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-            f"Download URL: {URL}"
-        )
-
-with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
-    print(f.read())
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-wind_farms = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_FILE}!"
-        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
-    )
-)
+wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
 
 wind_farms.crs
 
@@ -96,13 +77,13 @@ DATA_DIR = os.path.join("data", "kish-basin")
 
 CRS = 23029
 
-ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
+ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
 
 # use extent bounds
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 # shape of the halite
-shape = fns.halite_shape(dat_xr=ds)
+shape = rd.halite_shape(dat_xr=ds)
 
 # wind farms in the Irish Sea
 wind_farms_ = wind_farms.sjoin(

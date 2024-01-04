@@ -16,14 +16,14 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
-import pooch
+
+from src import read_data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kis-orca")
-os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = "https://kis-orca.org/wp-content/uploads/2020/12/Olex_KIS-ORCA-v2023.zip"
-KNOWN_HASH = None
+
 FILE_NAME = "Olex_KIS-ORCA-v2023.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
@@ -31,20 +31,7 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-# download data if necessary
-if not os.path.isfile(DATA_FILE):
-    pooch.retrieve(
-        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
-    )
-
-    with open(f"{DATA_FILE[:-4]}.txt", "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-            f"Download URL: {URL}"
-        )
-
-with open(f"{DATA_FILE[:-4]}.txt", encoding="utf-8") as f:
-    print(f.read())
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 # ## Read data
 

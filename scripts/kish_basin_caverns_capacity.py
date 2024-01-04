@@ -16,13 +16,14 @@ from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import capacity as cap
 from src import functions as fns
+from src import read_data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-ds, extent = fns.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -230,11 +231,11 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
     """
 
     plt.figure(figsize=(20, 11.5))
-    axis = plt.axes(projection=ccrs.epsg(fns.CRS))
+    axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
 
     # halite boundary - use buffering to smooth the outline
-    shape = fns.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
+    shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
     shape.plot(
         ax=axis,
         edgecolor="darkslategrey",
@@ -354,7 +355,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
     cx.add_basemap(
-        axis, crs=fns.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
+        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
     )
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},

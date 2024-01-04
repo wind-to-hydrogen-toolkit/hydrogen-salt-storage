@@ -10,8 +10,9 @@ from zipfile import ZipFile
 import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import pooch
 import seaborn as sns
+
+from src import read_data as rd
 
 # ## OREDP Assessment Zone
 #
@@ -19,13 +20,12 @@ import seaborn as sns
 
 # base data download directory
 DATA_DIR = os.path.join("data", "oredp-zone")
-os.makedirs(DATA_DIR, exist_ok=True)
 
 URL = (
     "https://atlas.marine.ie/midata/EnergyResourcesTidal/"
     "OREDP_Assessment_Zone.shapezip.zip"
 )
-KNOWN_HASH = None
+
 FILE_NAME = "OREDP_Assessment_Zone.shapezip.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
@@ -33,29 +33,11 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-# download data if necessary
-if not os.path.isfile(DATA_FILE):
-    pooch.retrieve(
-        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
-    )
-
-    with open(f"{DATA_FILE[:-13]}.txt", "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-            f"Download URL: {URL}"
-        )
-
-with open(f"{DATA_FILE[:-13]}.txt", encoding="utf-8") as f:
-    print(f.read())
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-data = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_FILE}!"
-        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
-    )
-)
+data = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
 
 data
 
@@ -90,29 +72,11 @@ FILE_NAME = "OREDP_Study_Area.shapezip.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
-# download data if necessary
-if not os.path.isfile(DATA_FILE):
-    pooch.retrieve(
-        url=URL, known_hash=KNOWN_HASH, fname=FILE_NAME, path=DATA_DIR
-    )
-
-    with open(f"{DATA_FILE[:-13]}.txt", "w", encoding="utf-8") as outfile:
-        outfile.write(
-            f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-            f"Download URL: {URL}"
-        )
-
-with open(f"{DATA_FILE[:-13]}.txt", encoding="utf-8") as f:
-    print(f.read())
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-data2 = gpd.read_file(
-    os.path.join(
-        f"zip://{DATA_FILE}!"
-        + [x for x in ZipFile(DATA_FILE).namelist() if x.endswith(".shp")][0]
-    )
-)
+data2 = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
 
 data2
 

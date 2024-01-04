@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import functions as fns
+from src import read_data as rd
 
 # data directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -22,7 +23,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = fns.read_dat_file(dat_path=DATA_DIR)
+ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
 
 # ## Zones of interest
 
