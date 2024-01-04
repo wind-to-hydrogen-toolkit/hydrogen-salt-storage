@@ -2,6 +2,7 @@ black[jupyter]
 cartopy
 contextily
 coverage
+dask[complete]
 flake8
 geocube
 geopandas
