@@ -1,5 +1,4 @@
 #!/bin/sh
-# jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb
 
 # format notebooks
 black -l 79 */*.ipynb

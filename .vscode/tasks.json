@@ -41,6 +41,15 @@
             }
         },
         {
+            "label": "sanitise-notebooks",
+            "type": "shell",
+            "command": "source .venv/bin/activate && jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
             "label": "pytest",
             "type": "shell",
             "command": "source .venv/bin/activate && python -m pytest",
@@ -51,9 +60,9 @@
             }
         },
         {
-            "label": "pytest-cov",
+            "label": "pytest-coverage",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m coverage run -m pytest && coverage report -m",
+            "command": "source .venv/bin/activate && coverage run -m pytest && coverage report -m",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
@@ -72,6 +81,24 @@
             "label": "pytest-capacity",
             "type": "shell",
             "command": "source .venv/bin/activate && python -m pytest tests/test_capacity.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "pylint",
+            "type": "shell",
+            "command": "source .venv/bin/activate && pylint **/*.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "flake8",
+            "type": "shell",
+            "command": "source .venv/bin/activate && flake8 **/*.py --extend-exclude 'data/**/*.py'",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
