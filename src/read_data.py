@@ -43,18 +43,17 @@ def download_data(url, data_dir, file_name, known_hash=None):
         pooch.retrieve(
             url=url, known_hash=known_hash, fname=file_name, path=data_dir
         )
+        print(f"Data downloaded on: {datetime.now(tz=timezone.utc)}")
         with open(f"{data_file}.txt", "w", encoding="utf-8") as outfile:
             outfile.write(
                 f"Data downloaded on: {datetime.now(tz=timezone.utc)}\n"
-                f"Download URL: {url}"
+                f"Download URL: {url}\n"
+                f"SHA256 hash: {pooch.file_hash(data_file)}\n"
             )
     else:
         print(f"Data '{file_name}' already exists in '{data_dir}'.")
-    with open(
-        glob.glob(data_file.split(".")[0] + "*.txt")[0],
-        encoding="utf-8"
-    ) as f:
-        print(f.read())
+        with open(f"{data_file}.txt", encoding="utf-8") as f:
+            print(f.read())
 
 
 def read_dat_file(dat_path):
