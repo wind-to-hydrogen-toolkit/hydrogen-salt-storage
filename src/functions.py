@@ -1,4 +1,4 @@
-"""Functions to read and structure data and generate caverns.
+"""Functions to structure data and generate caverns with constraints.
 
 .. rubric:: References
 .. [#Brennan20] Brennan, J. (2020). ‘Fast and easy gridding of point data with
@@ -32,160 +32,14 @@
     (Accessed: 10 November 2023).
 """
 
-import glob
 import os
-from zipfile import ZipFile
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import shapely
-import xarray as xr
-from geocube.api.core import make_geocube
 
-# CRS of the Kish Basin dat files
-CRS = 23029
-
-
-def read_dat_file(dat_path):
-    """Read XYZ halite data layers into an Xarray dataset
-
-    Parameters
-    ----------
-    dat_path : str
-        Path to the .dat files
-
-    Returns
-    -------
-    tuple[xarray.Dataset, geopandas.GeoSeries]
-        Xarray dataset of the XYZ data and GeoPandas GeoSeries of the extent
-    """
-    gdf = {}
-    # for dat_file in glob.glob(os.path.join(dat_path, "*.dat")):
-    for dat_file in [
-        x
-        for x in glob.glob(os.path.join(dat_path, "*.dat"))
-        if "Zone" not in x
-    ]:
-        # read each layer as individual dataframes into a dictionary
-        gdf[os.path.split(dat_file)[-1][:-4]] = pd.read_fwf(
-            dat_file, header=None, names=["X", "Y", "Z"]
-        )
-
-        # assign layer name to a column
-        gdf[os.path.split(dat_file)[-1][:-4]]["data"] = os.path.split(
-            dat_file
-        )[-1][:-4]
-
-    # # find data resolution
-    # gdf_xr = gdf[list(gdf.keys())[0]].set_index(["X", "Y"]).to_xarray()
-    # resx = gdf_xr["X"][1] - gdf_xr["X"][0]
-    # resy = gdf_xr["Y"][1] - gdf_xr["Y"][0]
-
-    # combine dataframes
-    gdf = pd.concat(gdf.values())
-
-    # convert dataframe to geodataframe
-    gdf["geometry"] = gpd.points_from_xy(gdf.X, gdf.Y, crs=CRS)
-    gdf = gpd.GeoDataFrame(gdf)
-    gdf.drop(columns=["X", "Y"], inplace=True)
-
-    # convert to Xarray dataset
-    xds = make_geocube(
-        vector_data=gdf,
-        # resolution=(-abs(resy), abs(resx)),
-        # align=(abs(resy / 2), abs(resx / 2)),
-        resolution=(-200, 200),
-        align=(100, 100),
-        group_by="data",
-    )
-
-    # split variables and halite members
-    xds_ = {}
-    for d in xds["data"].values:
-        halite_member = d.split(" ")[0]
-        # fix halite names
-        if halite_member == "Presall":
-            halite_member = "Preesall"
-        elif halite_member == "Flyde":
-            halite_member = "Fylde"
-        unit = d.split(" ")[-1]
-        zvar = d.split("Halite ")[-1].split(" XYZ")[0]
-        xds_[d] = (
-            xds.sel(data=d)
-            .assign_coords(halite=halite_member)
-            .expand_dims(dim="halite")
-            .drop_vars("data")
-        )
-        xds_[d] = xds_[d].rename({"Z": zvar.replace(" ", "")})
-        xds_[d][zvar.replace(" ", "")] = xds_[d][
-            zvar.replace(" ", "")
-        ].assign_attrs(units=unit, long_name=zvar)
-
-    xds = xr.combine_by_coords(xds_.values(), combine_attrs="override")
-
-    # # keep only points corresponding to zones of interest in the dataframe
-    # zones = gdf.loc[gdf["data"].str.contains("Zone")]
-
-    # # create zones of interest polygon
-    # zones = gpd.GeoDataFrame(geometry=zones.buffer(100).envelope).dissolve()
-
-    # create extent polygon
-    dat_extent = pd.read_csv(
-        os.path.join(dat_path, "Kish GIS Map Extent - Square.csv"), skiprows=2
-    )
-    dat_extent = gpd.GeoSeries(
-        shapely.geometry.Polygon(
-            [
-                (dat_extent[" X"][0], dat_extent[" Y"][0]),
-                (dat_extent[" X"][1], dat_extent[" Y"][1]),
-                (dat_extent[" X"][2], dat_extent[" Y"][2]),
-                (dat_extent[" X"][3], dat_extent[" Y"][3]),
-            ]
-        ),
-        crs=CRS,
-    )
-
-    return xds, dat_extent  # zones
-
-
-def halite_shape(dat_xr, halite=None):
-    """Create a vector shape of the halite data
-
-    Parameters
-    ----------
-    dat_xr : xarray.Dataset
-        Xarray dataset of the halite data
-    halite : str
-        Halite member
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        A (multi)polygon geodataframe of the halite's shape
-    """
-    if halite:
-        shape = (
-            dat_xr.sel(halite=halite)["Thickness"]
-            .to_dataframe()
-            .dropna()
-            .reset_index()
-        )
-    else:
-        shape = (
-            dat_xr.max(dim="halite")["Thickness"]
-            .to_dataframe()
-            .dropna()
-            .reset_index()
-        )
-    shape = gpd.GeoDataFrame(
-        geometry=gpd.GeoSeries(gpd.points_from_xy(shape.x, shape.y))
-        .buffer(100)
-        .envelope,
-        crs=CRS,
-    ).dissolve()
-
-    return shape
+from src import read_data as rd
 
 
 def zones_of_interest(
@@ -236,7 +90,7 @@ def zones_of_interest(
         geometry=gpd.GeoSeries(gpd.points_from_xy(zdf.x, zdf.y))
         .buffer(100)
         .envelope,
-        crs=CRS,
+        crs=rd.CRS,
     ).dissolve()
 
     return zdf, zds
@@ -277,7 +131,7 @@ def generate_caverns_square_grid(
             x1 = x0 - separation
             y1 = y0 + separation
             grid_cells.append(shapely.geometry.box(x0, y0, x1, y1))
-    grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=CRS)
+    grid_cells = gpd.GeoDataFrame(grid_cells, columns=["geometry"], crs=rd.CRS)
 
     # generate caverns within the zones of interest
     cavern_df = gpd.sjoin(
@@ -387,7 +241,7 @@ def generate_caverns_hexagonal_grid(
 
     # generate caverns using hexagon vertices and centroids
     cavern_df = gpd.GeoDataFrame(
-        geometry=gpd.GeoDataFrame(geometry=cavern_df, crs=CRS)
+        geometry=gpd.GeoDataFrame(geometry=cavern_df, crs=rd.CRS)
         .drop_duplicates()
         .buffer(diameter / 2)
     )
@@ -431,7 +285,7 @@ def cavern_dataframe(dat_zone, cavern_df):
         geometry=gpd.GeoSeries(gpd.points_from_xy(zdf.x, zdf.y))
         .buffer(100)
         .envelope,
-        crs=CRS,
+        crs=rd.CRS,
     )
 
     # merge with the cavern data
@@ -445,35 +299,6 @@ def cavern_dataframe(dat_zone, cavern_df):
     ).drop_duplicates(["geometry"])
 
     return cavern_df
-
-
-def read_shapefile_from_zip(data_path, endswith=".shp"):
-    """Read the Shapefile layer from a Zip file.
-
-    Parameters
-    ----------
-    data_path : str
-        Path to the exploration well Zip file
-    endswith : str
-        What the Shapefile's filename ends with
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        Geodataframe of the Shapefile's data
-    """
-    data_shp = gpd.read_file(
-        os.path.join(
-            f"zip://{data_path}!"
-            + [
-                x
-                for x in ZipFile(data_path).namelist()
-                if x.endswith(endswith)
-            ][0]
-        )
-    )
-
-    return data_shp
 
 
 def constraint_exploration_well(data_path, buffer=500):
@@ -495,9 +320,9 @@ def constraint_exploration_well(data_path, buffer=500):
     -----
     500 m buffer - suggested in the draft OREDP II p. 108 [#DECC23]_.
     """
-    wells = read_shapefile_from_zip(data_path=os.path.join(data_path))
+    wells = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
 
-    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(CRS)
+    wells = wells[wells["AREA"].str.contains("Kish")].to_crs(rd.CRS)
 
     wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
 
@@ -524,11 +349,11 @@ def constraint_wind_farm(data_path, dat_extent):
     The shapes are used as is without a buffer - suggested for renewable
     energy test site areas in the draft OREDP II p. 109 [#DECC23]_.
     """
-    wind_farms = read_shapefile_from_zip(data_path=os.path.join(data_path))
+    wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     wind_farms = (
-        wind_farms.to_crs(CRS)
+        wind_farms.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
         .sort_values("Name")
@@ -561,11 +386,11 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
     1 NM (nautical mile) buffer - suggested in the draft OREDP II p. 108
     [#DECC23]_. 1 NM is equivalent to 1,852 m [#NIST16]_.
     """
-    shipping = read_shapefile_from_zip(data_path=os.path.join(data_path))
+    shipping = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     shipping = (
-        shipping.to_crs(CRS)
+        shipping.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
     )
@@ -598,11 +423,11 @@ def constraint_shipwrecks(data_path, dat_extent, buffer=100):
     -----
     Archaeological Exclusion Zones recommendation - 100 m buffer [#RE21]_.
     """
-    shipwrecks = read_shapefile_from_zip(data_path=os.path.join(data_path))
+    shipwrecks = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
 
     # keep only features near Kish Basin
     shipwrecks = (
-        shipwrecks.to_crs(CRS)
+        shipwrecks.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
     )
@@ -636,7 +461,7 @@ def constraint_subsea_cables(data_path, buffer=750):
     """
     cables = gpd.read_file(os.path.join(data_path))
 
-    cables = cables.to_crs(CRS)
+    cables = cables.to_crs(rd.CRS)
 
     # remove point features
     cables = cables.drop(range(3)).reset_index(drop=True)
@@ -668,7 +493,7 @@ def constraint_halite_edge(dat_xr, buffer=80 * 3):
     """
     buffer_edge = {}
     for halite in dat_xr.halite.values:
-        buffer_edge[halite] = halite_shape(dat_xr=dat_xr, halite=halite)
+        buffer_edge[halite] = rd.halite_shape(dat_xr=dat_xr, halite=halite)
         buffer_edge[halite] = gpd.GeoDataFrame(
             geometry=buffer_edge[halite].boundary.buffer(buffer)
         ).overlay(buffer_edge[halite], how="intersection")
@@ -917,7 +742,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
 
     for w in ["c", "k"]:
         # read Weibull parameter data
-        weibull_df[w] = read_shapefile_from_zip(
+        weibull_df[w] = rd.read_shapefile_from_zip(
             data_path=data_path_weibull, endswith=f"{w}_ITM.shp"
         )
 
@@ -932,7 +757,9 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
-            weibull_df[w].to_crs(CRS).overlay(wind_farms, how="intersection")
+            weibull_df[w].to_crs(rd.CRS).overlay(
+                wind_farms, how="intersection"
+            )
         )
 
         # rename column
