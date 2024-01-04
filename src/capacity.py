@@ -73,12 +73,12 @@ def cavern_volume(height, diameter=80, theta=20):
 
     .. math::
         V_{ideal} = \\pi \\cdot r^2 \\cdot h_{cavern}
-        - \\frac{4}{3} \\times \\pi \\cdot r^2 \\cdot h_{cone}
+        - \\frac{4}{3} \\, \\pi \\cdot r^2 \\cdot h_{cone}
     .. math::
         V_{ideal} = \\pi \\cdot r^2
-        \\left(h_{cavern} - \\frac{4}{3} \\times h_{cone}\\right)
+        \\left(h_{cavern} - \\frac{4}{3} \\, h_{cone}\\right)
     .. math::
-        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\times
+        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\,
         r \\cdot \\tan(\\theta)\\right)
     """
     r = diameter / 2
@@ -123,7 +123,7 @@ def corrected_cavern_volume(
         V_{cavern} = V_{ideal} \\times 0.7 \\times (1 - 0.25 \\times 0.865
         \\times 1.46)
     .. math::
-        V_{cavern} \\approx 0.48 \\times V_{ideal}
+        V_{cavern} \\approx 0.48 \\, V_{ideal}
     """
     correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
     return v_cavern * correction_factors
@@ -200,14 +200,11 @@ def pressure_operating(
     Thickness of salt above casing shoe = 50 m.
     Acceleration due to gravity = 9.81 m s⁻².
     """
-
     p_casing = (
         rho_overburden * thickness_overburden + rho_salt * thickness_salt
     ) * 9.81
-
     p_operating_min = minf * p_casing
     p_operating_max = maxf * p_casing
-
     return p_operating_min, p_operating_max
 
 
@@ -249,20 +246,15 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
     """
     rho_h2 = []
-
     for p_min, p_max, t in zip(p_operating_min, p_operating_max, t_mid_point):
         h2_min = Fluid(FluidsList.Hydrogen).with_state(
             Input.pressure(p_min), Input.temperature(t)
         )
-
         h2_max = Fluid(FluidsList.Hydrogen).with_state(
             Input.pressure(p_max), Input.temperature(t)
         )
-
         rho_h2.append((h2_min.density, h2_max.density))
-
     rho_h2 = pd.DataFrame(rho_h2)
-
     return rho_h2[0], rho_h2[1]
 
 

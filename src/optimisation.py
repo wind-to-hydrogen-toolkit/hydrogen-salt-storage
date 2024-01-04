@@ -44,6 +44,8 @@
     (Accessed: 14 August 2023).
 """
 
+from functools import partial
+
 import numpy as np
 import pandas as pd
 from scipy import integrate
@@ -131,7 +133,7 @@ def weibull_probability_distribution(v, k, c):
     respectively, and :math:`v` is the wind speed.
 
     .. math::
-        f(v) = \\frac{k}{C} \\left( \\frac{v}{C} \\right)^{k-1}
+        f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k-1}
         \\cdot \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
 
     See also [#Pryor18]_, Eqn. (2).
@@ -202,16 +204,13 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     .. math::
         AEP = 365 \\times 24 \\times n_T \\times
         \\left( 1 - w_{loss} \\right) \\times
-        \\int\\limits_{v_i}^{v_o} P(v) f(v)\\,\\mathrm{d}v
+        \\int\\limits_{v_i}^{v_o} P(v) f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
     tolerance for the integration have been increased.
     """
     integration = integrate.quad(
-        lambda v: (
-            ref_power_curve(v=v)
-            * weibull_probability_distribution(k=k, c=c, v=v)
-        ),
+        partial(weibull_power_curve, k=k, c=c),
         a=REF_V_CUT_IN,
         b=REF_V_CUT_OUT,
         limit=100,  # an upper bound on the number of subintervals used
@@ -300,8 +299,8 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
 
     .. math::
-        CAPEX_{pipe} = 2 \\times \\left( 16,000,000 \\frac{E_{cap}
-        \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi} + 1,197,200
+        CAPEX_{pipe} = 2 \\, \\left( 16,000,000 \\, \\frac{E_{cap}
+        \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi} + 1,197,200 \\,
         \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi}}
         + 329,000 \\right)
 
@@ -419,8 +418,8 @@ def power_wind_resource(v, rho=1.225, diameter=REF_DIAMETER):
     Notes
     -----
     .. math::
-        P_{wind} = \\frac{1}{2} \\times \\rho_{air} \\times A \\times v^3
-        \\times 10^{-6}
+        P_{wind} = \\frac{1}{2} \\,
+        \\frac{\\rho_{air} \\cdot A \\cdot v^3}{10^6}
 
     where :math:`P_{wind}` is the power contained in the wind resource [MW],
     :math:`\\rho_{air}` is the air density [kg m⁻³], :math:`A` is the rotor
@@ -448,8 +447,8 @@ def power_coefficient(v):
     turbine [#Musial19]_.
 
     .. math::
-        C_p = \\frac{P}{P_{wind}} = \\frac{2 \\times P \\times 10^6}
-        {\\rho_{air} \\times A \\times v^3}
+        C_p = \\frac{P}{P_{wind}} = 2 \\, \\frac{P \\times 10^6}
+        {\\rho_{air} \\cdot A \\cdot v^3}
 
     where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
     the power contained in the wind resource [MW]:math:`\\rho_{air}` is the

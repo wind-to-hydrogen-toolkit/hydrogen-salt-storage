@@ -165,11 +165,9 @@ def hexgrid_init(dat_extent, separation):
         a, cols, and rows
     """
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-
     a = np.sin(np.pi / 3)
     cols = np.arange(np.floor(xmin_), np.ceil(xmax_), 3 * separation)
     rows = np.arange(np.floor(ymin_) / a, np.ceil(ymax_) / a, separation)
-
     return a, cols, rows
 
 
@@ -321,11 +319,8 @@ def constraint_exploration_well(data_path, buffer=500):
     500 m buffer - suggested in the draft OREDP II p. 108 [#DECC23]_.
     """
     wells = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-
     wells = wells[wells["AREA"].str.contains("Kish")].to_crs(rd.CRS)
-
     wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
-
     return wells, wells_b
 
 
@@ -342,7 +337,7 @@ def constraint_wind_farm(data_path, dat_extent):
     Returns
     -------
     geopandas.GeoDataFrame
-        Geodataframes of the dataset
+        Geodataframe of the dataset
 
     Notes
     -----
@@ -350,7 +345,6 @@ def constraint_wind_farm(data_path, dat_extent):
     energy test site areas in the draft OREDP II p. 109 [#DECC23]_.
     """
     wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-
     # keep only features near Kish Basin
     wind_farms = (
         wind_farms.to_crs(rd.CRS)
@@ -358,9 +352,7 @@ def constraint_wind_farm(data_path, dat_extent):
         .reset_index()
         .sort_values("Name")
     )
-
     wind_farms.drop(columns=["index_right"], inplace=True)
-
     return wind_farms
 
 
@@ -387,18 +379,14 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
     [#DECC23]_. 1 NM is equivalent to 1,852 m [#NIST16]_.
     """
     shipping = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-
     # keep only features near Kish Basin
     shipping = (
         shipping.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
     )
-
     shipping.drop(columns=["index_right"], inplace=True)
-
     shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(buffer)).dissolve()
-
     return shipping, shipping_b
 
 
@@ -424,19 +412,14 @@ def constraint_shipwrecks(data_path, dat_extent, buffer=100):
     Archaeological Exclusion Zones recommendation - 100 m buffer [#RE21]_.
     """
     shipwrecks = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-
     # keep only features near Kish Basin
     shipwrecks = (
         shipwrecks.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
     )
-
     shipwrecks.drop(columns=["index_right"], inplace=True)
-
-    # Archaeological Exclusion Zones recommendation
     shipwrecks_b = gpd.GeoDataFrame(geometry=shipwrecks.buffer(buffer))
-
     return shipwrecks, shipwrecks_b
 
 
@@ -460,14 +443,10 @@ def constraint_subsea_cables(data_path, buffer=750):
     750 m buffer - suggested in the draft OREDP II p. 109-111 [#DECC23]_.
     """
     cables = gpd.read_file(os.path.join(data_path))
-
     cables = cables.to_crs(rd.CRS)
-
     # remove point features
     cables = cables.drop(range(3)).reset_index(drop=True)
-
     cables_b = gpd.GeoDataFrame(geometry=cables.buffer(buffer)).dissolve()
-
     return cables, cables_b
 
 
@@ -497,8 +476,45 @@ def constraint_halite_edge(dat_xr, buffer=80 * 3):
         buffer_edge[halite] = gpd.GeoDataFrame(
             geometry=buffer_edge[halite].boundary.buffer(buffer)
         ).overlay(buffer_edge[halite], how="intersection")
-
     return buffer_edge
+
+
+def exclude_constraint(cavern_df, cavern_all, exclusions, key):
+    """Exclude constraint by their dictionary key.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of available caverns
+    cavern_all : geopandas.GeoDataFrame
+        Dataframe of all caverns, i.e. available and excluded
+    exclusions : dict[str, geopandas.GeoDataFrame]
+        Dictionary of exclusions data
+    key : str
+        Key for the constraint in the dictionary; one of the following:
+        `"shipping"`: frequent shipping routes;
+        `"cables"`: subsea cables;
+        `"wind_farms"`: offshore wind farms;
+        `"wells"`: exporation wells;
+        `"shipwrecks"`: shipwrecks
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Dataframe of available caverns
+    """
+    try:
+        cavern_df = cavern_df.overlay(
+            gpd.sjoin(cavern_df, exclusions[key], predicate="intersects"),
+            how="difference",
+        )
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
+        print(f"Caverns excluded: {pct:.2f}%")
+    except KeyError:
+        print("No data specified!")
+    print("-" * 60)
+    return cavern_df
 
 
 def generate_caverns_with_constraints(
@@ -515,7 +531,7 @@ def generate_caverns_with_constraints(
     dat_extent : geopandas.GeoSeries
         Extent of the data
     exclusions : dict[str, geopandas.GeoDataFrame]
-        A dictionary of exclusions data. If any of the following keys do not
+        Dictionary of exclusions data; if any of the following keys do not
         exist in the dictionary, the exclusion will be skipped:
         `"edge"`: halite edge, dict[str, geopandas.GeoDataFrame];
         `"shipping"`: frequent shipping routes;
@@ -541,11 +557,10 @@ def generate_caverns_with_constraints(
         separation=separation,
     )
     cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
-
     # keep original
     cavern_all = cavern_df.copy()
-
     print("-" * 60)
+
     print("Exclude salt formation edges...")
     try:
         cavern_dict = {}
@@ -565,77 +580,47 @@ def generate_caverns_with_constraints(
         print(f"Caverns excluded: {pct:.2f}%")
     except KeyError:
         print("No data specified!")
-
     print("-" * 60)
+
     print("Exclude frequent shipping routes...")
-    try:
-        cavern_df = cavern_df.overlay(
-            gpd.sjoin(
-                cavern_df, exclusions["shipping"], predicate="intersects"
-            ),
-            how="difference",
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
+    cavern_df = exclude_constraint(
+        cavern_df=cavern_df,
+        cavern_all=cavern_all,
+        exclusions=exclusions,
+        key="shipping",
+    )
 
-    print("-" * 60)
     print("Exclude subsea cables...")
-    try:
-        cavern_df = cavern_df.overlay(
-            gpd.sjoin(cavern_df, exclusions["cables"], predicate="intersects"),
-            how="difference",
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
+    cavern_df = exclude_constraint(
+        cavern_df=cavern_df,
+        cavern_all=cavern_all,
+        exclusions=exclusions,
+        key="cables",
+    )
 
-    print("-" * 60)
     print("Exclude wind farms...")
-    try:
-        cavern_df = cavern_df.overlay(
-            gpd.sjoin(
-                cavern_df, exclusions["wind_farms"], predicate="intersects"
-            ),
-            how="difference",
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
+    cavern_df = exclude_constraint(
+        cavern_df=cavern_df,
+        cavern_all=cavern_all,
+        exclusions=exclusions,
+        key="wind_farms",
+    )
 
-    print("-" * 60)
     print("Exclude exploration wells...")
-    try:
-        cavern_df = cavern_df.overlay(
-            gpd.sjoin(cavern_df, exclusions["wells"], predicate="intersects"),
-            how="difference",
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
+    cavern_df = exclude_constraint(
+        cavern_df=cavern_df,
+        cavern_all=cavern_all,
+        exclusions=exclusions,
+        key="wells",
+    )
 
-    print("-" * 60)
     print("Exclude shipwrecks...")
-    try:
-        cavern_df = cavern_df.overlay(
-            gpd.sjoin(
-                cavern_df, exclusions["shipwrecks"], predicate="intersects"
-            ),
-            how="difference",
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
+    cavern_df = exclude_constraint(
+        cavern_df=cavern_df,
+        cavern_all=cavern_all,
+        exclusions=exclusions,
+        key="shipwrecks",
+    )
 
     # get excluded caverns
     caverns_excl = cavern_all.overlay(
