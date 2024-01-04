@@ -64,7 +64,7 @@ def cavern_volume(height, diameter=80, theta=20):
     [#Jannel22]_. Since the volume of a cylinder is defined as
     :math:`\\pi r^2 h` and the volume of a cone is defined as
     :math:`\\frac{\\pi r^2 h}{3}` (i.e. one third of a cylinder's volume), the
-    ideal cavern volume, :math:`V_{ideal}` [m³] can therefore be derived by
+    bulk cavern volume, :math:`V_{bulk}` [m³] can therefore be derived by
     calculating the volume of a cylinder of the cavern height,
     :math:`h_{cavern}` [m] and deducting 4/3 of the volume of a cone of height
     :math:`h_{cone}`. :math:`r` [m] is the radius of the cavern and
@@ -72,13 +72,13 @@ def cavern_volume(height, diameter=80, theta=20):
     where :math:`\\theta` [°] is the cavern roof angle.
 
     .. math::
-        V_{ideal} = \\pi \\cdot r^2 \\cdot h_{cavern}
+        V_{bulk} = \\pi \\cdot r^2 \\cdot h_{cavern}
         - \\frac{4}{3} \\, \\pi \\cdot r^2 \\cdot h_{cone}
     .. math::
-        V_{ideal} = \\pi \\cdot r^2
+        V_{bulk} = \\pi \\cdot r^2
         \\left(h_{cavern} - \\frac{4}{3} \\, h_{cone}\\right)
     .. math::
-        V_{ideal} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\,
+        V_{bulk} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\,
         r \\cdot \\tan(\\theta)\\right)
     """
     r = diameter / 2
@@ -113,23 +113,23 @@ def corrected_cavern_volume(
         Corrected cavern volume [m³]
 
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
-    applying several correction factors as detailed in [#Williams22]_, Eqn.
-    (1).
+    applying several correction factors to the bulk cavern volume,
+    :math:`V_{bulk}` [m³]as detailed in [#Williams22]_, Eqn. (1).
 
     .. math::
-        V_{cavern} = V_{ideal} \\times SCF \\times (1 - IF \\times INSF
+        V_{cavern} = V_{bulk} \\times SCF \\times (1 - IF \\times INSF
         \\times BF)
     .. math::
-        V_{cavern} = V_{ideal} \\times 0.7 \\times (1 - 0.25 \\times 0.865
+        V_{cavern} = V_{bulk} \\times 0.7 \\times (1 - 0.25 \\times 0.865
         \\times 1.46)
     .. math::
-        V_{cavern} \\approx 0.48 \\, V_{ideal}
+        V_{cavern} \\approx 0.48 \\, V_{bulk}
     """
     correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
     return v_cavern * correction_factors
 
 
-def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
+def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
     """Cavern mid-point temperature.
 
     Parameters
@@ -140,7 +140,7 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
         Cavern top depth [m]
     t_0 : float
         Mean annual surface temperature [°C]
-    t_delta : float
+    delta_t : float
         Geothermal gradient; change in temperature with depth [°C km⁻¹]
 
     Returns
@@ -152,14 +152,24 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, t_delta=37.5):
     -----
     See [#Williams22]_, Eqn. (2).
 
-    A :math:`T_\\Delta` [°C km⁻¹] value of 37.5 is used based on the geothermal
+    .. math::
+        T_{midpoint} = T_0 + \\Delta_T \\,
+        \\frac{(z_{cavern} + 0.5 \\, h_{cavern})}{1,000} + 273.15
+
+    where :math:`T_{midpoint}` is the cavern mid-point temperature [K],
+    :math:`T_0` is the mean annual surface temperature [°C],
+    :math:`\\Delta_T` is the change in temperature with depth, i.e. geothermal
+    gradient [°C km⁻¹], :math:`z_{cavern}` is the cavern top depth [m], and
+    :math:`h_{cavern}` is the cavern height [m].
+
+    A :math:`\\Delta_T` of 37.5 °C km⁻¹ is used based on the geothermal
     gradient of Kish Basin wells in the Mercia Mudstone Group reported in
     [#English23]_.
     Note that the cavern top depth is used instead of the casing shoe depth,
     as the casing shoe is 30 m above the cavern top depth in this study,
-    rather than at the cavern top.
+    rather than at the cavern top as modelled in [#Williams22]_.
     """
-    return t_0 + t_delta * (depth_top + height / 2) / 1000 + 273.15
+    return t_0 + delta_t * (depth_top + height / 2) / 1000 + 273.15
 
 
 def pressure_operating(
@@ -195,10 +205,23 @@ def pressure_operating(
     Notes
     -----
     See [#Williams22]_, Eqn. (3) and (4).
-    Lithostatic pressure at the casing shoe.
-    Thickness of the overburden is the same as the depth to top of salt.
-    Thickness of salt above casing shoe = 50 m.
-    Acceleration due to gravity = 9.81 m s⁻².
+
+    .. math::
+        P_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
+        \\cdot t_{salt}) \\, g
+    .. math::
+        P_{min} = 0.3 \\, P_{casing}
+    .. math::
+        P_{max} = 0.8 \\, P_{casing}
+
+    :math:`P_{casing}` is the lithostatic pressure at the casing shoe [Pa].
+    The thickness of the overburden, :math:`t_{overburden}` [m] is the same
+    as the depth to top of salt. :math:`t_{salt}` [m] is the thickness of
+    the salt above the casing shoe. :math:`\\rho_{overburden}` and
+    :math:`\\rho_{salt}` are the densities of the overburden and salt,
+    respectively [kg m⁻³]. :math:`g` is the acceleration due to gravity
+    [m s⁻²]. :math:`P_{min}` and :math:`P_{max}` are the minimum and maximum
+    cavern operating pressures, respectively [Pa].
     """
     p_casing = (
         rho_overburden * thickness_overburden + rho_salt * thickness_salt
@@ -278,8 +301,20 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     Notes
     -----
     See [#Williams22]_, Eqn. (5) and (6).
-    The difference between the stored mass of hydrogen at max and min
-    operating pressures.
+
+    .. math::
+        m_{min} = \\rho_{min} \\cdot V_{cavern}
+    .. math::
+        m_{max} = \\rho_{max} \\cdot V_{cavern}
+    .. math::
+        m_{working} = m_{max} - m_{min}
+
+    The working mass of hydrogen, :math:`m_{working}` [kg] is the difference
+    between the stored mass of hydrogen at maximum, :math:`m_{max}` and
+    minimum, :math:`m_{min}` operating pressures [kg], which were derived
+    using the minimum, :math:`\\rho_{min}` and maximum, :math:`\\rho_{max}`
+    hydrogen densities [kg m⁻³], respectively, and the cavern volume
+    :math:`V_{cavern}`, [m³].
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
@@ -309,6 +344,6 @@ def energy_storage_capacity(m_working, lhv=119.96):
     heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
 
     .. math::
-        E = m_{working} \\times \\frac{LHV}{3,600,000}
+        E = m_{working} \\, \\frac{LHV}{3,600,000}
     """
     return m_working * lhv / 3.6e6
