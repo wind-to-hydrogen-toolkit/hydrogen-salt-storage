@@ -6,7 +6,7 @@ Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Notebooks
 
-Notebooks can be viewed [here](https://github.com/nmstreethran/hydrogen-salt-storage/tree/ipynb/notebooks).
+Notebooks can be viewed [here](https://github.com/nmstreethran/hydrogen-salt-storage/tree/main/docs/notebooks).
 
 ## Installation
 
