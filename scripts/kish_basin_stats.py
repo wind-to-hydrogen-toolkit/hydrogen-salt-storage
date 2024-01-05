@@ -12,19 +12,17 @@ import seaborn as sns
 from cartopy.mpl.ticker import LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import read_data as rd
-
-# data directory
-DATA_DIR = os.path.join("data", "kish-basin")
-
-CRS = 23029
+from src import data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Read data layers
 
-ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
+ds, extent = rd.kish_basin_data_depth_adjusted(
+    dat_path=os.path.join("data", "kish-basin"),
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
 
 ds
 
@@ -74,7 +72,7 @@ def plot_facet_maps(dat_xr, dat_extent, dat_crs):
         plt.show()
 
 
-plot_facet_maps(ds, extent, CRS)
+plot_facet_maps(ds, extent, rd.CRS)
 
 # ## Stats
 
@@ -101,7 +99,7 @@ def make_stats_plots(dat_xr):
         palette="flare",
         hue="halite",
         plot_kws={"alpha": 0.5},
-        vars=["Thickness", "TopDepth", "BaseDepth"],
+        vars=["Thickness", "TopDepthSeabed", "BaseDepthSeabed"],
     )
     plt.show()
 
@@ -140,7 +138,7 @@ def make_stats_plots(dat_xr):
     )
     sns.boxplot(
         dat_df.reset_index(),
-        y="TopDepth",
+        y="TopDepthSeabed",
         hue="halite",
         palette="flare",
         ax=axes[1],
@@ -148,7 +146,7 @@ def make_stats_plots(dat_xr):
     )
     sns.boxplot(
         dat_df.reset_index(),
-        y="BaseDepth",
+        y="BaseDepthSeabed",
         hue="halite",
         palette="flare",
         ax=axes[2],
@@ -237,11 +235,15 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
 
 
 plot_facet_maps_distr(
-    ds, extent, CRS, "TopDepth", [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80]
+    ds,
+    extent,
+    rd.CRS,
+    "TopDepthSeabed",
+    [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
 )
 
 plot_facet_maps_distr(
-    ds, extent, CRS, "Thickness", [85 + 90, 155 + 90, 311 + 90]
+    ds, extent, rd.CRS, "Thickness", [85 + 90, 155 + 90, 311 + 90]
 )
 
 # compare depths
@@ -249,7 +251,7 @@ plot_facet_maps_distr(
     col="halite",
     col_wrap=2,
     extend="both",
-    subplot_kws={"projection": ccrs.epsg(CRS)},
+    subplot_kws={"projection": ccrs.epsg(rd.CRS)},
 )
 plt.show()
 

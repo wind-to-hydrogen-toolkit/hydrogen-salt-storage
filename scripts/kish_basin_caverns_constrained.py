@@ -15,15 +15,18 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
+from src import data as rd
 from src import functions as fns
-from src import read_data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.kish_basin_data_depth_adjusted(
+    dat_path=os.path.join("data", "kish-basin"),
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -35,7 +38,7 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 wells, wells_b = fns.constraint_exploration_well(
     data_path=os.path.join(
         "data",
-        "exploration-wells-irish-offshore",
+        "exploration-wells",
         "Exploration_Wells_Irish_Offshore.shapezip.zip",
     )
 )
@@ -46,9 +49,7 @@ wells, wells_b = fns.constraint_exploration_well(
 # test site areas in draft OREDP II p. 109
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data",
-        "wind-farms-foreshore-process",
-        "wind-farms-foreshore-process.zip",
+        "data", "wind-farms", "wind-farms-foreshore-process.zip"
     ),
     dat_extent=extent,
 )
@@ -68,7 +69,7 @@ shipping, shipping_b = fns.constraint_shipping_routes(
 # Archaeological Exclusion Zones recommendation - 100 m buffer
 shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
     data_path=os.path.join(
-        "data", "heritage", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+        "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
     ),
     dat_extent=extent,
 )
@@ -77,7 +78,7 @@ shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
 cables, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "kis-orca", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
 # ### Distance from salt formation edge
@@ -133,10 +134,10 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     },
 )
 
-caverns.describe()[["Thickness", "TopDepth"]]
+caverns.describe()[["Thickness", "TopDepthSeabed"]]
 
 # excluded areas
-caverns_excl.describe()[["Thickness", "TopDepth"]]
+caverns_excl.describe()[["Thickness", "TopDepthSeabed"]]
 
 # label caverns by height and depth
 caverns = fns.label_caverns(
@@ -501,7 +502,7 @@ s["%"] = s["geometry"] / len(caverns) * 100
 s
 
 s = (
-    caverns.sort_values("TopDepth")
+    caverns.sort_values("TopDepthSeabed")
     .groupby("depth", sort=False)
     .count()[["geometry"]]
 )

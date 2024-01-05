@@ -15,15 +15,18 @@ from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from src import capacity as cap
+from src import data as rd
 from src import functions as fns
-from src import read_data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+ds, extent = rd.kish_basin_data_depth_adjusted(
+    dat_path=os.path.join("data", "kish-basin"),
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
@@ -35,7 +38,7 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 wells, wells_b = fns.constraint_exploration_well(
     data_path=os.path.join(
         "data",
-        "exploration-wells-irish-offshore",
+        "exploration-wells",
         "Exploration_Wells_Irish_Offshore.shapezip.zip",
     )
 )
@@ -46,9 +49,7 @@ wells, wells_b = fns.constraint_exploration_well(
 # test site areas in draft OREDP II p. 109
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data",
-        "wind-farms-foreshore-process",
-        "wind-farms-foreshore-process.zip",
+        "data", "wind-farms", "wind-farms-foreshore-process.zip"
     ),
     dat_extent=extent,
 )
@@ -68,7 +69,7 @@ shipping, shipping_b = fns.constraint_shipping_routes(
 # Archaeological Exclusion Zones recommendation - 100 m buffer
 shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
     data_path=os.path.join(
-        "data", "heritage", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+        "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
     ),
     dat_extent=extent,
 )
@@ -77,7 +78,7 @@ shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
 cables, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "kis-orca", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
 # ### Distance from salt formation edge
@@ -135,7 +136,7 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
 (
     caverns["p_operating_min"],
     caverns["p_operating_max"],
-) = cap.pressure_operating(thickness_overburden=caverns["TopDepth"])
+) = cap.pressure_operating(thickness_overburden=caverns["TopDepthSeabed"])
 
 # ### Hydrogen gas density
 
@@ -161,7 +162,9 @@ caverns["capacity"] = cap.energy_storage_capacity(
 
 # ## Stats
 
-caverns.drop(["x", "y", "TopTWT", "BaseDepth"], axis=1).describe()
+caverns.drop(
+    ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
+).describe()
 
 # cavern volumes
 list(caverns["cavern_volume"].unique())
@@ -190,7 +193,7 @@ s.groupby("height").sum()[["capacity"]]
 fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
 sns.histplot(
     caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
-        "TopDepth"
+        "TopDepthSeabed"
     ),
     x="capacity",
     hue="Cavern top depth [m]",
@@ -426,7 +429,7 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
 (
     caverns["p_operating_min"],
     caverns["p_operating_max"],
-) = cap.pressure_operating(thickness_overburden=caverns["TopDepth"])
+) = cap.pressure_operating(thickness_overburden=caverns["TopDepthSeabed"])
 
 caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
     p_operating_min=caverns["p_operating_min"],
@@ -444,7 +447,9 @@ caverns["capacity"] = cap.energy_storage_capacity(
     m_working=caverns["working_mass"]
 )
 
-caverns.drop(["x", "y", "TopTWT", "BaseDepth"], axis=1).describe()
+caverns.drop(
+    ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
+).describe()
 
 # cavern volumes
 list(caverns["cavern_volume"].unique())
@@ -469,7 +474,7 @@ s
 
 ax = sns.histplot(
     caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
-        "TopDepth"
+        "TopDepthSeabed"
     ),
     x="capacity",
     hue="Cavern top depth [m]",

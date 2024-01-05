@@ -39,7 +39,7 @@ import numpy as np
 import pandas as pd
 import shapely
 
-from src import read_data as rd
+from src import data as rd
 
 
 def zones_of_interest(
@@ -73,8 +73,14 @@ def zones_of_interest(
                 dat_xr.Thickness
                 >= constraints["height"] + roof_thickness + floor_thickness
             )
-            & (dat_xr.TopDepth >= constraints["min_depth"] - roof_thickness)
-            & (dat_xr.TopDepth <= constraints["max_depth"] - roof_thickness)
+            & (
+                dat_xr.TopDepthSeabed
+                >= constraints["min_depth"] - roof_thickness
+            )
+            & (
+                dat_xr.TopDepthSeabed
+                <= constraints["max_depth"] - roof_thickness
+            )
         ),
         drop=True,
     )
@@ -293,7 +299,7 @@ def cavern_dataframe(dat_zone, cavern_df):
 
     # remove duplicate caverns at each location - keep the thickest layer
     cavern_df = cavern_df.sort_values(
-        ["Thickness", "TopDepth"], ascending=False
+        ["Thickness", "TopDepthSeabed"], ascending=False
     ).drop_duplicates(["geometry"])
 
     return cavern_df
@@ -682,10 +688,12 @@ def label_caverns(
 
     # label caverns by depth
     conditions = [
-        (cavern_df["TopDepth"] < (depths["min_opt"] - roof_thickness)),
-        (cavern_df["TopDepth"] >= (depths["min_opt"] - roof_thickness))
-        & (cavern_df["TopDepth"] <= (depths["max_opt"] - roof_thickness)),
-        (cavern_df["TopDepth"] > (depths["max_opt"] - roof_thickness)),
+        (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
+        (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
+        & (
+            cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)
+        ),
+        (cavern_df["TopDepthSeabed"] > (depths["max_opt"] - roof_thickness)),
     ]
     choices = [
         f"{depths['min']:,} - {depths['min_opt']:,}",
@@ -696,7 +704,7 @@ def label_caverns(
 
     # create columns for the cavern heights and top depths
     cavern_df["cavern_height"] = cavern_df["height"].astype(float)
-    cavern_df["cavern_depth"] = cavern_df["TopDepth"] + roof_thickness
+    cavern_df["cavern_depth"] = cavern_df["TopDepthSeabed"] + roof_thickness
 
     return cavern_df
 
