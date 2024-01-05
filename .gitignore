@@ -2,9 +2,9 @@ _build/
 .coverage
 *.csv
 *.dat
-data/
+data/*
+!data/README.md
 .ipynb_checkpoints/
-notebooks/
 __pycache__/
 .pytest_cache/
 temp/
