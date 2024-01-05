@@ -79,7 +79,7 @@ coverage run -m pytest && coverage report -m
 [weibull2]: https://gis.seai.ie/wind/
 [nbkbdata]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/kish_basin_dat_files.ipynb
 [nbkbstats]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/kish_basin_stats.ipynb
-[nbowf]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/wind_farms_foreshore_process.ipynb
+[nbowf]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/offshore_wind_farms.ipynb
 [nbwells]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/offshore_exploration_wells.ipynb
 [nbweibull]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/weibull_parameters_wind_speeds.ipynb
 [nbshipping]: https://github.com/nmstreethran/hydrogen-salt-storage-optimisation/blob/ipynb/notebooks/frequent_shipping_routes.ipynb

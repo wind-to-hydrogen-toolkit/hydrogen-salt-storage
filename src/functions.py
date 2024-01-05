@@ -39,7 +39,7 @@ import numpy as np
 import pandas as pd
 import shapely
 
-from src import read_data as rd
+from src import data as rd
 
 
 def zones_of_interest(
