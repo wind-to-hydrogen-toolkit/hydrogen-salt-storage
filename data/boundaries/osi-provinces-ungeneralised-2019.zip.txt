@@ -1,0 +1,3 @@
+Data downloaded on: 2023-10-29 22:11:40.353067+00:00
+Download URL: https://data-osi.opendata.arcgis.com/datasets/559bc3300384413aa0fe93f0772cb7f1_0.zip?outSR=%7B%22latestWkid%22%3A2157%2C%22wkid%22%3A2157%7D
+SHA256 hash: 2410768c3c1252498812967354f90e42f7dc37003f99df73b3fe544cee85df3d
