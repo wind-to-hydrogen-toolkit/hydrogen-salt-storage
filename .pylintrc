@@ -1,3 +1,0 @@
-[MASTER]
-init-hook="import sys; sys.path.append('.')"
-ignore-paths=data/
