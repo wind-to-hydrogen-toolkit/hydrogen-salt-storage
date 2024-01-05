@@ -21,13 +21,13 @@ github_url = f"https://github.com/nmstreethran/{project}"
 
 extensions = [
     "sphinx.ext.autodoc",
-    # "myst_nb"
+    "myst_nb"
 ]
 
 # disable sorting of functions by alphabetical order
 autodoc_member_order = "bysource"
 
-# nb_execution_mode = "off"
+nb_execution_mode = "off"
 
 templates_path = ["_templates"]
 exclude_patterns = [

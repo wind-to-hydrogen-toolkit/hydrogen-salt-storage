@@ -15,7 +15,6 @@ Contents
    methods
    notebooks
 
-
 Indices and tables
 ------------------
 
