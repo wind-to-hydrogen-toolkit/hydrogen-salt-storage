@@ -1,6 +1,8 @@
 """Functions to structure data and generate caverns with constraints.
 
-.. rubric:: References
+References
+----------
+
 .. [#Brennan20] Brennan, J. (2020). ‘Fast and easy gridding of point data with
     geopandas’, 16 March. Available at:
     https://james-brennan.github.io/posts/fast_gridding_geopandas/

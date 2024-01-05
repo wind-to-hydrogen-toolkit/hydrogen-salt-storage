@@ -1,6 +1,8 @@
 """Test `src.capacity` functions.
 
-.. rubric:: References
+References
+----------
+
 .. [#Caglayan20] Caglayan, D. G., Weber, N., Heinrichs, H. U., Linßen, J.,
     Robinius, M., Kukla, P. A., and Stolten, D. (2020). ‘Technical potential
     of salt caverns for hydrogen storage in Europe’, International Journal of

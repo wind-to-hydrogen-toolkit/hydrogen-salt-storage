@@ -1,6 +1,8 @@
 """Functions to calculate salt cavern volumes and storage capacities
 
-.. rubric:: References
+References
+----------
+
 .. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
     cavern and porous media underground storage site. Hystories deliverable
     D7.1-1. Hystories. Available at:
