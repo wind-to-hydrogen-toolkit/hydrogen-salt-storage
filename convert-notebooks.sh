@@ -1,10 +1,14 @@
 #!/bin/sh
 
-mv temp/src/*.py src
-mv temp/tests/*.py tests
+# activate Python environment
+source .venv/bin/activate
 
-mv temp/requirements.txt .
-mv temp/README.md .
+# convert Jupyter Notebooks to Python scripts
+jupyter nbconvert --to script */*.ipynb
 
-rm -d -r scripts
-mv temp scripts
+# remove "# In []" and multiple blank lines in converted scripts
+for f in temp/*.py;
+do sed -i -e '/^# In\[/d' $f
+cat -s $f > $f.txt
+mv $f.txt $f
+done

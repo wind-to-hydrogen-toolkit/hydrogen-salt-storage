@@ -34,7 +34,7 @@
         {
             "label": "format-py",
             "type": "shell",
-            "command": "source .venv/bin/activate && black -l 79 **/*.py && isort **/*.py",
+            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "build"
@@ -98,7 +98,7 @@
         {
             "label": "flake8",
             "type": "shell",
-            "command": "source .venv/bin/activate && flake8 **/*.py --extend-exclude 'data/**/*.py'",
+            "command": "source .venv/bin/activate && flake8 **/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
