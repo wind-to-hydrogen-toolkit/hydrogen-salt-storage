@@ -22,6 +22,38 @@ Contents
    methods
    notebooks
 
+Installation
+------------
+
+This project uses Python 3.11.
+
+Clone the GitHub repository:
+
+.. code-block:: shell
+
+   git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+   cd hydrogen-salt-storage
+
+Create a virtual environment and install all requirements:
+
+.. code-block:: shell
+
+   python -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -r requirements.txt
+
+Run tests:
+
+.. code-block:: shell
+
+   python -m pytest
+
+To generate a coverage report with the tests:
+
+.. code-block:: shell
+
+   coverage run -m pytest && coverage report -m
+
 Indices and tables
 ------------------
 
