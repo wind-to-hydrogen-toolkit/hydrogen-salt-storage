@@ -10,7 +10,7 @@ import contextily as cx
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from src import read_data as rd
+from src import data as rd
 
 # ## OREDP Assessment Zone
 #

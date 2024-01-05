@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib_scalebar.scalebar import ScaleBar
 
+from src import data as rd
 from src import functions as fns
-from src import read_data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")
@@ -93,9 +93,7 @@ plt.show()
 # wind farms in the area
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data",
-        "wind-farms-foreshore-process",
-        "wind-farms-foreshore-process.zip",
+        "data", "wind-farms", "wind-farms-foreshore-process.zip"
     ),
     dat_extent=extent,
 )

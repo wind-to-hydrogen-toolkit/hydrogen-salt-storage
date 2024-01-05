@@ -11,10 +11,10 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import read_data as rd
+from src import data as rd
 
 # base data download directory
-DATA_DIR = os.path.join("data", "heritage")
+DATA_DIR = os.path.join("data", "shipwrecks")
 
 URL = (
     "https://gsi.geodata.gov.ie/downloads/Marine/Data/Downloads/Shapefiles/"

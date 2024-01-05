@@ -9,7 +9,7 @@ from zipfile import BadZipFile, ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import read_data as rd
+from src import data as rd
 
 # ## NUTS Island of Ireland boundary
 #
@@ -126,7 +126,7 @@ plt.show()
 # <https://xyzservices.readthedocs.io/en/stable/gallery.html>
 
 # bounding box limits with a ~50,000 m buffer
-bbox = ie.to_crs(23029).buffer(5e4).envelope
+bbox = ie.to_crs(rd.CRS).buffer(5e4).envelope
 xmin, ymin, xmax, ymax = bbox.to_crs(3857).total_bounds
 
 ax = ie.plot(

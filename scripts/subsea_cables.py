@@ -16,10 +16,10 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from src import read_data as rd
+from src import data as rd
 
 # base data download directory
-DATA_DIR = os.path.join("data", "kis-orca")
+DATA_DIR = os.path.join("data", "subsea-cables")
 
 URL = "https://kis-orca.org/wp-content/uploads/2020/12/Olex_KIS-ORCA-v2023.zip"
 
@@ -178,13 +178,13 @@ data_ie = pd.concat(
 data_ie
 
 # get bounds of Irish Sea data
-xmin, ymin, xmax, ymax = data_ie.to_crs(23029).total_bounds
+xmin, ymin, xmax, ymax = data_ie.to_crs(rd.CRS).total_bounds
 
 # view plotter points in the Irish Sea
-ax = data.to_crs(23029).plot(alpha=0.5, figsize=(9, 9))
+ax = data.to_crs(rd.CRS).plot(alpha=0.5, figsize=(9, 9))
 plt.xlim(xmin, xmax)
 plt.ylim(ymin, ymax)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=23029)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=rd.CRS)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()
@@ -193,23 +193,23 @@ plt.show()
 data_ie = data_ie.drop([6]).reset_index(drop=True)
 
 ax = (
-    gpd.GeoDataFrame(geometry=data_ie.to_crs(23029).buffer(750))
+    gpd.GeoDataFrame(geometry=data_ie.to_crs(rd.CRS).buffer(750))
     .dissolve()
     .plot(figsize=(12, 12), alpha=0.25, color="slategrey")
 )
-data_ie.to_crs(23029).plot(
+data_ie.to_crs(rd.CRS).plot(
     column="name",
     legend=True,
     ax=ax,
     cmap="jet",
     legend_kwds={"loc": "upper right"},
 )
-data.to_crs(23029).plot(
+data.to_crs(rd.CRS).plot(
     ax=ax, marker="x", color="black", markersize=20, alpha=0.5
 )
 plt.xlim(xmin - 10000, xmax + 50000)
 plt.ylim(ymin, ymax)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=23029)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=rd.CRS)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
 plt.show()

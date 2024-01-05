@@ -11,10 +11,10 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import read_data as rd
+from src import data as rd
 
 # base data download directory
-DATA_DIR = os.path.join("data", "exploration-wells-irish-offshore")
+DATA_DIR = os.path.join("data", "exploration-wells")
 
 URL = (
     "https://atlas.marine.ie/midata/EnergyResourcesExploration/"

@@ -15,10 +15,10 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import read_data as rd
+from src import data as rd
 
 # base data download directory
-DATA_DIR = os.path.join("data", "wind-farms-foreshore-process")
+DATA_DIR = os.path.join("data", "wind-farms")
 
 URL = (
     "https://opendata.arcgis.com/api/v3/datasets/"
@@ -73,8 +73,6 @@ plt.show()
 # read Kish Basin data
 DATA_DIR = os.path.join("data", "kish-basin")
 
-CRS = 23029
-
 ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
 
 # use extent bounds
@@ -119,7 +117,7 @@ wind_farms_ = (
 wind_farms_["Name_"] = wind_farms_["Name"].str.split(expand=True)[0]
 
 plt.figure(figsize=(10, 8))
-ax = plt.axes(projection=ccrs.epsg(CRS))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
 
 ds.max(dim="halite")["Thickness"].plot.contourf(
     cmap="jet",
@@ -135,7 +133,7 @@ plt.ylim(ymin - 10500, ymax + 10500)
 # wind farms
 colours = ["firebrick", "firebrick", "black", "royalblue"]
 for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(CRS).plot(
+    wind_farms_.iloc[[index]].to_crs(rd.CRS).plot(
         ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
     )
 legend_handles = [
@@ -148,7 +146,7 @@ legend_handles = [
     for x in range(len(wind_farms_.dissolve("Name_")))
 ]
 
-cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
+cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
 ax.gridlines(
     draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
 )
@@ -162,7 +160,7 @@ plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(9, 9))
-ax = plt.axes(projection=ccrs.epsg(CRS))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
 
 # add halite boundary - use buffering to smooth the outline
 shape.buffer(1000).buffer(-1000).boundary.plot(
@@ -175,7 +173,7 @@ plt.ylim(ymin - 10500, ymax + 10500)
 # wind farms
 colours = ["firebrick", "firebrick", "seagreen", "royalblue"]
 for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(CRS).plot(
+    wind_farms_.iloc[[index]].to_crs(rd.CRS).plot(
         ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
     )
 legend_handles = [
@@ -197,7 +195,7 @@ legend_handles.append(
     )
 )
 
-cx.add_basemap(ax, crs=CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
+cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
 ax.gridlines(
     draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
 )
@@ -211,7 +209,7 @@ plt.tight_layout()
 plt.show()
 
 # distance from Kish Bank
-wind_farms_ = wind_farms_.dissolve("Name_").reset_index().to_crs(CRS)
+wind_farms_ = wind_farms_.dissolve("Name_").reset_index().to_crs(rd.CRS)
 
 for i in range(len(wind_farms_)):
     print(

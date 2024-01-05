@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+from src import data as rd
 from src import functions as fns
 from src import optimisation as opt
-from src import read_data as rd
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
-ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
+extent = rd.kish_basin_extent(dat_path=os.path.join("data", "kish-basin"))
 
 # extract data for wind farms at 150 m
 weibull = fns.read_weibull_data(
@@ -24,9 +24,7 @@ weibull = fns.read_weibull_data(
         "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
     ),
     data_path_wind_farms=os.path.join(
-        "data",
-        "wind-farms-foreshore-process",
-        "wind-farms-foreshore-process.zip",
+        "data", "wind-farms", "wind-farms-foreshore-process.zip"
     ),
     dat_extent=extent,
 )

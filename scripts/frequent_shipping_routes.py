@@ -9,7 +9,7 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import read_data as rd
+from src import data as rd
 
 # ## Frequently Used Routes (300 gross tonnes and above)
 #

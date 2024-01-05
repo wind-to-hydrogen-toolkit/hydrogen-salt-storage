@@ -18,7 +18,7 @@ import pandas as pd
 from geocube.api.core import make_geocube
 from shapely.geometry import Polygon
 
-from src import read_data as rd
+from src import data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
