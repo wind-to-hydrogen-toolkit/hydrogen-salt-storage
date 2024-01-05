@@ -113,3 +113,18 @@ aep
 aep["AHP"] = opt.annual_hydrogen_production(aep=aep["AEP"])
 
 aep
+
+# ## CAPEX for pipeline [€ km⁻¹]
+
+# 1,000 MW electrolyser
+capex = opt.capex_pipeline(e_cap=1000)
+
+capex
+
+# ## LCOT for pipeline [€ kg⁻¹]
+
+aep["LCOT"] = opt.lcot_pipeline(
+    capex=capex, transmission_distance=100, ahp=aep["AHP"]
+)
+
+aep
