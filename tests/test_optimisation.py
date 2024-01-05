@@ -17,7 +17,6 @@ def test_ref_power_curve():
         + [15] * 15
         + [0] * 5
     )
-
     for v, p in zip(wind_speeds, power_curve):
         assert round(opt.ref_power_curve(v=v), 3) == p
         assert isinstance(opt.ref_power_curve(v=v), (float, int))
@@ -39,10 +38,8 @@ def test_weibull_probability_distribution():
         weibull_func.append(
             opt.weibull_probability_distribution(k=k, c=c, v=v)
         )
-
     weibull = [round(x, 10) for x in weibull]
     weibull_func = [round(x, 10) for x in weibull_func]
-
     assert weibull_func == weibull
 
 
@@ -76,7 +73,6 @@ def test_annual_energy_production():
             epsabs=1.49e-6,  # absolute error tolerance
         )
         aep.append(365 * 24 * n * (1 - w_loss) * integration[0])
-
     assert aep_func == aep
 
 
@@ -112,7 +108,6 @@ def test_lcot_pipeline():
     discount_rate = 0.05
     lifetime = 40
     opex = capex * opex_factor
-
     lcot = (
         capex * transmission_distance
         + sum(
@@ -131,5 +126,4 @@ def test_lcot_pipeline():
         discount_rate=discount_rate,
         lifetime=lifetime,
     )
-
     assert lcot_func == lcot

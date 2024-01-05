@@ -5,7 +5,7 @@ Methods
    :maxdepth: 2
    :caption: Contents:
 
-   methods/read_data
+   methods/data
    methods/functions
    methods/capacity
    methods/optimisation
