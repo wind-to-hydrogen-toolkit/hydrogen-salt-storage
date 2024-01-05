@@ -39,6 +39,7 @@ Irish Sea Subsea Cables and Renewable Energy Structures | KIS-ORCA | [Link][cabl
 Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level | Sustainable Energy Authority of Ireland | [Link][weibull]; [Link][weibull2] | Shapefile | 2021-06-30
 Provinces - National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | [Link][boundary]; [Link][boundary2] | Shapefile | 2022-07-07
 Kish Basin Halite | HYSS | [Link][hyss] | DAT | 2023-07
+Bathymetry | EMODnet | [Link][emodnet] | GeoTIFF | 2022
 
 ## Installation
 
@@ -69,6 +70,7 @@ coverage run -m pytest && coverage report -m
 [wells]: https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
 [wells2]: https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
 [hyss]: https://hyss.ie
+[emodnet]: https://emodnet.ec.europa.eu/en/bathymetry
 [shipwrecks]: https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
 [shippingroutes]: https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1
 [shippingroutes2]: https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above

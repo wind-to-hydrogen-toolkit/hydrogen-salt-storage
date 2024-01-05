@@ -13,6 +13,8 @@ import pooch
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
+import rasterio as rio
+import rioxarray as rxr
 
 # CRS of the Kish Basin dat files
 CRS = 23029
@@ -54,6 +56,36 @@ def download_data(url, data_dir, file_name, known_hash=None):
         print(f"Data '{file_name}' already exists in '{data_dir}'.")
         with open(f"{data_file}.txt", encoding="utf-8") as f:
             print(f.read())
+
+
+def kish_basin_extent(dat_path):
+    """Read the extent of the Kish Basin data.
+
+    Parameters
+    ----------
+    dat_path : str
+        Path to the Kish Basin data files
+
+    Returns
+    -------
+    geopandas.GeoSeries
+        GeoPandas geoseries of the extent polygon
+    """
+    dat_extent = pd.read_csv(
+        os.path.join(dat_path, "Kish GIS Map Extent - Square.csv"), skiprows=2
+    )
+    dat_extent = gpd.GeoSeries(
+        shapely.geometry.Polygon(
+            [
+                (dat_extent[" X"][0], dat_extent[" Y"][0]),
+                (dat_extent[" X"][1], dat_extent[" Y"][1]),
+                (dat_extent[" X"][2], dat_extent[" Y"][2]),
+                (dat_extent[" X"][3], dat_extent[" Y"][3]),
+            ]
+        ),
+        crs=CRS,
+    )
+    return dat_extent
 
 
 def read_dat_file(dat_path):
@@ -140,22 +172,41 @@ def read_dat_file(dat_path):
     # zones = gpd.GeoDataFrame(geometry=zones.buffer(100).envelope).dissolve()
 
     # create extent polygon
-    dat_extent = pd.read_csv(
-        os.path.join(dat_path, "Kish GIS Map Extent - Square.csv"), skiprows=2
-    )
-    dat_extent = gpd.GeoSeries(
-        shapely.geometry.Polygon(
-            [
-                (dat_extent[" X"][0], dat_extent[" Y"][0]),
-                (dat_extent[" X"][1], dat_extent[" Y"][1]),
-                (dat_extent[" X"][2], dat_extent[" Y"][2]),
-                (dat_extent[" X"][3], dat_extent[" Y"][3]),
-            ]
-        ),
-        crs=CRS,
-    )
+    dat_extent = kish_basin_extent(dat_path=dat_path)
 
     return xds, dat_extent  # zones
+
+
+def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
+    """Read halite data with adjusted depths and its extent.
+
+    Parameters
+    ----------
+    dat_path : str
+        Path to the .dat files
+    bathymetry_path : str
+        Path to the bathymetry .tif file
+
+    Returns
+    -------
+    tuple[xarray.Dataset, geopandas.GeoSeries]
+        Xarray dataset of the halite data and GeoPandas geoseries of the extent
+    """
+    bath = rxr.open_rasterio(
+        os.path.join(bathymetry_path, "D4_2022_mean.tif"), chunks="auto"
+    )
+    xds, dat_extent = read_dat_file(dat_path=dat_path)
+    bath = bath.rio.reproject_match(
+        xds, resampling=rio.enums.Resampling.bilinear
+    )
+    xds = xds.assign(TopDepthSeabed=xds["TopDepth"] + bath.isel(band=0))
+    xds = xds.assign(BaseDepthSeabed=xds["BaseDepth"] + bath.isel(band=0))
+    for v in ["TopDepth", "BaseDepth"]:
+        xds[f"{v}Seabed"].attrs = xds[v].attrs
+        xds[f"{v}Seabed"].attrs["long_name"] = (
+            xds[f"{v}Seabed"].attrs["long_name"] + " from the Seabed"
+        )
+    return xds, dat_extent
 
 
 def read_shapefile_from_zip(data_path, endswith=".shp"):
