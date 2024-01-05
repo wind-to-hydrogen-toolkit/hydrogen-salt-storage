@@ -15,3 +15,4 @@ temp/
 _templates/
 .venv/
 *.zip
+*.*^
