@@ -21,7 +21,7 @@ github_url = f"https://github.com/nmstreethran/{project}"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "myst_nb"
+    "myst_nb",
 ]
 
 # disable sorting of functions by alphabetical order
