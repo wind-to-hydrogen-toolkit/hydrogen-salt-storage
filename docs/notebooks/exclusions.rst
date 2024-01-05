@@ -10,5 +10,5 @@ Exclusions
    frequent_shipping_routes
    subsea_cables
    shipwrecks
-   ireland_boundary_basemaps
+   ireland_boundary
    oredp_areas
