@@ -5,14 +5,9 @@ _build/
 data/*
 !data/README.md
 .ipynb_checkpoints/
-# *.py
 __pycache__/
 .pytest_cache/
-scripts/
-# src/
-_static/
 temp/
-_templates/
 .venv/
 *.zip
 *.*^
