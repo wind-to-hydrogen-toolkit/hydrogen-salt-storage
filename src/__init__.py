@@ -1,6 +1,6 @@
-"""hydrogen-salt-storage-optimisation
+"""hydrogen-salt-storage
 
 Optimising green hydrogen storage in man-made submarine salt caverns
 
-https://github.com/nmstreethran/hydrogen-salt-storage-optimisation
+https://github.com/nmstreethran/hydrogen-salt-storage
 """
