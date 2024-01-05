@@ -73,8 +73,14 @@ def zones_of_interest(
                 dat_xr.Thickness
                 >= constraints["height"] + roof_thickness + floor_thickness
             )
-            & (dat_xr.TopDepthSeabed >= constraints["min_depth"] - roof_thickness)
-            & (dat_xr.TopDepthSeabed <= constraints["max_depth"] - roof_thickness)
+            & (
+                dat_xr.TopDepthSeabed
+                >= constraints["min_depth"] - roof_thickness
+            )
+            & (
+                dat_xr.TopDepthSeabed
+                <= constraints["max_depth"] - roof_thickness
+            )
         ),
         drop=True,
     )
@@ -684,7 +690,9 @@ def label_caverns(
     conditions = [
         (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
         (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
-        & (cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)),
+        & (
+            cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)
+        ),
         (cavern_df["TopDepthSeabed"] > (depths["max_opt"] - roof_thickness)),
     ]
     choices = [

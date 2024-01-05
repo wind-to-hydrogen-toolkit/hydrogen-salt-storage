@@ -10,11 +10,11 @@ from zipfile import ZipFile
 import geopandas as gpd
 import pandas as pd
 import pooch
+import rasterio as rio
+import rioxarray as rxr
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
-import rasterio as rio
-import rioxarray as rxr
 
 # CRS of the Kish Basin dat files
 CRS = 23029
