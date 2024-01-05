@@ -1,6 +1,8 @@
 """Functions to optimise hydrogen storage locations.
 
-.. rubric:: References
+References
+----------
+
 .. [#Musial19] Musial, W. D., Beiter, P. C., Nunemaker, J., Heimiller, D. M.,
     Ahmann, J., and Busch, J. (2019). Oregon Offshore Wind Site Feasibility
     and Cost Study. Technical Report NREL/TP-5000-74597. Golden, CO: National

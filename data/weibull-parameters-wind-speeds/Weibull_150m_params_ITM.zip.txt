@@ -1,0 +1,3 @@
+Data downloaded on: 2023-12-31 00:18:52.534921+00:00
+Download URL: https://seaiopendata.blob.core.windows.net/wind/Weibull_150m_params_ITM.zip
+SHA256 hash: d946e0c65417b0dc7325d3cec9c5d71d8bf80225bc85ee788349ad15b92cd767

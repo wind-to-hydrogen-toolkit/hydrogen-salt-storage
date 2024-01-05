@@ -1,6 +1,8 @@
 """Test `src.capacity` functions.
 
-.. rubric:: References
+References
+----------
+
 .. [#Caglayan20] Caglayan, D. G., Weber, N., Heinrichs, H. U., Linßen, J.,
     Robinius, M., Kukla, P. A., and Stolten, D. (2020). ‘Technical potential
     of salt caverns for hydrogen storage in Europe’, International Journal of
@@ -87,7 +89,7 @@ def test_density_hydrogen_gas():
     the density obtained from the `src.capacity.density_hydrogen_gas` function.
     The values should be approximately the same (rounded to one decimal place).
     PyFluids is used to just derive the compressibility factor, :math:`Z`, for
-    the former. The `pyfluids.ini` configuration file has been set such that
+    the former. The `pyproject.toml` configuration file has been set such that
     the default units are SI units.
 
     .. math::

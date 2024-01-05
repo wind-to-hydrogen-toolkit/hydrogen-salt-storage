@@ -1,6 +1,8 @@
 """Functions to calculate salt cavern volumes and storage capacities
 
-.. rubric:: References
+References
+----------
+
 .. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
     cavern and porous media underground storage site. Hystories deliverable
     D7.1-1. Hystories. Available at:
@@ -253,7 +255,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     This function uses the CoolProp [#Bell14]_ wrapper called PyFluids
     [#PyFluids]_. See [#Williams22]_, Section 3.4.2 and also the CoolProp
     documentation for useful information on hydrogen [#CoolProp]_.
-    The `pyfluids.ini` configuration file has been set such that the default
+    The `pyproject.toml` configuration file has been set such that the default
     units used by PyFluids are SI units. PyFluids can also be used to derive
     the compressibility factor.
 

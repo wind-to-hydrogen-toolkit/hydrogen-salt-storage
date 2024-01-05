@@ -1,0 +1,3 @@
+Data downloaded on: 2023-09-11 14:08:54.610561+00:00
+Download URL: https://opendata.arcgis.com/api/v3/datasets/803a4ecc22aa4cc09111072a0bbc4fac_2/downloads/data?format=shp&spatialRefId=4326&where=1%3D1
+SHA256 hash: eb0f0c1b14a0db959b47795a623d0e8b74bfb32285656905ae30136a4e34446b

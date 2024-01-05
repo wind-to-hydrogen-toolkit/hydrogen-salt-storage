@@ -1,0 +1,3 @@
+Data downloaded on: 2024-01-05 01:34:31.695837+00:00
+Download URL: https://downloads.emodnet-bathymetry.eu/v11/D4_2022.tif.zip
+SHA256 hash: 23e312b83101ef9d563ba4bab651fbab72dff62c51382eed72e27aa907584aec

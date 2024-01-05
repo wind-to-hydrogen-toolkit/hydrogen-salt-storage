@@ -1,0 +1,3 @@
+Data downloaded on: 2023-09-15 12:56:05.840492+00:00
+Download URL: https://atlas.marine.ie/midata/EnergyResourcesExploration/Exploration_Wells_Irish_Offshore.shapezip.zip
+SHA256 hash: 9a40c29082e359932b238828fe94ec1334f4fc2b5ea643648e47eeb7aeaa8949

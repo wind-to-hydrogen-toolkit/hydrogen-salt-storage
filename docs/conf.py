@@ -10,7 +10,7 @@ sys.path.append("..")
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "hydrogen-salt-storage-optimisation"
+project = "hydrogen-salt-storage"
 copyright = "2023-2024, Nithiya Streethran"
 author = "Nithiya Streethran"
 
@@ -21,13 +21,13 @@ github_url = f"https://github.com/nmstreethran/{project}"
 
 extensions = [
     "sphinx.ext.autodoc",
-    # "myst_nb"
+    "myst_nb",
 ]
 
 # disable sorting of functions by alphabetical order
 autodoc_member_order = "bysource"
 
-# nb_execution_mode = "off"
+nb_execution_mode = "off"
 
 templates_path = ["_templates"]
 exclude_patterns = [

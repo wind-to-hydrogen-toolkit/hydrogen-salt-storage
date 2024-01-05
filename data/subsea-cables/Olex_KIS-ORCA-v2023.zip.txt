@@ -1,0 +1,3 @@
+Data downloaded on: 2023-11-12 22:35:48.040165+00:00
+Download URL: https://kis-orca.org/wp-content/uploads/2020/12/Olex_KIS-ORCA-v2023.zip
+SHA256 hash: fd646e524a74fc36ee9401a0f1af6e977464ae76c6d8cc0126f4c738c6e4480a
