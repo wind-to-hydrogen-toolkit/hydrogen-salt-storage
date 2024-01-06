@@ -1,4 +1,4 @@
-"""Functions to calculate salt cavern volumes and storage capacities
+"""Functions to calculate salt cavern volumes and storage capacities.
 
 References
 ----------
@@ -297,12 +297,15 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
 
     Returns
     -------
-    float
-        Working mass of hydrogen [kg]
+    tuple[float, float, float]
+        Working mass and the minimum and maximum operating mass of hydrogen
+        [kg]
 
     Notes
     -----
     See [#Williams22]_, Eqn. (5) and (6).
+    The mass of hydrogen at the minimum operating pressure represents the
+    cushion gas requirement.
 
     .. math::
         m_{min} = \\rho_{min} \\cdot V_{cavern}
@@ -320,7 +323,8 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
-    return m_max_operating - m_min_operating
+    m_working = m_max_operating - m_min_operating
+    return m_working, m_min_operating, m_max_operating
 
 
 def energy_storage_capacity(m_working, lhv=119.96):

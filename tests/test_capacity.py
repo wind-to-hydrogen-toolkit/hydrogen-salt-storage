@@ -134,7 +134,7 @@ def test_mass_hydrogen_working():
     m_working = []
     m_working_func = []
     for mi, ma, v in zip(rho_h2_min, rho_h2_max, v_cavern):
-        m_working.append((ma - mi) * v)
+        m_working.append(((ma - mi) * v, mi * v, ma * v))
         m_working_func.append(
             cap.mass_hydrogen_working(rho_h2_min=mi, rho_h2_max=ma, v_cavern=v)
         )
