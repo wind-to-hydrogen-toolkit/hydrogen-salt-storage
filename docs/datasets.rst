@@ -1,7 +1,9 @@
 Datasets
 ========
 
-.. csv-table:: Datasets used in this project. These datasets are not to be used for navigation or for any other purpose relating to safety at sea.
+Datasets used in this project. These datasets are not to be used for navigation or for any other purpose relating to safety at sea.
+
+.. csv-table::
    :header: Dataset, Source, Metadata, Format, Version
    :delim: |
 

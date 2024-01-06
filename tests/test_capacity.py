@@ -8,6 +8,8 @@ References
     of salt caverns for hydrogen storage in Europe’, International Journal of
     Hydrogen Energy, 45(11), pp. 6793–6805.
     https://doi.org/10.1016/j.ijhydene.2019.12.161.
+.. [#PyFluids] Portyanikhin, V. (2023). ‘portyanikhin/PyFluids’. Available at:
+    https://github.com/portyanikhin/PyFluids (Accessed: 1 January 2024).
 """
 
 import numpy as np
@@ -88,9 +90,9 @@ def test_density_hydrogen_gas():
     Use Eqn. (3) of [#Caglayan20]_ to derive the density and compare it with
     the density obtained from the `src.capacity.density_hydrogen_gas` function.
     The values should be approximately the same (rounded to one decimal place).
-    PyFluids is used to just derive the compressibility factor, :math:`Z`, for
-    the former. The `pyproject.toml` configuration file has been set such that
-    the default units are SI units.
+    PyFluids [#PyFluids]_ is used to just derive the compressibility factor,
+    :math:`Z`, for the former. The `pyproject.toml` configuration file has
+    been set such that the default units are SI units.
 
     .. math::
         \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}

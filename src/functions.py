@@ -86,7 +86,6 @@ def zones_of_interest(
         ),
         drop=True,
     )
-
     # zones of interest polygon
     zdf = (
         zds.max(dim="halite")["Thickness"]
@@ -100,7 +99,6 @@ def zones_of_interest(
         .envelope,
         crs=rd.CRS,
     ).dissolve()
-
     return zdf, zds
 
 
