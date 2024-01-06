@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Wind Farms (Foreshore Process)
+# # Offshore wind farms
 #
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 

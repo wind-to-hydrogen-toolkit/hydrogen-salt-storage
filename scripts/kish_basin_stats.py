@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Kish Basin Statistics
+# # Kish Basin statistics
 
 import os
 
@@ -168,7 +168,7 @@ shape = rd.halite_shape(dat_xr=ds)
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
 
 
-def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
+def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels, label):
     """
     Helper function to plot facet maps of the halite layers
 
@@ -196,7 +196,7 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels):
             "shrink": 0.8,
             "pad": 0.09,
             "extendfrac": 0.2,
-            "label": "Halite " + dat_xr[v].attrs["long_name"] + " [m]",
+            "label": label,
             "format": lambda x, _: f"{x:,.0f}",
         },
         col_wrap=2,
@@ -240,10 +240,16 @@ plot_facet_maps_distr(
     rd.CRS,
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
+    "Halite Top Depth [m]",
 )
 
 plot_facet_maps_distr(
-    ds, extent, rd.CRS, "Thickness", [85 + 90, 155 + 90, 311 + 90]
+    ds,
+    extent,
+    rd.CRS,
+    "Thickness",
+    [85 + 90, 155 + 90, 311 + 90],
+    "Halite Thickness [m]",
 )
 
 # compare depths

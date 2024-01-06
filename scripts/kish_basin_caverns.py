@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Kish Basin Salt Caverns
+# # Cavern generation
 
 import os
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Kish Basin Halite Data
+# # Kish Basin halite data
 #
 # <https://hyss.ie/>
 

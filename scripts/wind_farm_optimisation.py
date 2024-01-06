@@ -121,9 +121,9 @@ capex = opt.capex_pipeline(e_cap=1000)
 
 capex
 
-# ## LCOT for pipeline [€ kg⁻¹]
+# ## LCOH for pipeline [€ kg⁻¹]
 
-aep["LCOT"] = opt.lcot_pipeline(
+aep["LCOH"] = opt.lcot_pipeline(
     capex=capex, transmission_distance=100, ahp=aep["AHP"]
 )
 
