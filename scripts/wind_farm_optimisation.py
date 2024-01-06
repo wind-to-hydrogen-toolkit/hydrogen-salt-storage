@@ -106,13 +106,9 @@ aep.columns = ["AEP", "integral", "abserr"]
 
 aep = pd.concat([weibull, aep], axis=1)
 
-aep
-
 # ## Annual hydrogen production [kg]
 
 aep["AHP"] = opt.annual_hydrogen_production(aep=aep["AEP"])
-
-aep
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
