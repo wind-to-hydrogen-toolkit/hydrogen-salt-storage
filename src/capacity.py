@@ -116,7 +116,7 @@ def corrected_cavern_volume(
 
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
     applying several correction factors to the bulk cavern volume,
-    :math:`V_{bulk}` [m³]as detailed in [#Williams22]_, Eqn. (1).
+    :math:`V_{bulk}` [m³] as detailed in [#Williams22]_, Eqn. (1).
 
     .. math::
         V_{cavern} = V_{bulk} \\times SCF \\times (1 - IF \\times INSF
@@ -127,12 +127,12 @@ def corrected_cavern_volume(
     .. math::
         V_{cavern} \\approx 0.48 \\, V_{bulk}
 
-    where :math:`V_{SCF}` is the shape correction factor (deviation of the
-    cavern's shape due to geological differences), :math:`V_{IF}` is the
-    insoluble fraction (insoluble material within the salt), :math:`V_{INSF}`
+    where :math:`SCF` is the shape correction factor (deviation of the
+    cavern's shape due to geological differences), :math:`IF` is the
+    insoluble fraction (insoluble material within the salt), :math:`INSF`
     is the correction for the fraction of insoluble material that remains in
     the cavern after mechanical sweeping that forms the sump of the cavern,
-    and :math:`V_{BF}` is the bulking factor (uneven stacking of the insoluble
+    and :math:`BF` is the bulking factor (uneven stacking of the insoluble
     material that forms the cavern sump).
     """
     correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
