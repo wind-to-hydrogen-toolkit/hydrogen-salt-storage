@@ -27,6 +27,7 @@ extensions = [
 # disable sorting of functions by alphabetical order
 autodoc_member_order = "bysource"
 
+# disable execution of Jupyter notebooks
 nb_execution_mode = "off"
 
 templates_path = ["_templates"]
