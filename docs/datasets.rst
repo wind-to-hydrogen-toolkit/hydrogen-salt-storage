@@ -1,7 +1,7 @@
 Datasets
 ========
 
-.. csv-table:: Datasets used in this project
+.. csv-table:: Datasets used in this project. These datasets are not to be used for navigation or for any other purpose relating to safety at sea.
    :header: Dataset, Source, Metadata, Format, Version
    :delim: |
 
@@ -13,14 +13,16 @@ Datasets
    Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level | Sustainable Energy Authority of Ireland | `data.gov.ie4`_; `seai`_ | Shapefile | 2021-06-30
    Provinces - National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | `data.gov.ie5`_; `osi`_ | Shapefile | 2022-07-07
    Kish Basin Halite | HYSS | `hyss`_ | DAT (ASCII XYZ) | 2023-07
-   Bathymetry | EMODnet | `emodnet`_ | GeoTIFF | 2022
+   EMODnet Digital Bathymetry - DTM | EMODnet | `emodnet1`_; `emodnet2`_; `emodnet3`_ | netCDF | 2022
 
 .. _data.gov.ie1: https://data.gov.ie/dataset/wind-farms-foreshore-process
 .. _data.gov.ie2: https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
 .. _data.gov.ie3: https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1
 .. _data.gov.ie4: https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level
 .. _data.gov.ie5: https://data.gov.ie/dataset/provinces-osi-national-statutory-boundaries-2019
-.. _emodnet: https://emodnet.ec.europa.eu/en/bathymetry
+.. _emodnet1: https://emodnet.ec.europa.eu/en/bathymetry
+.. _emodnet2: https://emodnet.ec.europa.eu/geonetwork/emodnet/eng/catalog.search#/metadata/53e69177-16cc-4b7a-a6e1-2a4f245e4dbd
+.. _emodnet3: https://doi.org/10.12770/ff3aff8a-cff1-44a3-a2c8-1910bf109f85
 .. _hyss: https://hyss.ie
 .. _housinggovie1: https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process
 .. _housinggovie2: https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above

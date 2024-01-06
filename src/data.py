@@ -11,7 +11,6 @@ import geopandas as gpd
 import pandas as pd
 import pooch
 import rasterio as rio
-import rioxarray as rxr
 import shapely
 import xarray as xr
 from geocube.api.core import make_geocube
@@ -185,26 +184,27 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     dat_path : str
         Path to the .dat files
     bathymetry_path : str
-        Path to the bathymetry .tif file
+        Path to the bathymetry netCDF file
 
     Returns
     -------
     tuple[xarray.Dataset, geopandas.GeoSeries]
         Xarray dataset of the halite data and GeoPandas geoseries of the extent
     """
-    bath = rxr.open_rasterio(
-        os.path.join(bathymetry_path, "D4_2022_mean.tif"), chunks="auto"
+    bath = xr.open_dataset(
+        os.path.join(bathymetry_path, "D4_2022.nc"), decode_coords="all"
     )
+    bath = bath.chunk({"lat": 1000, "lon": 1000, "cdi_index_count": 1000})
     xds, dat_extent = read_dat_file(dat_path=dat_path)
-    bath = bath.rio.reproject_match(
+    bath = bath.rename({"lon": "x", "lat": "y"}).rio.reproject_match(
         xds, resampling=rio.enums.Resampling.bilinear
     )
-    xds = xds.assign(TopDepthSeabed=xds["TopDepth"] + bath.isel(band=0))
-    xds = xds.assign(BaseDepthSeabed=xds["BaseDepth"] + bath.isel(band=0))
+    xds = xds.assign(TopDepthSeabed=xds["TopDepth"] + bath["elevation"])
+    xds = xds.assign(BaseDepthSeabed=xds["BaseDepth"] + bath["elevation"])
     for v in ["TopDepth", "BaseDepth"]:
         xds[f"{v}Seabed"].attrs = xds[v].attrs
         xds[f"{v}Seabed"].attrs["long_name"] = (
-            xds[f"{v}Seabed"].attrs["long_name"] + " from the Seabed"
+            xds[f"{v}Seabed"].attrs["long_name"] + " relative to the sea-floor"
         )
     return xds, dat_extent
 
