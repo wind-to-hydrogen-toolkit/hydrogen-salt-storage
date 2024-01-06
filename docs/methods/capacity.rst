@@ -1,5 +1,5 @@
-Volume and storage capacity
-===========================
+Cavern volume and storage capacity
+==================================
 
 .. automodule:: src.capacity
    :members:
