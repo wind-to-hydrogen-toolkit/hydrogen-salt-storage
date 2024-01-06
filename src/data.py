@@ -93,7 +93,7 @@ def read_dat_file(dat_path):
     Parameters
     ----------
     dat_path : str
-        Path to the .dat files
+        Path to the DAT (ASCII XYZ) files
 
     Returns
     -------
@@ -182,7 +182,7 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     Parameters
     ----------
     dat_path : str
-        Path to the .dat files
+        Path to the DAT (ASCII XYZ) files
     bathymetry_path : str
         Path to the bathymetry netCDF file
 
