@@ -117,7 +117,7 @@ def make_stats_plots(dat_xr):
     )
     sns.histplot(
         dat_df.reset_index(),
-        x="TopDepth",
+        x="TopDepthSeabed",
         hue="halite",
         ax=axes[1],
         palette="rocket_r",
