@@ -140,7 +140,9 @@ ds["BaseDepthSeabed"].attrs = ds["BaseDepth"].attrs
 
 ds
 
-plot_bath_map(ds["TopDepthSeabed"].sel(halite="Rossall"), cmap="jet")
+plot_bath_map(
+    ds["TopDepthSeabed"].sel(halite="Rossall"), cmap="jet", vmin=150, vmax=2250
+)
 
 plot_bath_map(ds["BaseDepthSeabed"].sel(halite="Rossall"), cmap="jet")
 
