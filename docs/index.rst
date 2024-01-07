@@ -1,14 +1,14 @@
-.. hydrogen-salt-storage documentation master file, created by
+.. hydrogen_salt_storage documentation master file, created by
    sphinx-quickstart on Sun Dec 31 21:35:00 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-hydrogen-salt-storage
+hydrogen_salt_storage
 =====================
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
 
-Source code is available on GitHub: https://github.com/nmstreethran/hydrogen-salt-storage
+Source code is available on GitHub: https://github.com/nmstreethran/hydrogen_salt_storage
 
 This research was supported by a research grant from Science Foundation Ireland (SFI) under Grant No. 12/RC/2302 – P2 and by the `H-Wind <https://www.marei.ie/project/h-wind/>`_ academic-industry consortium members: DP Energy, ESB, Equinor, and Gas Networks Ireland.
 
@@ -31,8 +31,8 @@ Clone the GitHub repository:
 
 .. code-block:: shell
 
-   git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
-   cd hydrogen-salt-storage
+   git clone https://github.com/nmstreethran/hydrogen_salt_storage.git
+   cd hydrogen_salt_storage
 
 Create a virtual environment and install all requirements:
 

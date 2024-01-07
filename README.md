@@ -1,10 +1,10 @@
-# hydrogen-salt-storage
+# hydrogen_salt_storage
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
 
 ## Documentation
 
-Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
+Documentation is available at: <https://hydrogen_salt_storage.readthedocs.io>
 
 ## Installation
 

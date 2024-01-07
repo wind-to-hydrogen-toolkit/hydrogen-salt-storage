@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hydrogen-salt-storage"
+name = "hydrogen_salt_storage"
 version = "0.1.0"
 requires-python = ">= 3.11"
 dependencies = [
@@ -50,9 +50,9 @@ test = [
 ]
 
 [project.urls]
-Documentation = "https://hydrogen-salt-storage.readthedocs.io/"
-Repository = "https://github.com/nmstreethran/hydrogen-salt-storage.git"
-Issues = "https://github.com/nmstreethran/hydrogen-salt-storage/issues"
+Documentation = "https://hydrogen_salt_storage.readthedocs.io/"
+Repository = "https://github.com/nmstreethran/hydrogen_salt_storage.git"
+Issues = "https://github.com/nmstreethran/hydrogen_salt_storage/issues"
 
 [tool.black]
 line-length = 79
