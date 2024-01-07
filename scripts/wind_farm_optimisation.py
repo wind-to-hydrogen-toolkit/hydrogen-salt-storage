@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from src import data as rd
-from src import functions as fns
-from src import optimisation as opt
+from hydrogen_salt_storage import data as rd
+from hydrogen_salt_storage import functions as fns
+from hydrogen_salt_storage import optimisation as opt
 
 # ## Power curve [MW] and Weibull wind speed distribution
 

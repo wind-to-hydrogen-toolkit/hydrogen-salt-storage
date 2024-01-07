@@ -10,8 +10,8 @@ import contextily as cx
 import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import data as rd
-from src import functions as fns
+from hydrogen_salt_storage import data as rd
+from hydrogen_salt_storage import functions as fns
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
