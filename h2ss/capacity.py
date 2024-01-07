@@ -1,8 +1,7 @@
-"""Functions to calculate salt cavern volumes and storage capacities
+"""Functions to calculate salt cavern volumes and storage capacities.
 
 References
 ----------
-
 .. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
     cavern and porous media underground storage site. Hystories deliverable
     D7.1-1. Hystories. Available at:
@@ -116,7 +115,7 @@ def corrected_cavern_volume(
 
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
     applying several correction factors to the bulk cavern volume,
-    :math:`V_{bulk}` [m³]as detailed in [#Williams22]_, Eqn. (1).
+    :math:`V_{bulk}` [m³] as detailed in [#Williams22]_, Eqn. (1).
 
     .. math::
         V_{cavern} = V_{bulk} \\times SCF \\times (1 - IF \\times INSF
@@ -126,6 +125,14 @@ def corrected_cavern_volume(
         \\times 1.46)
     .. math::
         V_{cavern} \\approx 0.48 \\, V_{bulk}
+
+    where :math:`SCF` is the shape correction factor (deviation of the
+    cavern's shape due to geological differences), :math:`IF` is the
+    insoluble fraction (insoluble material within the salt), :math:`INSF`
+    is the correction for the fraction of insoluble material that remains in
+    the cavern after mechanical sweeping that forms the sump of the cavern,
+    and :math:`BF` is the bulking factor (uneven stacking of the insoluble
+    material that forms the cavern sump).
     """
     correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
     return v_cavern * correction_factors
@@ -297,12 +304,15 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
 
     Returns
     -------
-    float
-        Working mass of hydrogen [kg]
+    tuple[float, float, float]
+        Working mass and the minimum and maximum operating mass of hydrogen
+        [kg]
 
     Notes
     -----
     See [#Williams22]_, Eqn. (5) and (6).
+    The mass of hydrogen at the minimum operating pressure represents the
+    cushion gas requirement.
 
     .. math::
         m_{min} = \\rho_{min} \\cdot V_{cavern}
@@ -320,7 +330,8 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
-    return m_max_operating - m_min_operating
+    m_working = m_max_operating - m_min_operating
+    return m_working, m_min_operating, m_max_operating
 
 
 def energy_storage_capacity(m_working, lhv=119.96):

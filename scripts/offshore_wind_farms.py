@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Wind Farms (Foreshore Process)
+# # Offshore wind farms
 #
 # <https://data.gov.ie/dataset/wind-farms-foreshore-process>
 
@@ -15,7 +15,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import data as rd
+from h2ss import data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "wind-farms")

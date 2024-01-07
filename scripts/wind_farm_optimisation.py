@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from src import data as rd
-from src import functions as fns
-from src import optimisation as opt
+from h2ss import data as rd
+from h2ss import functions as fns
+from h2ss import optimisation as opt
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -106,13 +106,9 @@ aep.columns = ["AEP", "integral", "abserr"]
 
 aep = pd.concat([weibull, aep], axis=1)
 
-aep
-
 # ## Annual hydrogen production [kg]
 
 aep["AHP"] = opt.annual_hydrogen_production(aep=aep["AEP"])
-
-aep
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
@@ -121,9 +117,9 @@ capex = opt.capex_pipeline(e_cap=1000)
 
 capex
 
-# ## LCOT for pipeline [€ kg⁻¹]
+# ## LCOH for pipeline [€ kg⁻¹]
 
-aep["LCOT"] = opt.lcot_pipeline(
+aep["LCOH"] = opt.lcot_pipeline(
     capex=capex, transmission_distance=100, ahp=aep["AHP"]
 )
 

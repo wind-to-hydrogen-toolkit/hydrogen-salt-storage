@@ -2,7 +2,6 @@
 
 References
 ----------
-
 .. [#Brennan20] Brennan, J. (2020). ‘Fast and easy gridding of point data with
     geopandas’, 16 March. Available at:
     https://james-brennan.github.io/posts/fast_gridding_geopandas/
@@ -41,7 +40,7 @@ import numpy as np
 import pandas as pd
 import shapely
 
-from src import data as rd
+from h2ss import data as rd
 
 
 def zones_of_interest(
@@ -86,7 +85,6 @@ def zones_of_interest(
         ),
         drop=True,
     )
-
     # zones of interest polygon
     zdf = (
         zds.max(dim="halite")["Thickness"]
@@ -100,7 +98,6 @@ def zones_of_interest(
         .envelope,
         crs=rd.CRS,
     ).dissolve()
-
     return zdf, zds
 
 

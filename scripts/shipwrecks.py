@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Shipwrecks in Irish Waters
+# # Shipwrecks
 #
 # <https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
 
@@ -11,7 +11,7 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import data as rd
+from h2ss import data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "shipwrecks")
@@ -32,15 +32,15 @@ rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-data3 = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
+data = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
 
-data3.head()
+data.head()
 
-data3.shape
+data.shape
 
-data3.crs
+data.crs
 
-ax = data3.to_crs(3857).plot(
+ax = data.to_crs(3857).plot(
     figsize=(7.5, 7.5),
     edgecolor="darkslategrey",
     markersize=15,

@@ -1,5 +1,5 @@
 Optimising storage locations
 ============================
 
-.. automodule:: src.optimisation
+.. automodule:: h2ss.optimisation
    :members:

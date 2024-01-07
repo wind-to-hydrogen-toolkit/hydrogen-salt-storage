@@ -1,5 +1,5 @@
 Downloading and reading data
 ============================
 
-.. automodule:: src.data
+.. automodule:: h2ss.data
    :members:

@@ -11,4 +11,3 @@ Exclusions
    subsea_cables
    shipwrecks
    ireland_boundary
-   oredp_areas

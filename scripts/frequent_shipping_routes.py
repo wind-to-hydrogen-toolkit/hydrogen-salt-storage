@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Shipping
+# # Frequently used shipping routes (300 gross tonnes and above)
+#
+# <https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1>
 
 import os
 from zipfile import ZipFile
@@ -9,11 +11,7 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from src import data as rd
-
-# ## Frequently Used Routes (300 gross tonnes and above)
-#
-# <https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1>
+from h2ss import data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "shipping")

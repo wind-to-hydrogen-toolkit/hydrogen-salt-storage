@@ -1,4 +1,4 @@
-"""Test `src.capacity` functions.
+"""Test `h2ss.capacity` functions.
 
 References
 ----------
@@ -8,6 +8,8 @@ References
     of salt caverns for hydrogen storage in Europe’, International Journal of
     Hydrogen Energy, 45(11), pp. 6793–6805.
     https://doi.org/10.1016/j.ijhydene.2019.12.161.
+.. [#PyFluids] Portyanikhin, V. (2023). ‘portyanikhin/PyFluids’. Available at:
+    https://github.com/portyanikhin/PyFluids (Accessed: 1 January 2024).
 """
 
 import numpy as np
@@ -15,11 +17,11 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 from pyfluids import Fluid, FluidsList, Input
 
-from src import capacity as cap
+from h2ss import capacity as cap
 
 
 def test_cavern_volume():
-    """Test the `src.capacity.cavern_volume` function"""
+    """Test `h2ss.capacity.cavern_volume`"""
     h_cylinder = [10, 20, 30, 40, 50]
     h_cone = [2, 4, 6, 8, 10]
     roof_angle = [5, 10, 15, 20, 25]
@@ -39,7 +41,7 @@ def test_cavern_volume():
 
 
 def test_corrected_cavern_volume():
-    """Test the `src.capacity.corrected_cavern_volume` function"""
+    """Test `h2ss.capacity.corrected_cavern_volume`"""
     correction_factors = 0.7 * (1 - 0.25 * 0.865 * 1.46)
     volumes = [1e4, 2.5e4, 3e4, 4.7e4, 5.3e4]
     v_cavern = []
@@ -51,7 +53,7 @@ def test_corrected_cavern_volume():
 
 
 def test_temperature_cavern_mid_point():
-    """Test the `src.capacity.temperature_cavern_mid_point` function"""
+    """Test `h2ss.capacity.temperature_cavern_mid_point`"""
     heights = [50, 100, 150, 200, 250]
     top_depths = [600, 800, 1100, 1300, 1700]
     delta_t = [35, 37, 39, 41, 43]
@@ -69,7 +71,7 @@ def test_temperature_cavern_mid_point():
 
 
 def test_pressure_operating():
-    """Test the `src.capacity.pressure_operating` function"""
+    """Test `h2ss.capacity.pressure_operating`"""
     thickness_overburden = [550, 650, 750, 850, 950]
     p_operating = []
     p_operating_func = []
@@ -81,16 +83,17 @@ def test_pressure_operating():
 
 
 def test_density_hydrogen_gas():
-    """Test the `src.capacity.density_hydrogen_gas` function.
+    """Test `h2ss.capacity.density_hydrogen_gas`
 
     Notes
     -----
     Use Eqn. (3) of [#Caglayan20]_ to derive the density and compare it with
-    the density obtained from the `src.capacity.density_hydrogen_gas` function.
+    the density obtained from the
+    `h2ss.capacity.density_hydrogen_gas` function.
     The values should be approximately the same (rounded to one decimal place).
-    PyFluids is used to just derive the compressibility factor, :math:`Z`, for
-    the former. The `pyproject.toml` configuration file has been set such that
-    the default units are SI units.
+    PyFluids [#PyFluids]_ is used to just derive the compressibility factor,
+    :math:`Z`, for the former. The `pyproject.toml` configuration file has
+    been set such that the default units are SI units.
 
     .. math::
         \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
@@ -127,14 +130,14 @@ def test_density_hydrogen_gas():
 
 
 def test_mass_hydrogen_working():
-    """Test the `src.capacity.mass_hydrogen_working` function"""
+    """Test `h2ss.capacity.mass_hydrogen_working`"""
     rho_h2_min = [2.7, 8.5, 6, 4.563, 3.5]
     rho_h2_max = [20, 12, 16, 6.6, 10.4928]
     v_cavern = [2.7e5, 3.5e5, 4.1234e5, 6e5, 7.2e5]
     m_working = []
     m_working_func = []
     for mi, ma, v in zip(rho_h2_min, rho_h2_max, v_cavern):
-        m_working.append((ma - mi) * v)
+        m_working.append(((ma - mi) * v, mi * v, ma * v))
         m_working_func.append(
             cap.mass_hydrogen_working(rho_h2_min=mi, rho_h2_max=ma, v_cavern=v)
         )
@@ -142,7 +145,7 @@ def test_mass_hydrogen_working():
 
 
 def test_energy_storage_capacity():
-    """Test the `src.capacity.energy_storage_capacity` function"""
+    """Test `h2ss.capacity.energy_storage_capacity`"""
     m_working = [6.4e5, 1.5e6, 2.6e6, 8.2e6, 3.5e6]
     capacity = []
     capacity_func = []

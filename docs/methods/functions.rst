@@ -1,5 +1,5 @@
 Structuring data and generating caverns
 =======================================
 
-.. automodule:: src.functions
+.. automodule:: h2ss.functions
    :members:

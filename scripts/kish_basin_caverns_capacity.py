@@ -14,9 +14,9 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import capacity as cap
-from src import data as rd
-from src import functions as fns
+from h2ss import capacity as cap
+from h2ss import data as rd
+from h2ss import functions as fns
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -148,7 +148,11 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
 
 # ### Working mass of hydrogen
 
-caverns["working_mass"] = cap.mass_hydrogen_working(
+(
+    caverns["working_mass"],
+    caverns["mass_operating_min"],
+    caverns["mass_operating_max"],
+) = cap.mass_hydrogen_working(
     rho_h2_min=caverns["rho_min"],
     rho_h2_max=caverns["rho_max"],
     v_cavern=caverns["cavern_volume"],
@@ -228,11 +232,12 @@ plt.show()
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
+def plot_map_alt(
+    dat_xr, cavern_df, zones_gdf, classes, colours, labels, fontsize=11.5
+):
     """
     Helper function to plot caverns within the zones of interest
     """
-
     plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
@@ -364,15 +369,24 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
+        xlabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize},
     )
     axis.add_artist(
-        ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+        ScaleBar(
+            1,
+            box_alpha=0,
+            location="lower right",
+            color="darkslategrey",
+            width_fraction=0.0075,
+            font_properties={"size": fontsize},
+        )
     )
     plt.legend(
         loc="lower right",
         bbox_to_anchor=(1, 0.05),
         handles=legend_handles,
-        fontsize=11.5,
+        fontsize=fontsize,
     )
 
     plt.tight_layout()
@@ -437,7 +451,11 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
     t_mid_point=caverns["t_mid_point"],
 )
 
-caverns["working_mass"] = cap.mass_hydrogen_working(
+(
+    caverns["working_mass"],
+    caverns["mass_operating_min"],
+    caverns["mass_operating_max"],
+) = cap.mass_hydrogen_working(
     rho_h2_min=caverns["rho_min"],
     rho_h2_max=caverns["rho_max"],
     v_cavern=caverns["cavern_volume"],
@@ -448,7 +466,17 @@ caverns["capacity"] = cap.energy_storage_capacity(
 )
 
 caverns.drop(
-    ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
+    [
+        "x",
+        "y",
+        "TopTWT",
+        "BaseDepth",
+        "TopDepth",
+        "BaseDepthSeabed",
+        "height",
+        "cavern_height",
+    ],
+    axis=1,
 ).describe()
 
 # cavern volumes

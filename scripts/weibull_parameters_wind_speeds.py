@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level
+# # Weibull parameters of wind speeds - 150m above ground level
 #
 # <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
 
@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from src import data as rd
-from src import functions as fns
+from h2ss import data as rd
+from h2ss import functions as fns
 
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")

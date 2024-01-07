@@ -6,6 +6,9 @@ source .venv/bin/activate
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script docs/notebooks/*.ipynb
 
+# clear scripts/ directory
+rm -rf scripts/*
+
 # move scripts to scripts/ directory
 mv docs/notebooks/*.py scripts
 
