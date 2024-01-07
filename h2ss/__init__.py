@@ -1,9 +1,9 @@
-"""hydrogen_salt_storage
+"""h2ss
 
 Optimising green hydrogen storage in man-made submarine salt caverns
 
-https://github.com/nmstreethran/hydrogen_salt_storage
-https://hydrogen_salt_storage.readthedocs.io
+https://github.com/nmstreethran/h2ss
+https://h2ss.readthedocs.io
 """
 
 __author__ = """Nithiya Streethran"""

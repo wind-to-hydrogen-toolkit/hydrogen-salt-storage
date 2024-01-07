@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 import shapely
 
-from hydrogen_salt_storage import data as rd
+from h2ss import data as rd
 
 
 def zones_of_interest(
