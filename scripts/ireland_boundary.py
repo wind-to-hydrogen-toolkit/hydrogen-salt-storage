@@ -12,7 +12,7 @@ from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
 
-from hydrogen_salt_storage import data as rd
+from h2ss import data as rd
 
 URL = (
     "https://data-osi.opendata.arcgis.com/datasets/"

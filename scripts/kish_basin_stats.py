@@ -12,7 +12,7 @@ import seaborn as sns
 from cartopy.mpl.ticker import LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from hydrogen_salt_storage import data as rd
+from h2ss import data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))

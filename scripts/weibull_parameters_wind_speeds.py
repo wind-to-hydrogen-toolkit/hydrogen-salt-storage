@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from hydrogen_salt_storage import data as rd
-from hydrogen_salt_storage import functions as fns
+from h2ss import data as rd
+from h2ss import functions as fns
 
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")

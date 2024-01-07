@@ -14,9 +14,9 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from hydrogen_salt_storage import capacity as cap
-from hydrogen_salt_storage import data as rd
-from hydrogen_salt_storage import functions as fns
+from h2ss import capacity as cap
+from h2ss import data as rd
+from h2ss import functions as fns
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))

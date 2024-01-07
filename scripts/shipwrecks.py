@@ -11,7 +11,7 @@ from zipfile import ZipFile
 import contextily as cx
 import matplotlib.pyplot as plt
 
-from hydrogen_salt_storage import data as rd
+from h2ss import data as rd
 
 # base data download directory
 DATA_DIR = os.path.join("data", "shipwrecks")
