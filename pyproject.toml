@@ -22,10 +22,16 @@ authors = [
 ]
 readme = "README.md"
 description = "Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea"
-license = {file = "LICENSE.txt"}
 keywords = ["green hydrogen", "renewable energy", "ireland", "offshore wind", "energy storage", "geological storage", "salt caverns"]
 classifiers = [
-  "Programming Language :: Python :: 3"
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: GIS",
 ]
 
 [project.optional-dependencies]
@@ -34,9 +40,10 @@ docs = [
   "pydata-sphinx-theme",
 ]
 test = [
-  "black",
+  "black[jupyter]",
   "coverage",
   "flake8",
+  "jupyterlab",
   "nbconvert",
   "pylint",
   "pytest",
@@ -44,7 +51,8 @@ test = [
 
 [project.urls]
 Documentation = "https://hydrogen-salt-storage.readthedocs.io/"
-Repository = "https://github.com/nmstreethran/hydrogen-salt-storage"
+Repository = "https://github.com/nmstreethran/hydrogen-salt-storage.git"
+Issues = "https://github.com/nmstreethran/hydrogen-salt-storage/issues"
 
 [tool.black]
 line-length = 79
