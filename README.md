@@ -6,7 +6,7 @@ This research was supported by a research grant from Science Foundation Ireland 
 
 ## Documentation
 
-Documentation is available at: <https://hydrogen_salt_storage.readthedocs.io>
+Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Installation
 

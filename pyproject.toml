@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hydrogen_salt_storage"
+name = "h2ss"
 version = "0.1.0"
 requires-python = ">= 3.11"
 dependencies = [
@@ -50,12 +50,12 @@ test = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["hydrogen_salt_storage"]
+where = ["h2ss"]
 
 [project.urls]
-Documentation = "https://hydrogen_salt_storage.readthedocs.io/"
-Repository = "https://github.com/nmstreethran/hydrogen_salt_storage.git"
-Issues = "https://github.com/nmstreethran/hydrogen_salt_storage/issues"
+Documentation = "https://hydrogen-salt-storage.readthedocs.io/"
+Repository = "https://github.com/nmstreethran/hydrogen-salt-storage.git"
+Issues = "https://github.com/nmstreethran/hydrogen-salt-storage/issues"
 
 [tool.black]
 line-length = 79

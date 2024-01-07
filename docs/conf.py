@@ -10,7 +10,7 @@ sys.path.append("..")
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "hydrogen_salt_storage"
+project = "hydrogen-salt-storage"
 copyright = "2023-2024, Nithiya Streethran"
 author = "Nithiya Streethran"
 
