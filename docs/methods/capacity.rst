@@ -1,5 +1,5 @@
 Cavern volume and storage capacity
 ==================================
 
-.. automodule:: src.capacity
+.. automodule:: hydrogen_salt_storage.capacity
    :members:
