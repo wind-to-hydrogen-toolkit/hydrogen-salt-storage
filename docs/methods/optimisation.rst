@@ -1,5 +1,5 @@
 Optimising storage locations
 ============================
 
-.. automodule:: hydrogen_salt_storage.optimisation
+.. automodule:: h2ss.optimisation
    :members:

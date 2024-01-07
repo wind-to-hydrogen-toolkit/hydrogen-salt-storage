@@ -1,5 +1,5 @@
 Downloading and reading data
 ============================
 
-.. automodule:: hydrogen_salt_storage.data
+.. automodule:: h2ss.data
    :members:

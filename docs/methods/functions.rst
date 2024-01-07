@@ -1,5 +1,5 @@
 Structuring data and generating caverns
 =======================================
 
-.. automodule:: hydrogen_salt_storage.functions
+.. automodule:: h2ss.functions
    :members:
