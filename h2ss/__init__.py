@@ -1,4 +1,4 @@
-"""h2ss
+"""hydrogen-salt-storage (h2ss)
 
 Optimising green hydrogen storage in man-made submarine salt caverns
 
