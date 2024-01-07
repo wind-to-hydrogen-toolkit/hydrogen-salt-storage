@@ -49,6 +49,9 @@ test = [
   "pytest",
 ]
 
+[tool.setuptools.packages.find]
+where = ["hydrogen_salt_storage"]
+
 [project.urls]
 Documentation = "https://hydrogen_salt_storage.readthedocs.io/"
 Repository = "https://github.com/nmstreethran/hydrogen_salt_storage.git"
