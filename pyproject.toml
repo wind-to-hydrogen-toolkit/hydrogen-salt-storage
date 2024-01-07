@@ -1,3 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydrogen-salt-storage"
+version = "0.1.0"
+requires-python = ">= 3.11"
+dependencies = [
+  "cartopy",
+  "contextily",
+  "dask",
+  "geocube",
+  "matplotlib-scalebar",
+  "mapclassify",
+  "pyfluids",
+  "seaborn",
+]
+authors = [
+  {name = "Nithiya Streethran", email = "nmstreethran@gmail.com"},
+]
+readme = "README.md"
+description = "Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea"
+license = {file = "LICENSE.txt"}
+keywords = ["green hydrogen", "renewable energy", "ireland", "offshore wind", "energy storage", "geological storage", "salt caverns"]
+classifiers = [
+  "Programming Language :: Python :: 3"
+]
+
+[project.urls]
+Documentation = "https://hydrogen-salt-storage.readthedocs.io/"
+Repository = "https://github.com/nmstreethran/hydrogen-salt-storage"
+
 [tool.black]
 line-length = 79
 
