@@ -1,4 +1,4 @@
-# hydrogen_salt_storage
+# Storage of hydrogen from offshore wind in salt caverns
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
 
