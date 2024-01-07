@@ -232,11 +232,12 @@ plt.show()
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
+def plot_map_alt(
+    dat_xr, cavern_df, zones_gdf, classes, colours, labels, fontsize=11.5
+):
     """
     Helper function to plot caverns within the zones of interest
     """
-
     plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
@@ -368,15 +369,24 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, classes, colours, labels):
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
+        xlabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize},
     )
     axis.add_artist(
-        ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+        ScaleBar(
+            1,
+            box_alpha=0,
+            location="lower right",
+            color="darkslategrey",
+            width_fraction=0.0075,
+            font_properties={"size": fontsize},
+        )
     )
     plt.legend(
         loc="lower right",
         bbox_to_anchor=(1, 0.05),
         handles=legend_handles,
-        fontsize=11.5,
+        fontsize=fontsize,
     )
 
     plt.tight_layout()

@@ -224,6 +224,7 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels, label):
                     box_alpha=0,
                     location="lower right",
                     color="darkslategrey",
+                    width_fraction=0.015,
                 )
             )
         if n == 2:
@@ -240,7 +241,7 @@ plot_facet_maps_distr(
     rd.CRS,
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
-    "Halite Top Depth [m]",
+    "Top Depth [m]",
 )
 
 plot_facet_maps_distr(
@@ -249,7 +250,7 @@ plot_facet_maps_distr(
     rd.CRS,
     "Thickness",
     [85 + 90, 155 + 90, 311 + 90],
-    "Halite Thickness [m]",
+    "Thickness [m]",
 )
 
 # compare depths
