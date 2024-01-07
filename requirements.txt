@@ -5,7 +5,6 @@ coverage
 dask[complete]
 flake8
 geocube
-geopandas
 jupyterlab
 mapclassify
 matplotlib-scalebar
@@ -15,5 +14,4 @@ pydata-sphinx-theme
 pyfluids
 pylint
 pytest
-rioxarray
 statsmodels

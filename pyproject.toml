@@ -13,6 +13,7 @@ dependencies = [
   "geocube",
   "matplotlib-scalebar",
   "mapclassify",
+  "pooch",
   "pyfluids",
   "seaborn",
 ]
@@ -25,6 +26,20 @@ license = {file = "LICENSE.txt"}
 keywords = ["green hydrogen", "renewable energy", "ireland", "offshore wind", "energy storage", "geological storage", "salt caverns"]
 classifiers = [
   "Programming Language :: Python :: 3"
+]
+
+[project.optional-dependencies]
+docs = [
+  "myst-nb",
+  "pydata-sphinx-theme",
+]
+test = [
+  "black",
+  "coverage",
+  "flake8",
+  "nbconvert",
+  "pylint",
+  "pytest",
 ]
 
 [project.urls]
