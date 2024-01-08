@@ -12,11 +12,30 @@ Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 This project uses Python 3.11.
 
+### Installation of the `h2ss` module via pip
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
+```
+
+### Installation of the project (including notebooks) from source
+
+Clone this GitHub repository:
+
+```sh
+git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+cd hydrogen-salt-storage
+```
+
 Create a virtual environment and install all requirements:
 
 ```sh
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
