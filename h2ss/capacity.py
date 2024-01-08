@@ -262,9 +262,9 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     This function uses the CoolProp [#Bell14]_ wrapper called PyFluids
     [#PyFluids]_. See [#Williams22]_, Section 3.4.2 and also the CoolProp
     documentation for useful information on hydrogen [#CoolProp]_.
-    The `pyproject.toml` configuration file has been set such that the default
-    units used by PyFluids are SI units. PyFluids can also be used to derive
-    the compressibility factor.
+    The ``pyproject.toml`` configuration file has been set such that the
+    default units used by PyFluids are SI units. PyFluids can also be used to
+    derive the compressibility factor.
 
     Based on [#Caglayan20]_, Eqn. (3), the density can be approximated using
     the following equation.

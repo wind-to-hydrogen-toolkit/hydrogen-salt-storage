@@ -54,9 +54,9 @@ def zones_of_interest(
         Xarray dataset of the halite data
     constraints : dict[str, float]
         Dictionary containing the following:
-        `"height"`: cavern height [m];
-        `"min_depth"`: minimum cavern depth [m];
-        `"max_depth"`: Maximum cavern depth [m]
+        ``"height"``: cavern height [m];
+        ``"min_depth"``: minimum cavern depth [m];
+        ``"max_depth"``: Maximum cavern depth [m]
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
@@ -155,7 +155,7 @@ def generate_caverns_square_grid(
 
 
 def hexgrid_init(dat_extent, separation):
-    """Initialise variables for `generate_caverns_hexagonal_grid`.
+    """Initialise variables for ``generate_caverns_hexagonal_grid``.
 
     Parameters
     ----------
@@ -497,11 +497,11 @@ def exclude_constraint(cavern_df, cavern_all, exclusions, key):
         Dictionary of exclusions data
     key : str
         Key for the constraint in the dictionary; one of the following:
-        `"shipping"`: frequent shipping routes;
-        `"cables"`: subsea cables;
-        `"wind_farms"`: offshore wind farms;
-        `"wells"`: exporation wells;
-        `"shipwrecks"`: shipwrecks
+        ``"shipping"``: frequent shipping routes;
+        ``"cables"``: subsea cables;
+        ``"wind_farms"``: offshore wind farms;
+        ``"wells"``: exporation wells;
+        ``"shipwrecks"``: shipwrecks
 
     Returns
     -------
@@ -538,12 +538,12 @@ def generate_caverns_with_constraints(
     exclusions : dict[str, geopandas.GeoDataFrame]
         Dictionary of exclusions data; if any of the following keys do not
         exist in the dictionary, the exclusion will be skipped:
-        `"edge"`: halite edge, dict[str, geopandas.GeoDataFrame];
-        `"shipping"`: frequent shipping routes;
-        `"cables"`: subsea cables;
-        `"wind_farms"`: offshore wind farms;
-        `"wells"`: exporation wells;
-        `"shipwrecks"`: shipwrecks
+        ``"edge"``: halite edge, dict[str, geopandas.GeoDataFrame];
+        ``"shipping"``: frequent shipping routes;
+        ``"cables"``: subsea cables;
+        ``"wind_farms"``: offshore wind farms;
+        ``"wells"``: exporation wells;
+        ``"shipwrecks"``: shipwrecks
     diameter : float
         Diameter of the cavern [m]
     separation : float
