@@ -7,15 +7,10 @@ name = "h2ss"
 version = "0.1.0"
 requires-python = ">= 3.11"
 dependencies = [
-  "cartopy",
-  "contextily",
   "dask",
   "geocube",
-  "matplotlib-scalebar",
-  "mapclassify",
   "pooch",
   "pyfluids",
-  "seaborn",
 ]
 authors = [
   {name = "Nithiya Streethran", email = "nmstreethran@gmail.com"},
@@ -39,12 +34,18 @@ docs = [
   "myst-nb",
   "pydata-sphinx-theme",
 ]
+notebooks = [
+  "cartopy",
+  "contextily",
+  "jupyterlab",
+  "matplotlib-scalebar",
+  "mapclassify",
+  "seaborn",
+]
 test = [
   "black[jupyter]",
   "coverage",
   "flake8",
-  "jupyterlab",
-  "nbconvert",
   "pylint",
   "pytest",
 ]
