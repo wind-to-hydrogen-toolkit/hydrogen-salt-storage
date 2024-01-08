@@ -1,8 +1,8 @@
 # Storage of hydrogen from offshore wind in salt caverns
 
-Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
+Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
-This research was supported by a research grant from Science Foundation Ireland (SFI) under Grant No. 12/RC/2302 – P2 and by the H-Wind academic-industry consortium members: DP Energy, ESB, Equinor, and Gas Networks Ireland.
+This research was supported by a research grant from [Science Foundation Ireland (SFI)](http://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the [H-Wind](https://www.marei.ie/project/h-wind) academic-industry consortium members: [DP Energy](https://dpenergy.com/), [ESB](https://esb.ie/), [Equinor](https://www.equinor.com/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
 
 ## Documentation
 
