@@ -1,2 +1,5 @@
 myst-nb
 pydata-sphinx-theme
+geocube
+pooch
+pyfluids

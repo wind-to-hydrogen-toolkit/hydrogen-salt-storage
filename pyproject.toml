@@ -9,6 +9,7 @@ requires-python = ">= 3.11"
 dependencies = [
   "dask",
   "geocube",
+  "netcdf4",
   "pooch",
   "pyfluids",
 ]
@@ -38,8 +39,8 @@ notebooks = [
   "cartopy",
   "contextily",
   "jupyterlab",
-  "matplotlib-scalebar",
   "mapclassify",
+  "matplotlib-scalebar",
   "seaborn",
 ]
 test = [
