@@ -40,7 +40,7 @@ Installation of the ``h2ss`` module via pip
 Installation of the project (including notebooks) from source
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Clone the GitHub repository:
+Clone the Git repository:
 
 .. code-block:: shell
 

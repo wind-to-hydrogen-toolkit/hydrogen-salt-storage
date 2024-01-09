@@ -10,7 +10,7 @@ Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Installation
 
-This project uses Python 3.11.
+This project uses [Python](https://www.python.org/) 3.11.
 
 ### Installation of the `h2ss` module via pip
 
@@ -23,7 +23,7 @@ python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
 
 ### Installation of the project (including notebooks) from source
 
-Clone this GitHub repository:
+Clone this Git repository:
 
 ```sh
 git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
