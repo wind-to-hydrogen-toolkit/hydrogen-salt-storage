@@ -27,8 +27,8 @@ Installation
 
 This project uses `Python <https://www.python.org/>`_ 3.11.
 
-Installation of the ``h2ss`` module via pip
-+++++++++++++++++++++++++++++++++++++++++++
+Installation of the ``h2ss`` module
++++++++++++++++++++++++++++++++++++
 
 .. code-block:: shell
 

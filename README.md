@@ -12,7 +12,7 @@ Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 This project uses [Python](https://www.python.org/) 3.11.
 
-### Installation of the `h2ss` module via pip
+### Installation of the `h2ss` module
 
 ```sh
 python -m venv .venv
