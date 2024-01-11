@@ -3,7 +3,8 @@
 
 # # Exploration wells
 #
-# <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
+# - <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
+# - <https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore>
 
 import os
 from zipfile import ZipFile
@@ -16,12 +17,9 @@ from h2ss import data as rd
 # base data download directory
 DATA_DIR = os.path.join("data", "exploration-wells")
 
-URL = (
-    "https://atlas.marine.ie/midata/EnergyResourcesExploration/"
-    "Exploration_Wells_Irish_Offshore.shapezip.zip"
-)
-
 FILE_NAME = "Exploration_Wells_Irish_Offshore.shapezip.zip"
+
+URL = f"https://atlas.marine.ie/midata/EnergyResourcesExploration/{FILE_NAME}"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
