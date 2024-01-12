@@ -28,7 +28,7 @@ Datasets used in this project. These datasets are not to be used for navigation 
 .. [#kisorca] https://kis-orca.org/downloads/
 .. [#datagovie4] https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level
 .. [#seai] https://gis.seai.ie/wind/
-.. [#datagovie5] https://data.gov.ie/dataset/provinces-osi-national-statutory-boundaries-2019
+.. [#datagovie5] https://data.gov.ie/dataset/provinces-national-statutory-boundaries-2019
 .. [#osi] https://data-osi.opendata.arcgis.com/maps/osi::provinces-national-statutory-boundaries-2019
 .. [#hyss] https://hyss.ie
 .. [#emodnet1] https://emodnet.ec.europa.eu/en/bathymetry
