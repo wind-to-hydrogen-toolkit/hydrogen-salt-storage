@@ -42,9 +42,18 @@ import shapely
 
 from h2ss import data as rd
 
+ROOF_THICKNESS = 80
+FLOOR_THICKNESS = 10
+CAVERN_DIAMETER = 80
+CAVERN_SEPARATION = CAVERN_DIAMETER * 4
+PILLAR_WIDTH = CAVERN_DIAMETER * 3
+
 
 def zones_of_interest(
-    dat_xr, constraints, roof_thickness=80, floor_thickness=10
+    dat_xr,
+    constraints,
+    roof_thickness=ROOF_THICKNESS,
+    floor_thickness=FLOOR_THICKNESS,
 ):
     """Generate zones of interest by applying thickness and depth constraints.
 
@@ -102,7 +111,10 @@ def zones_of_interest(
 
 
 def generate_caverns_square_grid(
-    dat_extent, zones_df, diameter=80, separation=80 * 4
+    dat_extent,
+    zones_df,
+    diameter=CAVERN_DIAMETER,
+    separation=CAVERN_SEPARATION,
 ):
     """Generate salt caverns using a regular square grid.
 
@@ -149,8 +161,6 @@ def generate_caverns_square_grid(
 
     cavern_df.drop(columns=["index_right"], inplace=True)
 
-    print(f"Number of potential caverns: {len(cavern_df):,}")
-
     return cavern_df
 
 
@@ -177,7 +187,10 @@ def hexgrid_init(dat_extent, separation):
 
 
 def generate_caverns_hexagonal_grid(
-    dat_extent, zones_df, diameter=80, separation=80 * 4
+    dat_extent,
+    zones_df,
+    diameter=CAVERN_DIAMETER,
+    separation=CAVERN_SEPARATION,
 ):
     """Generate caverns in a regular hexagonal grid.
 
@@ -251,15 +264,18 @@ def generate_caverns_hexagonal_grid(
 
     # clip caverns to the zones of interest
     cavern_df = gpd.sjoin(cavern_df, zones_df, predicate="within")
-
     cavern_df.drop(columns=["index_right"], inplace=True)
-
-    print(f"Number of potential caverns: {len(cavern_df):,}")
 
     return cavern_df
 
 
-def cavern_dataframe(dat_zone, cavern_df):
+def cavern_dataframe(
+    dat_zone,
+    cavern_df,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+    roof_thickness=ROOF_THICKNESS,
+    floor_thickness=FLOOR_THICKNESS,
+):
     """Merge halite data for each cavern location and create a dataframe.
 
     Parameters
@@ -268,6 +284,12 @@ def cavern_dataframe(dat_zone, cavern_df):
         Xarray dataset for the zone of interest
     cavern_df : geopandas.GeoDataFrame
         Geodataframe of caverns within the zone of interest
+    depths : dict[str, float]
+        Dictionary of cavern top depth ranges [m] for labelling
+    roof_thickness : float
+        Salt roof thickness [m]
+    floor_thickness : float
+        Minimum salt floor thickness [m]
 
     Returns
     -------
@@ -293,15 +315,55 @@ def cavern_dataframe(dat_zone, cavern_df):
 
     # merge with the cavern data
     cavern_df = gpd.sjoin(cavern_df, zdf)
-
     cavern_df.drop(columns=["index_right"], inplace=True)
 
-    # remove duplicate caverns at each location - keep the thickest layer
+    # remove duplicate caverns at each location - keep the layer at the optimal
+    # depth, followed by deeper layers, and then the thicker layer
+    conditions = [
+        (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
+        (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
+        & (
+            cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)
+        ),
+        (cavern_df["TopDepthSeabed"] > (depths["max_opt"] - roof_thickness)),
+    ]
+    choices = [1, 2, 1]
+    cavern_df["depth_criteria"] = np.select(conditions, choices)
     cavern_df = cavern_df.sort_values(
-        ["Thickness", "TopDepthSeabed"], ascending=False
+        ["depth_criteria", "TopDepthSeabed", "Thickness"], ascending=False
     ).drop_duplicates(["geometry"])
+    cavern_df = cavern_df.drop(columns=["depth_criteria"])
 
     return cavern_df
+
+
+def constraint_halite_edge(dat_xr, buffer=PILLAR_WIDTH):
+    """The edge of each halite member as a constraint.
+
+    Parameters
+    ----------
+    dat_xr : xarray.Dataset
+        Xarray dataset of the halite data
+    buffer : float
+        Buffer [m]
+
+    Returns
+    -------
+    dict[str, geopandas.GeoDataFrame]
+        Dictionary of GeoPandas geodataframes of the halite edge constraint
+        for each halite member
+
+    Notes
+    -----
+    Set the buffer to 3 times the cavern diameter, i.e. the pillar width.
+    """
+    buffer_edge = {}
+    for halite in dat_xr.halite.values:
+        buffer_edge[halite] = rd.halite_shape(dat_xr=dat_xr, halite=halite)
+        buffer_edge[halite] = gpd.GeoDataFrame(
+            geometry=buffer_edge[halite].boundary.buffer(buffer)
+        ).overlay(buffer_edge[halite], how="intersection")
+    return buffer_edge
 
 
 def constraint_exploration_well(data_path, buffer=500):
@@ -455,35 +517,6 @@ def constraint_subsea_cables(data_path, buffer=750):
     return cables, cables_b
 
 
-def constraint_halite_edge(dat_xr, buffer=80 * 3):
-    """The edge of each halite member as a constraint.
-
-    Parameters
-    ----------
-    dat_xr : xarray.Dataset
-        Xarray dataset of the halite data
-    buffer : float
-        Buffer [m]
-
-    Returns
-    -------
-    dict[str, geopandas.GeoDataFrame]
-        Dictionary of GeoPandas geodataframes of the halite edge constraint
-        for each halite member
-
-    Notes
-    -----
-    Set the buffer to 3 times the cavern diameter, i.e. the pillar width.
-    """
-    buffer_edge = {}
-    for halite in dat_xr.halite.values:
-        buffer_edge[halite] = rd.halite_shape(dat_xr=dat_xr, halite=halite)
-        buffer_edge[halite] = gpd.GeoDataFrame(
-            geometry=buffer_edge[halite].boundary.buffer(buffer)
-        ).overlay(buffer_edge[halite], how="intersection")
-    return buffer_edge
-
-
 def exclude_constraint(cavern_df, cavern_all, exclusions, key):
     """Exclude constraint by their dictionary key.
 
@@ -523,7 +556,12 @@ def exclude_constraint(cavern_df, cavern_all, exclusions, key):
 
 
 def generate_caverns_with_constraints(
-    zones_gdf, zones_ds, dat_extent, exclusions, diameter=80, separation=80 * 4
+    zones_gdf,
+    zones_ds,
+    dat_extent,
+    exclusions,
+    diameter=CAVERN_DIAMETER,
+    separation=CAVERN_SEPARATION,
 ):
     """Add constraints to cavern configuration.
 
@@ -536,8 +574,9 @@ def generate_caverns_with_constraints(
     dat_extent : geopandas.GeoSeries
         Extent of the data
     exclusions : dict[str, geopandas.GeoDataFrame]
-        Dictionary of exclusions data; if any of the following keys do not
-        exist in the dictionary, the exclusion will be skipped:
+        Dictionary of exclusions data; ``"edge"`` must be present in the
+        dictionary, but if any other of the following keys do not exist in the
+        dictionary, the exclusion will be skipped:
         ``"edge"``: halite edge, dict[str, geopandas.GeoDataFrame];
         ``"shipping"``: frequent shipping routes;
         ``"cables"``: subsea cables;
@@ -554,7 +593,6 @@ def generate_caverns_with_constraints(
     tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Dataframe of available and excluded caverns
     """
-    print("Without constraints...")
     cavern_df = generate_caverns_hexagonal_grid(
         dat_extent=dat_extent,
         zones_df=zones_gdf,
@@ -562,70 +600,34 @@ def generate_caverns_with_constraints(
         separation=separation,
     )
     cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
+    print("-" * 60)
+
+    print("Without constraints, excluding salt formation edges...")
+    cavern_dict = {}
+    for h in cavern_df["halite"].unique():
+        cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
+        cavern_dict[h] = cavern_dict[h].overlay(
+            gpd.sjoin(
+                cavern_dict[h],
+                exclusions["edge"][h],
+                predicate="intersects",
+            ),
+            how="difference",
+        )
+    cavern_df = pd.concat(cavern_dict.values())
+    print(f"Number of potential caverns: {len(cavern_df):,}")
     # keep original
     cavern_all = cavern_df.copy()
     print("-" * 60)
 
-    print("Exclude salt formation edges...")
-    try:
-        cavern_dict = {}
-        for h in cavern_df["halite"].unique():
-            cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
-            cavern_dict[h] = cavern_dict[h].overlay(
-                gpd.sjoin(
-                    cavern_dict[h],
-                    exclusions["edge"][h],
-                    predicate="intersects",
-                ),
-                how="difference",
-            )
-        cavern_df = pd.concat(cavern_dict.values())
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        pct = (len(cavern_all) - len(cavern_df)) / len(cavern_all) * 100
-        print(f"Caverns excluded: {pct:.2f}%")
-    except KeyError:
-        print("No data specified!")
-    print("-" * 60)
-
-    print("Exclude frequent shipping routes...")
-    cavern_df = exclude_constraint(
-        cavern_df=cavern_df,
-        cavern_all=cavern_all,
-        exclusions=exclusions,
-        key="shipping",
-    )
-
-    print("Exclude subsea cables...")
-    cavern_df = exclude_constraint(
-        cavern_df=cavern_df,
-        cavern_all=cavern_all,
-        exclusions=exclusions,
-        key="cables",
-    )
-
-    print("Exclude wind farms...")
-    cavern_df = exclude_constraint(
-        cavern_df=cavern_df,
-        cavern_all=cavern_all,
-        exclusions=exclusions,
-        key="wind_farms",
-    )
-
-    print("Exclude exploration wells...")
-    cavern_df = exclude_constraint(
-        cavern_df=cavern_df,
-        cavern_all=cavern_all,
-        exclusions=exclusions,
-        key="wells",
-    )
-
-    print("Exclude shipwrecks...")
-    cavern_df = exclude_constraint(
-        cavern_df=cavern_df,
-        cavern_all=cavern_all,
-        exclusions=exclusions,
-        key="shipwrecks",
-    )
+    for c in ["shipping", "wind_farms", "cables", "wells", "shipwrecks"]:
+        print(f"Exclude {c.replace('_', ' ')}...")
+        cavern_df = exclude_constraint(
+            cavern_df=cavern_df,
+            cavern_all=cavern_all,
+            exclusions=exclusions,
+            key=c,
+        )
 
     # get excluded caverns
     caverns_excl = cavern_all.overlay(
@@ -637,7 +639,11 @@ def generate_caverns_with_constraints(
 
 
 def label_caverns(
-    cavern_df, heights, depths, roof_thickness=80, floor_thickness=10
+    cavern_df,
+    heights,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+    roof_thickness=ROOF_THICKNESS,
+    floor_thickness=FLOOR_THICKNESS,
 ):
     """Label cavern dataframe by height and depth.
 

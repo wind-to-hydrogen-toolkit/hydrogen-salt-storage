@@ -38,9 +38,9 @@ def download_data(url, data_dir, file_name, known_hash=None):
     This only downloads data if necessary, i.e. if the data file does not
     already exist in the directory.
     """
-    os.makedirs(data_dir, exist_ok=True)
     data_file = os.path.join(data_dir, file_name)
     if not os.path.isfile(data_file):
+        os.makedirs(data_dir, exist_ok=True)
         pooch.retrieve(
             url=url, known_hash=known_hash, fname=file_name, path=data_dir
         )
