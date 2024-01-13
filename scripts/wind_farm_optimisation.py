@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 from shapely.geometry import Point
 
@@ -32,8 +33,8 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 # ## Constraints
 
-# 500 m buffer - suggested in draft OREDP II p. 108
-wells, wells_b = fns.constraint_exploration_well(
+# exploration wells
+_, wells_b = fns.constraint_exploration_well(
     data_path=os.path.join(
         "data",
         "exploration-wells",
@@ -41,8 +42,7 @@ wells, wells_b = fns.constraint_exploration_well(
     )
 )
 
-# the shapes are used as is without a buffer - suggested for renewable energy
-# test site areas in draft OREDP II p. 109
+# wind farms
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "wind-farms-foreshore-process.zip"
@@ -50,32 +50,33 @@ wind_farms = fns.constraint_wind_farm(
     dat_extent=extent,
 )
 
-# 1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
-shipping, shipping_b = fns.constraint_shipping_routes(
+# frequent shipping routes
+_, shipping_b = fns.constraint_shipping_routes(
     data_path=os.path.join(
         "data", "shipping", "shipping_frequently_used_routes.zip"
     ),
     dat_extent=extent,
 )
 
-# Archaeological Exclusion Zones recommendation - 100 m buffer
-shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
+# shipwrecks
+_, shipwrecks_b = fns.constraint_shipwrecks(
     data_path=os.path.join(
         "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
     ),
     dat_extent=extent,
 )
 
-# 750 m buffer - suggested in draft OREDP II p. 109-111
-cables, cables_b = fns.constraint_subsea_cables(
+# subsea cables
+_, cables_b = fns.constraint_subsea_cables(
     data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
+# distance from salt formation edge
 edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 # ## Zones of interest
 
-# height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
+# height = 155 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
 # separation = 320 m
 zones, zds = fns.zones_of_interest(
     dat_xr=ds,
@@ -84,7 +85,7 @@ zones, zds = fns.zones_of_interest(
 
 # ## Exclusions
 
-caverns, caverns_excl = fns.generate_caverns_with_constraints(
+caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
@@ -107,39 +108,8 @@ caverns = fns.label_caverns(
 
 # ## Capacity [GWh]
 
-caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
-caverns["cavern_volume"] = cap.corrected_cavern_volume(
-    v_cavern=caverns["cavern_volume"]
-)
-
-caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
-    height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
-)
-
-(
-    caverns["p_operating_min"],
-    caverns["p_operating_max"],
-) = cap.pressure_operating(thickness_overburden=caverns["TopDepthSeabed"])
-
-caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
-    p_operating_min=caverns["p_operating_min"],
-    p_operating_max=caverns["p_operating_max"],
-    t_mid_point=caverns["t_mid_point"],
-)
-
-(
-    caverns["working_mass"],
-    caverns["mass_operating_min"],
-    caverns["mass_operating_max"],
-) = cap.mass_hydrogen_working(
-    rho_h2_min=caverns["rho_min"],
-    rho_h2_max=caverns["rho_max"],
-    v_cavern=caverns["cavern_volume"],
-)
-
-caverns["capacity"] = cap.energy_storage_capacity(
-    m_working=caverns["working_mass"]
-)
+# calculate volumes and capacities
+caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
 # total capacity
 caverns[["capacity"]].sum().iloc[0]
@@ -150,7 +120,7 @@ caverns[["working_mass"]].sum().iloc[0]
 # ## Power curve [MW] and Weibull wind speed distribution
 
 # extract data for wind farms at 150 m
-weibull = fns.read_weibull_data(
+data = fns.read_weibull_data(
     data_path_weibull=os.path.join(
         "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
     ),
@@ -160,11 +130,11 @@ weibull = fns.read_weibull_data(
     dat_extent=extent,
 )
 
-weibull
+data
 
 # generate Weibull distribution
 ref_data = {}
-for n in weibull["Name"]:
+for n in data["Name"]:
     ref_data[n] = {}
     ref_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3100)]
     ref_data[n]["power_curve"] = []
@@ -174,8 +144,8 @@ for n in weibull["Name"]:
         ref_data[n][n].append(
             opt.weibull_probability_distribution(
                 v=v,
-                k=weibull[weibull["Name"] == n][("k", "mean")].iloc[0],
-                c=weibull[weibull["Name"] == n][("c", "mean")].iloc[0],
+                k=data[data["Name"] == n][("k", "mean")].iloc[0],
+                c=data[data["Name"] == n][("c", "mean")].iloc[0],
             )
         )
     ref_data[n] = pd.DataFrame(ref_data[n])
@@ -189,7 +159,7 @@ ax = ref_data.plot(
     y="power_curve",
     ylabel="Power [MW]",
     linewidth=3,
-    color="crimson",
+    color=sns.color_palette("flare", 256)[127],
     figsize=(12, 6),
     legend=False,
 )
@@ -215,36 +185,63 @@ sns.despine()
 # ## Annual energy production [MWh]
 
 # max wind farm capacity
-weibull["capacity"] = [1300, 824, 500]
+data["capacity"] = [1300, 824, 500]
 
 # number of 15 MW turbines, rounded down to the nearest integer
-weibull["n_turbines"] = (weibull["capacity"] / 15).astype(int)
+data["n_turbines"] = (data["capacity"] / 15).astype(int)
 
-data = []
-integral = []
-abserr = []
-for n in weibull["Name"]:
+aep = []
+for n in data["Name"]:
     aepwt = opt.annual_energy_production(
-        n_turbines=weibull[weibull["Name"] == n]["n_turbines"].iloc[0],
-        k=weibull[weibull["Name"] == n][("k", "mean")].iloc[0],
-        c=weibull[weibull["Name"] == n][("c", "mean")].iloc[0],
+        n_turbines=data[data["Name"] == n]["n_turbines"].iloc[0],
+        k=data[data["Name"] == n][("k", "mean")].iloc[0],
+        c=data[data["Name"] == n][("c", "mean")].iloc[0],
     )
-    data.append(aepwt)
+    aep.append(aepwt)
 
-data = pd.DataFrame(data)
-data.columns = ["AEP", "integral", "abserr"]
+aep = pd.DataFrame(aep)
+aep.columns = ["AEP", "integral", "abserr"]
 
-data = pd.concat([weibull, data], axis=1)
+data = pd.concat([data, aep], axis=1)
 
 # ## Annual hydrogen production [kg]
 
 data["AHP"] = opt.annual_hydrogen_production(aep=data["AEP"])
 
-# ### AHP as a proportion of the total working mass
+# ## AHP as a proportion of the total working mass
 
 data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
 
 data
+
+# ## Number of caverns required based on cumulative working mass and AHP
+
+working_mass_cumsum_1 = (
+    caverns.sort_values("working_mass", ascending=False)
+    .reset_index()["working_mass"]
+    .cumsum()
+)
+
+working_mass_cumsum_2 = (
+    caverns.sort_values("working_mass").reset_index()["working_mass"].cumsum()
+)
+
+for x in range(len(data)):
+    print(data["Name"].iloc[x])
+    print("Working mass [kg]:", data["AHP"].iloc[x])
+    print(
+        "Number of caverns required:",
+        working_mass_cumsum_1.loc[working_mass_cumsum_1 >= data["AHP"].iloc[x]]
+        .head(1)
+        .index[0]
+        + 1,
+        "-",
+        working_mass_cumsum_2.loc[working_mass_cumsum_2 >= data["AHP"].iloc[x]]
+        .head(1)
+        .index[0]
+        + 1,
+    )
+    print("-" * 50)
 
 # ## Calculate distance between caverns and the wind farms and injection point [km]
 
@@ -317,157 +314,94 @@ caverns[
     ]
 ].describe()
 
+# ## Maps
 
-def plot_map_alt(
-    dat_xr,
-    cavern_df,
-    zones_gdf,
-    column,
-    classes,
-    colours,
-    labels,
-    fontsize=11.5,
-):
-    """
-    Helper function to plot caverns within the zones of interest
-    """
-    plt.figure(figsize=(20, 11.5))
-    axis = plt.axes(projection=ccrs.epsg(rd.CRS))
+shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
+
+
+def plot_map_facet(cavern_df, classes, fontsize=11.5):
+    """Helper function for plotting LCOT facet maps"""
+    fig = plt.figure(figsize=(11, 11.75))
+    xmin_, ymin_, xmax_, ymax_ = cavern_df.total_bounds
+    colours = [
+        int(n * 255 / (len(classes) - 2)) for n in range(len(classes) - 1)
+    ]
     legend_handles = []
 
-    # halite boundary - use buffering to smooth the outline
-    shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
-    shape.plot(
-        ax=axis,
-        edgecolor="darkslategrey",
-        color="none",
-        linewidth=2,
-        alpha=0.5,
-        zorder=2,
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            linewidth=2,
-            edgecolor="darkslategrey",
-            label="Kish Basin boundary",
-            alpha=0.5,
+    for a, wf in enumerate(["Codling", "Dublin", "NISA"]):
+        ax = fig.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
+        gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
+            ax=ax,
+            scheme="UserDefined",
+            classification_kwds={"bins": classes[1:]},
+            column=f"LCOT_{wf}",
+            zorder=2,
+            marker=".",
+            cmap="flare",
+            markersize=8,
         )
-    )
-
-    zones_gdf.plot(
-        ax=axis, zorder=1, linewidth=0, facecolor="white", alpha=0.45
-    )
-    zones_gdf.plot(
-        ax=axis,
-        zorder=2,
-        edgecolor="slategrey",
-        linestyle="dotted",
-        linewidth=1.25,
-        facecolor="none",
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            linestyle="dotted",
-            edgecolor="slategrey",
-            label="Area of interest",
-            linewidth=1.25,
+        shape.plot(
+            ax=ax, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
         )
-    )
-
-    pd.concat(
-        [wells_b, shipwrecks_b, shipping_b, cables_b, wind_farms]
-    ).dissolve().clip(shape).plot(
-        ax=axis,
-        facecolor="none",
-        linewidth=0.65,
-        edgecolor="slategrey",
-        zorder=2,
-        alpha=0.5,
-        hatch="//",
-    )
-    legend_handles.append(
-        mpatches.Patch(
-            facecolor="none",
-            hatch="//",
-            edgecolor="slategrey",
-            label="Exclusion",
-            alpha=0.65,
-            linewidth=0.5,
+        cx.add_basemap(
+            ax,
+            crs=rd.CRS,
+            source=cx.providers.CartoDB.VoyagerNoLabels,
+            attribution=False,
         )
-    )
-
-    legend_handles.append(
-        mpatches.Patch(label="Pipeline LCOT [€ kg⁻¹]", visible=False)
-    )
-
-    for x, y, z in zip(classes, colours, labels):
-        if x == 0:
-            c = cavern_df[cavern_df[column] < x + 0.04]
-        elif x == 0.16:
-            c = cavern_df[cavern_df[column] >= x]
+        if a in (0, 2):
+            draw_labels = {"bottom": "x", "left": "y"}
         else:
-            c = cavern_df[
-                (cavern_df[column] >= x) & (cavern_df[column] < x + 0.04)
-            ]
-        if len(c) > 0:
-            c.centroid.plot(
-                ax=axis,
-                zorder=3,
-                linewidth=0,
-                marker=".",
-                # markersize=markersize,
-                color=sns.color_palette("flare", 256)[y],
+            draw_labels = {"bottom": "x"}
+        ax.gridlines(
+            draw_labels=draw_labels,
+            color="none",
+            xlabel_style={"fontsize": fontsize},
+            ylabel_style={"fontsize": fontsize},
+            xformatter=LongitudeFormatter(number_format=".2f"),
+            yformatter=LatitudeFormatter(number_format=".2f"),
+        )
+        if a == 2:
+            ax.add_artist(
+                ScaleBar(
+                    1,
+                    box_alpha=0,
+                    location="lower right",
+                    color="darkslategrey",
+                    font_properties={"size": fontsize},
+                )
             )
+        plt.xlim(xmin_ - 1000, xmax_ + 1000)
+        plt.ylim(ymin_ - 1000, ymax_ + 1000)
+        if wf == "Codling":
+            ax.set_title(f"{wf} Wind Park")
+        elif wf == "Dublin":
+            ax.set_title(f"{wf} Array")
+        else:
+            ax.set_title("North Irish Sea Array")
+
+    for n, c in enumerate(colours):
+        if n == 0:
+            l = f"< {classes[1:][n]}"
+        elif n == len(colours) - 1:
+            l = f"≥ {classes[1:][-2]}"
+        else:
+            l = f"{classes[1:][n - 1]} - {classes[1:][n]}"
         legend_handles.append(
             mpatches.Patch(
-                facecolor=sns.color_palette("flare", 256)[y], label=z
+                facecolor=sns.color_palette("flare", 256)[c], label=l
             )
         )
-
-    plt.xlim(shape.bounds["minx"][0] - 1000, shape.bounds["maxx"][0] + 1000)
-    plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
-
-    cx.add_basemap(
-        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
-    )
-    axis.gridlines(
-        draw_labels={"bottom": "x", "left": "y"},
-        alpha=0.25,
-        color="darkslategrey",
-        xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize},
-    )
-    axis.add_artist(
-        ScaleBar(
-            1,
-            box_alpha=0,
-            location="lower right",
-            color="darkslategrey",
-            width_fraction=0.0075,
-            font_properties={"size": fontsize},
+        plt.legend(
+            loc="lower right",
+            bbox_to_anchor=(1, 0.075),
+            handles=legend_handles,
+            title="Pipeline LCOT [€ kg⁻¹]",
+            fontsize=fontsize,
+            title_fontsize=fontsize,
         )
-    )
-    plt.legend(
-        loc="lower right",
-        bbox_to_anchor=(1, 0.05),
-        handles=legend_handles,
-        fontsize=fontsize,
-    )
-
     plt.tight_layout()
     plt.show()
 
 
-for wf in ["Codling", "Dublin", "NISA"]:
-    print(wf)
-    plot_map_alt(
-        ds,
-        caverns,
-        zones,
-        f"LCOT_{wf}",
-        [0.04 * n for n in range(5)],
-        [0] + [int(256 / 4) + int(256 / 4) * n - 1 for n in range(4)],
-        ["< 0.04", "0.04 - 0.08", "0.08 - 0.12", "0.12 - 0.16", "≥ 0.16"],
-    )
+plot_map_facet(caverns, [0.04 * n for n in range(6)])

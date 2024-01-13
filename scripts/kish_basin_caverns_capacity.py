@@ -7,6 +7,7 @@ import os
 
 import cartopy.crs as ccrs
 import contextily as cx
+import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -309,23 +310,35 @@ def plot_map_alt(
                 & (cavern_df["capacity"] < classes[n + 1])
             ]
             label = f"{classes[n]} - {classes[n + 1]}"
-        for df, markersize in zip(
-            [
-                c[c["depth"] == "500 - 1,000"],
-                c[c["depth"] == "1,000 - 1,500"],
-                c[c["depth"] == "1,500 - 2,000"],
-            ],
-            [20, 50, 20],
-        ):
-            if len(df) > 0:
-                df.centroid.plot(
-                    ax=axis,
-                    zorder=3,
-                    linewidth=0,
-                    marker=".",
-                    markersize=markersize,
-                    color=sns.color_palette("flare", 256)[y],
-                )
+        if top_depth:
+            for df, markersize in zip(
+                [
+                    c[c["depth"] == "500 - 1,000"],
+                    c[c["depth"] == "1,000 - 1,500"],
+                    c[c["depth"] == "1,500 - 2,000"],
+                ],
+                [20, 50, 20],
+            ):
+                if len(df) > 0:
+                    df.centroid.plot(
+                        ax=axis,
+                        zorder=3,
+                        linewidth=0,
+                        marker=".",
+                        markersize=markersize,
+                        color=sns.color_palette("flare", 256)[y],
+                    )
+        else:
+            gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
+                ax=axis,
+                scheme="UserDefined",
+                classification_kwds={"bins": classes[1:]},
+                column="capacity",
+                zorder=3,
+                marker=".",
+                cmap="flare",
+                markersize=20,
+            )
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[y], label=label
@@ -396,7 +409,7 @@ zones, zds = fns.zones_of_interest(
     constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
 )
 
-caverns, caverns_excl = fns.generate_caverns_with_constraints(
+caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,

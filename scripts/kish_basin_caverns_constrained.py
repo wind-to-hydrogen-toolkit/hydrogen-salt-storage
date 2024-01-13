@@ -173,10 +173,7 @@ buffer = buffer.overlay(land, how="difference")
 
 
 def plot_map(dat_xr):
-    """
-    Helper function to plot halite layer and caverns within the zones of
-    interest
-    """
+    """Helper function to plot constraints and exclusions"""
     # initialise figure
     plt.figure(figsize=(12, 8))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
@@ -272,9 +269,7 @@ plot_map(ds)
 
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
-    """
-    Helper function to plot caverns within the zones of interest
-    """
+    """Helper function to plot caverns within the zones of interest"""
     plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
@@ -488,5 +483,23 @@ s["%"] = s["geometry"] / len(caverns) * 100
 s
 
 s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby("halite", sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "height"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "depth"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "height", "depth"], sort=False).count()[
+    ["geometry"]
+]
 s["%"] = s["geometry"] / len(caverns) * 100
 s

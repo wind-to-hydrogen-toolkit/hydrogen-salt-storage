@@ -125,11 +125,11 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 # ### Cavern calculations in a regular square grid
 
 # diameter = 80 m, separation = 320 m
-caverns = fns.generate_caverns_square_grid(
-    dat_extent=extent, zones_df=zones, diameter=80, separation=80 * 4
-)
+caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
 
 len_square = len(caverns)
+
+len_square
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
@@ -140,6 +140,8 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 len_hex = len(caverns)
+
+len_hex
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
