@@ -382,14 +382,14 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
 
     for n, c in enumerate(colours):
         if n == 0:
-            l = f"< {classes[1:][n]}"
+            label = f"< {classes[1:][n]}"
         elif n == len(colours) - 1:
-            l = f"≥ {classes[1:][-2]}"
+            label = f"≥ {classes[1:][-2]}"
         else:
-            l = f"{classes[1:][n - 1]} - {classes[1:][n]}"
+            label = f"{classes[1:][n - 1]} - {classes[1:][n]}"
         legend_handles.append(
             mpatches.Patch(
-                facecolor=sns.color_palette("flare", 256)[c], label=l
+                facecolor=sns.color_palette("flare", 256)[c], label=label
             )
         )
         plt.legend(
