@@ -1,8 +1,6 @@
 # Storage of hydrogen from offshore wind in salt caverns
 
-Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
-
-This research was supported by a research grant from Science Foundation Ireland (SFI) under Grant No. 12/RC/2302 – P2 and by the H-Wind academic-industry consortium members: DP Energy, ESB, Equinor, and Gas Networks Ireland.
+Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
 ## Documentation
 
@@ -10,13 +8,32 @@ Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Installation
 
-This project uses Python 3.11.
+This project uses [Python](https://www.python.org/) 3.11.
+
+### Installation of the `h2ss` module
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
+```
+
+### Installation of the project (including notebooks) from source
+
+Clone this Git repository:
+
+```sh
+git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+cd hydrogen-salt-storage
+```
 
 Create a virtual environment and install all requirements:
 
 ```sh
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
@@ -41,3 +58,7 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 <https://www.apache.org/licenses/LICENSE-2.0>
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+## Acknowledgements
+
+This research was supported by a research grant from [Science Foundation Ireland (SFI)](http://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the [H-Wind](https://www.marei.ie/project/h-wind) academic-industry consortium members: [DP Energy](https://dpenergy.com/), [ESB](https://esb.ie/), [Equinor](https://www.equinor.com/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).

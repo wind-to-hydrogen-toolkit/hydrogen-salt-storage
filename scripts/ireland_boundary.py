@@ -5,7 +5,8 @@
 #
 # Provinces - OSi National Statutory Boundaries - 2019 - Ungeneralised
 #
-# <https://data.gov.ie/dataset/provinces-osi-national-statutory-boundaries-2019>
+# - <https://data.gov.ie/dataset/provinces-national-statutory-boundaries-2019>
+# - <https://data-osi.opendata.arcgis.com/maps/osi::provinces-national-statutory-boundaries-2019>
 
 import os
 from zipfile import ZipFile

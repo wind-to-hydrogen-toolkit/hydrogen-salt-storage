@@ -21,9 +21,9 @@ from h2ss import data as rd
 # base data download directory
 DATA_DIR = os.path.join("data", "subsea-cables")
 
-URL = "https://kis-orca.org/wp-content/uploads/2020/12/Olex_KIS-ORCA-v2023.zip"
-
 FILE_NAME = "Olex_KIS-ORCA-v2023.zip"
+
+URL = f"https://kis-orca.org/wp-content/uploads/2020/12/{FILE_NAME}"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 

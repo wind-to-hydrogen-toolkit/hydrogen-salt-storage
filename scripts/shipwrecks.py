@@ -16,12 +16,12 @@ from h2ss import data as rd
 # base data download directory
 DATA_DIR = os.path.join("data", "shipwrecks")
 
+FILE_NAME = "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+
 URL = (
     "https://gsi.geodata.gov.ie/downloads/Marine/Data/Downloads/Shapefiles/"
-    "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+    + FILE_NAME
 )
-
-FILE_NAME = "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 

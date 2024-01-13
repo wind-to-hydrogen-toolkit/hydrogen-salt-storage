@@ -262,9 +262,9 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     This function uses the CoolProp [#Bell14]_ wrapper called PyFluids
     [#PyFluids]_. See [#Williams22]_, Section 3.4.2 and also the CoolProp
     documentation for useful information on hydrogen [#CoolProp]_.
-    The `pyproject.toml` configuration file has been set such that the default
-    units used by PyFluids are SI units. PyFluids can also be used to derive
-    the compressibility factor.
+    The ``pyproject.toml`` configuration file has been set such that the
+    default units used by PyFluids are SI units. PyFluids can also be used to
+    derive the compressibility factor.
 
     Based on [#Caglayan20]_, Eqn. (3), the density can be approximated using
     the following equation.
@@ -360,3 +360,53 @@ def energy_storage_capacity(m_working, lhv=119.96):
         E = m_{working} \\, \\frac{LHV}{3,600,000}
     """
     return m_working * lhv / 3.6e6
+
+
+def calculate_capacity_dataframe(cavern_df):
+    """Calculate volumes and storage capacities for a dataframe of caverns.
+
+    Parameters
+    ----------
+    cavern_df : gpd.GeoDataFrame
+        Dataframe of caverns
+
+    gpd.GeoDataFrame
+        Updated dataframe of caverns with volume and capacity values
+    """
+    cavern_df["cavern_volume"] = cavern_volume(
+        height=cavern_df["cavern_height"]
+    )
+    cavern_df["cavern_volume"] = corrected_cavern_volume(
+        v_cavern=cavern_df["cavern_volume"]
+    )
+
+    cavern_df["t_mid_point"] = temperature_cavern_mid_point(
+        height=cavern_df["cavern_height"], depth_top=cavern_df["cavern_depth"]
+    )
+
+    (
+        cavern_df["p_operating_min"],
+        cavern_df["p_operating_max"],
+    ) = pressure_operating(thickness_overburden=cavern_df["TopDepthSeabed"])
+
+    cavern_df["rho_min"], cavern_df["rho_max"] = density_hydrogen_gas(
+        p_operating_min=cavern_df["p_operating_min"],
+        p_operating_max=cavern_df["p_operating_max"],
+        t_mid_point=cavern_df["t_mid_point"],
+    )
+
+    (
+        cavern_df["working_mass"],
+        cavern_df["mass_operating_min"],
+        cavern_df["mass_operating_max"],
+    ) = mass_hydrogen_working(
+        rho_h2_min=cavern_df["rho_min"],
+        rho_h2_max=cavern_df["rho_max"],
+        v_cavern=cavern_df["cavern_volume"],
+    )
+
+    cavern_df["capacity"] = energy_storage_capacity(
+        m_working=cavern_df["working_mass"]
+    )
+
+    return cavern_df

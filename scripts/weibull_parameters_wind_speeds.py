@@ -3,7 +3,8 @@
 
 # # Weibull parameters of wind speeds - 150m above ground level
 #
-# <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
+# - <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
+# - <https://gis.seai.ie/wind/>
 
 import os
 from zipfile import ZipFile
@@ -22,12 +23,9 @@ from h2ss import functions as fns
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")
 
-URL = (
-    "https://seaiopendata.blob.core.windows.net/wind/"
-    "Weibull_150m_params_ITM.zip"
-)
-
 FILE_NAME = "Weibull_150m_params_ITM.zip"
+
+URL = f"https://seaiopendata.blob.core.windows.net/wind/{FILE_NAME}"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 

@@ -3,7 +3,8 @@
 
 # # Frequently used shipping routes (300 gross tonnes and above)
 #
-# <https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1>
+# - <https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1>
+# - <https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above>
 
 import os
 from zipfile import ZipFile

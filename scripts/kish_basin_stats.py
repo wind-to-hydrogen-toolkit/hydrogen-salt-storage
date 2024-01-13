@@ -168,7 +168,16 @@ shape = rd.halite_shape(dat_xr=ds)
 f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
 
 
-def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels, label):
+def plot_facet_maps_distr(
+    dat_xr,
+    dat_extent,
+    dat_crs,
+    v,
+    levels,
+    label,
+    scalebar=True,
+    attribution=True,
+):
     """
     Helper function to plot facet maps of the halite layers
 
@@ -218,19 +227,24 @@ def plot_facet_maps_distr(dat_xr, dat_extent, dat_crs, v, levels, label):
                 xformatter=LongitudeFormatter(number_format=".2f"),
             )
         if n == 3:
-            axis.add_artist(
-                ScaleBar(
-                    1,
-                    box_alpha=0,
-                    location="lower right",
-                    color="darkslategrey",
-                    width_fraction=0.015,
+            if scalebar:
+                axis.add_artist(
+                    ScaleBar(
+                        1,
+                        box_alpha=0,
+                        location="lower right",
+                        color="darkslategrey",
+                        width_fraction=0.015,
+                    )
                 )
-            )
         if n == 2:
-            axis.text(
-                xmin_ + 1000, ymin_ + 1000, basemap["attribution"], fontsize=9
-            )
+            if attribution:
+                axis.text(
+                    xmin_ + 1000,
+                    ymin_ + 1000,
+                    basemap["attribution"],
+                    fontsize=9,
+                )
     f.set_titles("{value}", weight="semibold")
     plt.show()
 
@@ -242,6 +256,7 @@ plot_facet_maps_distr(
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
     "Top Depth [m]",
+    scalebar=False,
 )
 
 plot_facet_maps_distr(
@@ -251,6 +266,7 @@ plot_facet_maps_distr(
     "Thickness",
     [85 + 90, 155 + 90, 311 + 90],
     "Thickness [m]",
+    attribution=False,
 )
 
 # compare depths

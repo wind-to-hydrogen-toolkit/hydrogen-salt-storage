@@ -244,7 +244,8 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     Notes
     -----
     Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are based on
-    Table 3 of [#Dinh21]_ for PEM electrolysers predicted for 2030.
+    Table 3 of [#Dinh21]_ for proton exchange membrane (PEM) electrolysers
+    predicted for the year 2030.
 
     .. math::
         AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
@@ -259,7 +260,7 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     return aep / (e_elec / eta_conv + e_pcl)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
+def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -270,7 +271,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
         Electrolyser production rate [kg s⁻¹ MW⁻¹]
     rho : float
         Mass density of hydrogen [kg m⁻³]
-    v : float
+    u : float
         Average fluid velocity [m s⁻¹]
 
     Returns
@@ -301,17 +302,17 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, v=15):
 
     .. math::
         CAPEX_{pipe} = 2 \\, \\left( 16,000,000 \\, \\frac{E_{cap}
-        \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi} + 1,197,200 \\,
-        \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot v \\cdot \\pi}}
+        \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi} + 1,197,200 \\,
+        \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi}}
         + 329,000 \\right)
 
     where :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`E_{cap}` is the electrolyser capacity [MW],
     :math:`P_{rate}` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
-    :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`v` is
+    :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`u` is
     the average fluid velocity [m s⁻¹].
     """
-    f = e_cap * p_rate / (rho * v * np.pi)
+    f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
 

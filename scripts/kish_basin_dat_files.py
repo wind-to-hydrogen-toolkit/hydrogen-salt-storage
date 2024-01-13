@@ -23,9 +23,9 @@ from h2ss import data as rd
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
 
-URL = "https://hyss.ie/wp-content/uploads/2023/07/Kish-Basin-dat-files.zip"
-
 FILE_NAME = "Kish-Basin-dat-files.zip"
+
+URL = f"https://hyss.ie/wp-content/uploads/2023/07/{FILE_NAME}"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 

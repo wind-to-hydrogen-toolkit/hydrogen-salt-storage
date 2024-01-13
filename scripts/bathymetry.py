@@ -29,7 +29,7 @@ DATA_DIR = os.path.join("data", "bathymetry")
 # DTM tile D4
 FILE_NAME = "D4_2022.nc.zip"
 
-URL = "https://downloads.emodnet-bathymetry.eu/v11/" + FILE_NAME
+URL = f"https://downloads.emodnet-bathymetry.eu/v11/{FILE_NAME}"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 

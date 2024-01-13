@@ -3,7 +3,8 @@
 
 # # Offshore wind farms
 #
-# <https://data.gov.ie/dataset/wind-farms-foreshore-process>
+# - <https://data.gov.ie/dataset/wind-farms-foreshore-process>
+# - <https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process>
 
 import os
 from zipfile import ZipFile

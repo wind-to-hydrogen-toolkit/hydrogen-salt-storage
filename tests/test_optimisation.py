@@ -1,4 +1,4 @@
-"""test `h2ss.optimisation` functions.
+"""test ``h2ss.optimisation`` functions.
 
 """
 
@@ -9,7 +9,7 @@ from h2ss import optimisation as opt
 
 
 def test_ref_power_curve():
-    """Test `h2ss.optimisation.ref_power_curve`"""
+    """Test ``h2ss.optimisation.ref_power_curve``"""
     wind_speeds = list(range(31))
     power_curve = (
         [0] * 4
@@ -25,7 +25,7 @@ def test_ref_power_curve():
 
 
 def test_weibull_probability_distribution():
-    """Test `h2ss.optimisation.weibull_probability_distribution`"""
+    """Test ``h2ss.optimisation.weibull_probability_distribution``"""
     k_vals = [1.4, 1.7, 2.0, 2.15, 2.25]
     c_vals = [5.1, 9.2, 10.4, 8, 12]
     v_vals = [0, 7.2, 11.7, 14.6, 28, 20]
@@ -52,7 +52,7 @@ def integrate_lambda(k, c):
 
 
 def test_annual_energy_production():
-    """Test `h2ss.optimisation.annual_energy_production`"""
+    """Test ``h2ss.optimisation.annual_energy_production``"""
     n_turbines = [50, 65, 80, 95]
     k_vals = [1.4, 1.7, 1.9, 2.0, 2.15]
     c_vals = [5.1, 9.2, 11, 10.4, 8]
@@ -77,7 +77,7 @@ def test_annual_energy_production():
 
 
 def test_annual_hydrogen_production():
-    """Test `h2ss.optimisation.annual_hydrogen_production`"""
+    """Test ``h2ss.optimisation.annual_hydrogen_production``"""
     aep = 15e6
     e_elec = 0.07
     eta_conv = 0.9
@@ -88,7 +88,7 @@ def test_annual_hydrogen_production():
 
 
 def test_capex_pipeline():
-    """Test `h2ss.optimisation.capex_pipeline`"""
+    """Test ``h2ss.optimisation.capex_pipeline``"""
     e_cap = 500
     p_rate = 0.006
     capex = 2 * (
@@ -100,7 +100,7 @@ def test_capex_pipeline():
 
 
 def test_lcot_pipeline():
-    """Test `h2ss.optimisation.lcot_pipeline`"""
+    """Test ``h2ss.optimisation.lcot_pipeline``"""
     capex = 1000
     transmission_distance = 100
     ahp = 500

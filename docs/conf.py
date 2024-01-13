@@ -21,6 +21,7 @@ github_url = f"https://github.com/nmstreethran/{project}"
 
 extensions = [
     "sphinx.ext.autodoc",
+    # "sphinx.ext.viewcode",
     "myst_nb",
 ]
 

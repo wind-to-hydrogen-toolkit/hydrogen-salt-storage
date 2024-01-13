@@ -101,21 +101,21 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={"shipping": shipping_b},
+    exclusions={"shipping": shipping_b, "edge": edge_buffer},
 )
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={"cables": cables_b},
+    exclusions={"cables": cables_b, "edge": edge_buffer},
 )
 
 caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
-    exclusions={"wind_farms": wind_farms},
+    exclusions={"wind_farms": wind_farms, "edge": edge_buffer},
 )
 
 # ### Exclude all
@@ -136,7 +136,7 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
 
 caverns.describe()[["Thickness", "TopDepthSeabed"]]
 
-# excluded areas
+# caverns in excluded areas
 caverns_excl.describe()[["Thickness", "TopDepthSeabed"]]
 
 # label caverns by height and depth
@@ -173,42 +173,15 @@ buffer = buffer.overlay(land, how="difference")
 
 
 def plot_map(dat_xr):
-    """
-    Helper function to plot halite layer and caverns within the zones of
-    interest
-    """
+    """Helper function to plot constraints and exclusions"""
     # initialise figure
     plt.figure(figsize=(12, 8))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
-
-    # # configure colour bar based on variable
-    # if var == "TopTWT":
-    #     units = "ms"
-    # else:
-    #     units = "m"
-    # cbar_label = f"{dat_xr[var].attrs['long_name']} [{units}]"
-    # if stat == "max":
-    #     plot_data = dat_xr.max(dim="halite", skipna=True)
-    #     cbar_label = f"Maximum Halite {cbar_label}"
-    # elif stat == "min":
-    #     plot_data = dat_xr.min(dim="halite", skipna=True)
-    #     cbar_label = f"Minimum Halite {cbar_label}"
-    # elif stat == "mean":
-    #     plot_data = dat_xr.mean(dim="halite", skipna=True)
-    #     cbar_label = f"Mean Halite {cbar_label}"
-
-    # # plot halite data
-    # plot_data[var].plot.contourf(
-    #     cmap="jet", alpha=.65, robust=True, levels=15,
-    #     cbar_kwargs={"label": cbar_label}
-    # )
 
     # halite boundary - use buffering to smooth the outline
     shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
 
     # configure map limits
-    # plt.xlim(xmin - 1450, xmax + 500)
-    # plt.ylim(ymin - 500, ymax + 500)
     plt.xlim(shape.bounds["minx"][0] - 10000, shape.bounds["maxx"][0] + 1500)
     plt.ylim(shape.bounds["miny"][0] - 1500, shape.bounds["maxy"][0] + 1500)
 
@@ -296,9 +269,7 @@ plot_map(ds)
 
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
-    """
-    Helper function to plot caverns within the zones of interest
-    """
+    """Helper function to plot caverns within the zones of interest"""
     plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
@@ -339,7 +310,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
             facecolor="none",
             linestyle="dotted",
             edgecolor="slategrey",
-            label="Feasible area",
+            label="Area of interest",
             linewidth=1.25,
         )
     )
@@ -358,7 +329,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
             facecolor="none",
             hatch="//",
             edgecolor="slategrey",
-            label="Exclusion area",
+            label="Exclusion",
             alpha=0.65,
             linewidth=0.5,
         )
@@ -392,11 +363,6 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
         sns.color_palette("flare", 256)[-1],
     ]
     for color, label in zip(palette, ["85", "155", "311"]):
-        # legend_handles.append(
-        #     Line2D(
-        #         [0], [0], marker="o", linewidth=0, label=label, color=color
-        #     )
-        # )
         legend_handles.append(mpatches.Patch(facecolor=color, label=label))
     legend_handles.append(
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
@@ -420,7 +386,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
     cx.add_basemap(
-        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels
+        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels, zoom=12
     )
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
@@ -517,5 +483,23 @@ s["%"] = s["geometry"] / len(caverns) * 100
 s
 
 s = caverns.groupby(["height", "depth"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby("halite", sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "height"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "depth"], sort=False).count()[["geometry"]]
+s["%"] = s["geometry"] / len(caverns) * 100
+s
+
+s = caverns.groupby(["halite", "height", "depth"], sort=False).count()[
+    ["geometry"]
+]
 s["%"] = s["geometry"] / len(caverns) * 100
 s
