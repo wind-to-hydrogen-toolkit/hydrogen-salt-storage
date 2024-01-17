@@ -456,14 +456,4 @@ caverns[["cavern_volume"]].sum().iloc[0]
 # total capacity
 caverns[["capacity"]].sum().iloc[0]
 
-ax = sns.histplot(
-    caverns, x="capacity", alpha=1, color=sns.color_palette("flare", 5)[2]
-)
-ax.set_xlabel("Hydrogen storage capacity [GWh]")
-ax.grid(which="major", axis="y")
-ax.set_ylabel("Number of caverns")
-sns.despine()
-plt.tight_layout()
-plt.show()
-
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)

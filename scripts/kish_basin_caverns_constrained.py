@@ -421,6 +421,37 @@ plot_map_alt(ds, caverns, zones)
 # ## Stats
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
+sns.histplot(
+    caverns.sort_values("halite"),
+    x="TopDepthSeabed",
+    palette="rocket_r",
+    multiple="stack",
+    hue="halite",
+    alpha=1,
+    bins=25,
+    ax=axes[0],
+    legend=False,
+)
+sns.histplot(
+    caverns.sort_values("halite").rename(columns={"halite": "Halite member"}),
+    x="Thickness",
+    hue="Halite member",
+    palette="rocket_r",
+    multiple="stack",
+    alpha=1,
+    bins=25,
+    ax=axes[1],
+)
+axes[0].set_xlabel("Halite top depth [m]")
+axes[1].set_xlabel("Halite thickness [m]")
+axes[0].grid(which="major", axis="y")
+axes[1].grid(which="major", axis="y")
+axes[0].set_ylabel("Number of caverns")
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
 sns.countplot(
     caverns.sort_values("halite"),
     ax=axes[0],
