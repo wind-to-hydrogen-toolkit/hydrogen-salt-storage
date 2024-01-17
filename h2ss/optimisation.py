@@ -20,7 +20,12 @@ References
     production from dedicated offshore wind farms’, International Journal of
     Hydrogen Energy, 46(48), pp. 24620–24631.
     https://doi.org/10.1016/j.ijhydene.2020.04.232.
-.. [#Dinh23b] Dinh, Q. V., Todesco Pereira, P. H., Dinh, V. N., Nagle, A. J.,
+.. [#Dinh23b] Dinh, Q. V., Dinh, V. N., and Leahy, P. (2023). ‘A method to map
+    the levelised cost of hydrogen from offshore wind farms coupled to onshore
+    electrolysers via HVDC’, IOP Conference Series: Earth and Environmental
+    Science, 1281(1), p. 012005.
+    https://doi.org/10.1088/1755-1315/1281/1/012005.
+.. [#Dinh23c] Dinh, Q. V., Todesco Pereira, P. H., Dinh, V. N., Nagle, A. J.,
     and Leahy, P. G. (2023). ‘Optimising the levelised cost of transmission
     for green hydrogen and ammonia in new-build offshore energy
     infrastructure: pipelines, tankers, and HVDC’.
@@ -260,6 +265,32 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     return aep / (e_elec / eta_conv + e_pcl)
 
 
+def electrolyser_capacity(owf_cap, loss=0.1):
+    """
+    Calculate the electrolyser capacity for a wind farm.
+
+    Parameters
+    ----------
+    owf_cap : float
+        Offshore wind farm capacity [MW]
+    loss : float
+        Electricity loss
+
+    Returns
+    -------
+    float
+        Electrolyser capacity [MW]
+
+    Notes
+    -----
+    Based on [#Dinh23b]_; the electrolyser capacity is the offshore wind farm
+    capacity minus electricity loss. Electricity loss includes wake loss and
+    transmission system loss. Since the electrolyser is situated at the
+    offshore wind farm, only the wake loss is considered.
+    """
+    return owf_cap * (1 - loss)
+
+
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
@@ -281,7 +312,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
 
     Notes
     -----
-    See Eqn. (18) of [#Dinh23a]_ and Section 3.1 of [#Dinh23b]_, from which
+    See Eqn. (18) of [#Dinh23a]_ and Section 3.1 of [#Dinh23c]_, from which
     the following text has been taken.
 
     The estimation of offshore pipeline costs is based on the onshore pipeline
@@ -350,7 +381,7 @@ def lcot_pipeline(
     Notes
     -----
     See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
-    (22) of [#Dinh23b]_; see Tables 2 and 3 for the assumptions and constants
+    (22) of [#Dinh23c]_; see Tables 2 and 3 for the assumptions and constants
     used.
 
     .. math::
