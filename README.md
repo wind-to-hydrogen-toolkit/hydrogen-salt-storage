@@ -1,14 +1,11 @@
 # Storage of hydrogen from offshore wind in salt caverns
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
+Read the Docs: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Acknowledgements
 
 This research was supported by a research grant from [Science Foundation Ireland (SFI)](http://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the [H-Wind](https://www.marei.ie/project/h-wind) academic-industry consortium members: [DP Energy](https://dpenergy.com/), [ESB](https://esb.ie/), [Equinor](https://www.equinor.com/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
-
-## Documentation
-
-Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Installation
 
@@ -44,6 +41,19 @@ To generate a coverage report with the tests:
 coverage run -m pytest && coverage report -m
 ```
 
+### Installation of the `h2ss` module
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
+```
+
+## Documentation
+
+Documentation is available at: <https://hydrogen-salt-storage.readthedocs.io>
+
 To build the documentation locally:
 
 ```sh
@@ -54,15 +64,6 @@ To clean build the documentation locally:
 
 ```sh
 cd docs && make clean html
-```
-
-### Installation of the `h2ss` module
-
-```sh
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
 ```
 
 ## Licence
