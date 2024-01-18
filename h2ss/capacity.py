@@ -216,21 +216,21 @@ def pressure_operating(
     See [#Williams22]_, Eqn. (3) and (4).
 
     .. math::
-        P_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
+        p_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
         \\cdot t_{salt}) \\, g
     .. math::
-        P_{min} = 0.3 \\, P_{casing}
+        p_{min} = 0.3 \\, p_{casing}
     .. math::
-        P_{max} = 0.8 \\, P_{casing}
+        p_{max} = 0.8 \\, p_{casing}
 
-    :math:`P_{casing}` is the lithostatic pressure at the casing shoe [Pa].
+    :math:`p_{casing}` is the lithostatic pressure at the casing shoe [Pa].
     The thickness of the overburden, :math:`t_{overburden}` [m] is the same
     as the depth to top of salt. :math:`t_{salt}` [m] is the thickness of
     the salt above the casing shoe. :math:`\\rho_{overburden}` and
     :math:`\\rho_{salt}` are the densities of the overburden and salt,
     respectively [kg m⁻³]. :math:`g` is the acceleration due to gravity
-    [m s⁻²]. :math:`P_{min}` and :math:`P_{max}` are the minimum and maximum
-    cavern operating pressures, respectively [Pa].
+    [m s⁻²]. :math:`p_{H2min}` and :math:`p_{H2max}` are the minimum and
+    maximum cavern operating pressures, respectively [Pa].
     """
     p_casing = (
         rho_overburden * thickness_overburden + rho_salt * thickness_salt
@@ -270,10 +270,10 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     the following equation.
 
     .. math::
-        \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
+        \\rho = \\frac{p \\cdot M}{Z \\cdot R \\cdot T}
 
     where :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is
-    the universal gas constant [J K⁻¹ mol⁻¹], :math:`P` is the pressure [Pa],
+    the universal gas constant [J K⁻¹ mol⁻¹], :math:`p` is the pressure [Pa],
     :math:`T` is the temperature [K], :math:`Z` is the compressibility factor,
     and :math:`\\rho` is the hydrogen gas density [kg m⁻³].
     """
@@ -315,9 +315,9 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     cushion gas requirement.
 
     .. math::
-        m_{min} = \\rho_{min} \\cdot V_{cavern}
+        m_{min} = \\rho_{H2min} \\cdot V_{cavern}
     .. math::
-        m_{max} = \\rho_{max} \\cdot V_{cavern}
+        m_{max} = \\rho_{H2max} \\cdot V_{cavern}
     .. math::
         m_{working} = m_{max} - m_{min}
 
@@ -352,12 +352,12 @@ def energy_storage_capacity(m_working, lhv=119.96):
     Notes
     -----
     See [#Williams22]_, Eqn. (7).
-    The energy storage capacity of the cavern, :math:`E` [GWh] is a function
-    of the working mass of hydrogen, :math:`m_{working}` [kg] and the lower
-    heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
+    The energy storage capacity of the cavern, :math:`E_{cavern}` [GWh] is a
+    function of the working mass of hydrogen, :math:`m_{working}` [kg] and the
+    lower heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
 
     .. math::
-        E = m_{working} \\, \\frac{LHV}{3,600,000}
+        E_{cavern} = m_{working} \\, \\frac{LHV}{3,600,000}
     """
     return m_working * lhv / 3.6e6
 
