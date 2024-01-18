@@ -177,6 +177,44 @@ def weibull_power_curve(v, k, c):
     return power_curve
 
 
+def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
+    """Number of reference wind turbines in the offshore wind farm.
+
+    Parameters
+    ----------
+    owf_cap : float
+        Maximum nameplate capacity of the proposed offshore wind farm [MW]
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
+
+    Returns
+    -------
+    float
+        Number of wind turbines in the wind farm consisting of the reference
+        wind turbine
+    """
+    return (owf_cap / wt_power).astype(int)
+
+
+def owf_capacity_ref_turbines(owf_cap, wt_power=REF_RATED_POWER):
+    """Number of reference wind turbines in the offshore wind farm.
+
+    Parameters
+    ----------
+    owf_cap : float
+        Maximum nameplate capacity of the proposed offshore wind farm [MW]
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
+
+    Returns
+    -------
+    float
+        Number of wind turbines in the wind farm consisting of the reference
+        wind turbine
+    """
+    return number_of_turbines(owf_cap=owf_cap, wt_power=wt_power) * wt_power
+
+
 def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     """Annual energy production of the wind farm.
 
@@ -265,16 +303,18 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     return aep / (e_elec / eta_conv + e_pcl)
 
 
-def electrolyser_capacity(owf_cap, loss=0.1):
+def electrolyser_capacity(owf_cap, loss=0.1, wt_power=REF_RATED_POWER):
     """
     Calculate the electrolyser capacity for a wind farm.
 
     Parameters
     ----------
     owf_cap : float
-        Offshore wind farm capacity [MW]
+        Maximum nameplate capacity of the propoded offshore wind farm [MW]
     loss : float
-        Electricity loss
+        Electricity loss due to wake and transmission
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
 
     Returns
     -------
@@ -288,7 +328,10 @@ def electrolyser_capacity(owf_cap, loss=0.1):
     transmission system loss. Since the electrolyser is situated at the
     offshore wind farm, only the wake loss is considered.
     """
-    return owf_cap * (1 - loss)
+    return (
+        owf_capacity_ref_turbines(owf_cap=owf_cap, wt_power=wt_power)
+        * (1 - loss)
+    )
 
 
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
