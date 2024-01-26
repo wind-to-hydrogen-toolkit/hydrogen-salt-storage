@@ -189,30 +189,11 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
 
     Returns
     -------
-    float
-        Number of wind turbines in the wind farm consisting of the reference
-        wind turbine
+    int
+        Number of wind turbines in the offshore wind farm comprising of
+        reference wind turbines
     """
     return (owf_cap / wt_power).astype(int)
-
-
-def owf_capacity_ref_turbines(owf_cap, wt_power=REF_RATED_POWER):
-    """Number of reference wind turbines in the offshore wind farm.
-
-    Parameters
-    ----------
-    owf_cap : float
-        Maximum nameplate capacity of the proposed offshore wind farm [MW]
-    wt_power : float
-        Rated power of the reference wind turbine [MW]
-
-    Returns
-    -------
-    float
-        Number of wind turbines in the wind farm consisting of the reference
-        wind turbine
-    """
-    return number_of_turbines(owf_cap=owf_cap, wt_power=wt_power) * wt_power
 
 
 def annual_energy_production(n_turbines, k, c, w_loss=0.1):
@@ -238,16 +219,16 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     Notes
     -----
     The annual energy production, :math:`AEP` [MWh], is based on Eqn. (3)
-    of [#Dinh23a]_, where :math:`n_T` is the number of turbines in the wind
-    farm, :math:`w_{loss}` is the wake loss, which is assumed to be a constant
+    of [#Dinh23a]_, where :math:`n` is the number of turbines in the wind
+    farm, :math:`w` is the wake loss, which is assumed to be a constant
     value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in and
     cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
     the wind turbine power output, and :math:`f(v)` [s m⁻¹] is the Weibull
     probability distribution function.
 
     .. math::
-        AEP = 365 \\times 24 \\times n_T \\times
-        \\left( 1 - w_{loss} \\right) \\times
+        AEP = 365 \\times 24 \\times n \\times
+        \\left( 1 - w \\right) \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -291,26 +272,26 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     predicted for the year 2030.
 
     .. math::
-        AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
+        AHP = \\frac{AEP}{\\frac{E_{electrolyser}}{\\eta} + E_{plant}}
 
     where :math:`AHP` is the annual hydrogen production [kg], :math:`AEP` is
-    the annual energy production of wind farm [MWh], :math:`E_{elec}` is the
-    electricity required to supply the electrolyser to produce 1 kg of
-    hydrogen [MWh kg⁻¹], :math:`\\eta_{conv}` is the conversion efficiency of
-    the electrolyser, and :math:`E_{pcl}` is the electricity consumed by other
+    the annual energy production of wind farm [MWh], :math:`E_{electrolyser}`
+    is the electricity required to supply the electrolyser to produce 1 kg of
+    hydrogen [MWh kg⁻¹], :math:`\\eta` is the conversion efficiency of the
+    electrolyser, and :math:`E_{plant}` is the electricity consumed by other
     parts of the hydrogen plant [MWh kg⁻¹].
     """
     return aep / (e_elec / eta_conv + e_pcl)
 
 
-def electrolyser_capacity(owf_cap, loss=0.1, wt_power=REF_RATED_POWER):
+def electrolyser_capacity(n_turbines, wt_power=REF_RATED_POWER, loss=0.1):
     """
     Calculate the electrolyser capacity for a wind farm.
 
     Parameters
     ----------
-    owf_cap : float
-        Maximum nameplate capacity of the propoded offshore wind farm [MW]
+    n_turbines : int
+        Number of wind turbines in wind farm
     loss : float
         Electricity loss due to wake and transmission
     wt_power : float
@@ -328,10 +309,7 @@ def electrolyser_capacity(owf_cap, loss=0.1, wt_power=REF_RATED_POWER):
     transmission system loss. Since the electrolyser is situated at the
     offshore wind farm, only the wake loss is considered.
     """
-    return (
-        owf_capacity_ref_turbines(owf_cap=owf_cap, wt_power=wt_power)
-        * (1 - loss)
-    )
+    return n_turbines * wt_power * (1 - loss)
 
 
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
@@ -375,16 +353,16 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
 
     .. math::
-        CAPEX_{pipe} = 2 \\, \\left( 16,000,000 \\, \\frac{E_{cap}
-        \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi} + 1,197,200 \\,
-        \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi}}
-        + 329,000 \\right)
+        CAPEX = 2 \\, \\left( 16,000,000 \\, \\frac{P_{electrolyser}
+        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197,200 \\,
+        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H2} \\cdot v_{H2}
+        \\cdot \\pi}} + 329,000 \\right)
 
-    where :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
-    [€ km⁻¹], :math:`E_{cap}` is the electrolyser capacity [MW],
-    :math:`P_{rate}` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
-    :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`u` is
-    the average fluid velocity [m s⁻¹].
+    where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
+    [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],
+    :math:`EPR` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
+    :math:`\\rho_{H2}` is the mass density of hydrogen [kg m⁻³], and
+    :math:`v_{H2}` is the average fluid velocity [m s⁻¹].
     """
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
@@ -432,14 +410,14 @@ def lcot_pipeline(
         components}}
         {\\mathrm{lifetime\\ hydrogen\\ transported}}
     .. math::
-        LCOT_{pipe} = \\frac{CAPEX_{pipe} \\cdot d + \\sum_{l=0}^{L}
-        \\frac{OPEX_{pipe}}{{(1 + DR)}^l}}
+        LCOT = \\frac{CAPEX \\cdot d + \\sum_{l=0}^{L}
+        \\frac{OPEX}{{(1 + DR)}^l}}
         {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
-    where :math:`LCOT_{pipe}` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
-    :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
+    where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
+    :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`d` is the pipeline transmission distance [km],
-    :math:`OPEX_{pipe}` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
+    :math:`OPEX` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
     discount rate, :math:`AHP` is the annual hydrogen production [kg], and
     :math:`L` is the lifetime of the pipeline [year].
     """

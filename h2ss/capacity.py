@@ -63,23 +63,23 @@ def cavern_volume(height, diameter=80, theta=20):
     The cavern's ideal shape is a cylinder of height :math:`h_{cylinder}` [m]
     with two conical ends each with a height of :math:`h_{cone}` [m] based on
     [#Jannel22]_. Since the volume of a cylinder is defined as
-    :math:`\\pi r^2 h` and the volume of a cone is defined as
-    :math:`\\frac{\\pi r^2 h}{3}` (i.e. one third of a cylinder's volume), the
-    bulk cavern volume, :math:`V_{bulk}` [m³] can therefore be derived by
-    calculating the volume of a cylinder of the cavern height,
-    :math:`h_{cavern}` [m] and deducting 4/3 of the volume of a cone of height
+    :math:`\\pi r^2 h_{cylinder}` and the volume of a cone is defined as
+    :math:`\\frac{\\pi r^2 h_{cone}}{3}` (i.e. one third of a cylinder's
+    volume), the bulk cavern volume, :math:`V_{bulk}` [m³] can therefore be
+    deduced by calculating the volume of a cylinder of the cavern height,
+    :math:`h` [m] and deducting 4/3 of the volume of a cone of height
     :math:`h_{cone}`. :math:`r` [m] is the radius of the cavern and
     :math:`h_{cone}` is therefore equivalent to :math:`r \\tan(\\theta)`,
     where :math:`\\theta` [°] is the cavern roof angle.
 
     .. math::
-        V_{bulk} = \\pi \\cdot r^2 \\cdot h_{cavern}
+        V_{bulk} = \\pi \\cdot r^2 \\cdot h
         - \\frac{4}{3} \\, \\pi \\cdot r^2 \\cdot h_{cone}
     .. math::
         V_{bulk} = \\pi \\cdot r^2
-        \\left(h_{cavern} - \\frac{4}{3} \\, h_{cone}\\right)
+        \\left(h - \\frac{4}{3} \\, h_{cone}\\right)
     .. math::
-        V_{bulk} = \\pi \\cdot r^2 \\left(h_{cavern} - \\frac{4}{3} \\,
+        V_{bulk} = \\pi \\cdot r^2 \\left(h - \\frac{4}{3} \\,
         r \\cdot \\tan(\\theta)\\right)
     """
     r = diameter / 2
@@ -163,12 +163,12 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
 
     .. math::
         T_{midpoint} = T_0 + \\Delta_T \\,
-        \\frac{(z_{cavern} + 0.5 \\, h_{cavern})}{1,000} + 273.15
+        \\frac{(z + 0.5 \\, h_{cavern})}{1,000} + 273.15
 
     where :math:`T_{midpoint}` is the cavern mid-point temperature [K],
     :math:`T_0` is the mean annual surface temperature [°C],
     :math:`\\Delta_T` is the change in temperature with depth, i.e. geothermal
-    gradient [°C km⁻¹], :math:`z_{cavern}` is the cavern top depth [m], and
+    gradient [°C km⁻¹], :math:`z` is the cavern top depth [m], and
     :math:`h_{cavern}` is the cavern height [m].
 
     A :math:`\\Delta_T` of 37.5 °C km⁻¹ is used based on the geothermal

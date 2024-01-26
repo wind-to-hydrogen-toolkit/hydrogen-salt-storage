@@ -89,17 +89,17 @@ def test_annual_hydrogen_production():
 
 def test_electrolyser_capacity():
     """Test ``h2ss.optimisation.electrolyser_capacity``"""
-    owf_cap_list = [500, 750, 1000, 1250, 1500]
+    n_turbines_list = [25, 50, 75, 100, 125]
     loss_list = [0.1, 0.15, 0.2, 0.25, 0.3]
-    e_cap_list = []
+    e_cap = []
     e_cap_func = []
-    for owf_cap, loss in zip(owf_cap_list, loss_list):
+    for n_turbines, loss in zip(n_turbines_list, loss_list):
         e_cap_func.append(
-            opt.electrolyser_capacity(owf_cap=owf_cap, loss=loss)
+            opt.electrolyser_capacity(n_turbines=n_turbines, loss=loss)
         )
-        losses = owf_cap * loss
-        e_cap_list.append(owf_cap - losses)
-    assert e_cap_func == e_cap_list
+        owf_cap = n_turbines * opt.REF_RATED_POWER
+        e_cap.append(owf_cap - owf_cap * loss)
+    assert e_cap_func == e_cap
 
 
 def test_capex_pipeline():
