@@ -10,6 +10,7 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
@@ -112,10 +113,10 @@ caverns = fns.label_caverns(
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
 # total capacity
-caverns[["capacity"]].sum().iloc[0]
+print("{:.2f}".format(caverns[["capacity"]].sum().iloc[0]))
 
 # total working mass
-caverns[["working_mass"]].sum().iloc[0]
+print("{:.2E}".format(caverns[["working_mass"]].sum().iloc[0]))
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -187,7 +188,7 @@ sns.despine()
 data["cap"] = [1300, 824, 500]
 
 # number of 15 MW turbines, rounded down to the nearest integer
-data["n_turbines"] = (data["cap"] / 15).astype(int)
+data["n_turbines"] = opt.number_of_turbines(owf_cap=data["cap"])
 
 aep = []
 for n in data["Name"]:
@@ -283,9 +284,8 @@ caverns = caverns.rename(columns={"distanceNorth": "distanceNISA"})
 # ## CAPEX for pipeline [€ km⁻¹]
 
 # calculate electrolyser capacity
-data["E_cap"] = opt.electrolyser_capacity(owf_cap=data["cap"])
+data["E_cap"] = opt.electrolyser_capacity(n_turbines=data["n_turbines"])
 
-# 1,000 MW electrolyser
 data["CAPEX"] = opt.capex_pipeline(e_cap=data["E_cap"])
 
 data
@@ -386,7 +386,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
         elif n == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n - 1]} - {classes[1:][n]}"
+            label = f"{classes[1:][n - 1]:.2f} - {classes[1:][n]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -404,4 +404,4 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
     plt.show()
 
 
-plot_map_facet(caverns, [0.03 * n for n in range(6)])
+plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
