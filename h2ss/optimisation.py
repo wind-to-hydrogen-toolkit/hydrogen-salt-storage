@@ -137,7 +137,7 @@ def weibull_probability_distribution(v, k, c):
     respectively, and :math:`v` is the wind speed.
 
     .. math::
-        f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k-1}
+        f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k - 1}
         \\cdot \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
 
     See also [#Pryor18]_, Eqn. (2).
@@ -190,6 +190,16 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
     int
         Number of wind turbines in the offshore wind farm comprising of
         reference wind turbines
+
+    Notes
+    -----
+    The number of turbines, :math:`n` of an offshore wind farm was determined
+    using the floor division of the wind farm's maximum nameplate capacity,
+    :math:`P_{owf}` [MW] by the reference wind turbine's rated power,
+    :math:`P_{rated}` [MW].
+
+    .. math::
+        n = \\left\\lfloor \\frac{P_{owf}}{P_{rated}} \\right\\rfloor
     """
     return (owf_cap / wt_power).astype(int)
 
@@ -287,20 +297,20 @@ def electrolyser_capacity(
     n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.837
 ):
     """
-    Calculate the electrolyser capacity for a wind farm.
+    Calculate the electrolyser capacity for an offshore wind farm.
 
     Parameters
     ----------
     n_turbines : int
         Number of wind turbines in wind farm
-    loss : float
-        Electricity loss due to wake and transmission
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
     cap_ratio : float
         Ratio of electrolyser capacity to the wind farm capacity
 
     Returns
     -------
-    float
+    int
         Electrolyser capacity [MW]
 
     Notes
@@ -317,6 +327,16 @@ def electrolyser_capacity(
     converter before being supplied to the electrolyser. The hydrogen obtained
     will then be transported to onshore infrastructure by pipeline. The losses
     incurred by pipeline transmission are very low" [#Dinh24a]_.
+
+    The electrolyser capacity, :math:`P_{electrolyser}` [MW] is rounded down
+    to an integer and is the product of the number of reference wind turbines
+    of the offshore wind farm, :math:`n`, the rated power of the reference
+    wind turbine, :math:`P_{rated}`, and the ratio of the electrolyser
+    capacity to the offshore wind farm capacity, :math:`F_{electrolyser}`.
+
+    .. math::
+        P_{electrolyser} = \\left\\lfloor n \\cdot P_{rated} \\cdot
+        F_{electrolyser} \\right\\rfloor
     """
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
@@ -415,6 +435,8 @@ def lcot_pipeline(
     used.
 
     .. math::
+        OPEX = CAPEX \\cdot F_{OPEX}
+    .. math::
         LCOT = \\frac{\\mathrm{total\\ lifecycle\\ costs\\ of\\ all\\
         components}}
         {\\mathrm{lifetime\\ hydrogen\\ transported}}
@@ -424,11 +446,12 @@ def lcot_pipeline(
         {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
-    :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
-    [€ km⁻¹], :math:`d` is the pipeline transmission distance [km],
-    :math:`OPEX` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
-    discount rate, :math:`AHP` is the annual hydrogen production [kg], and
-    :math:`L` is the lifetime of the pipeline [year].
+    :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline [€ km⁻¹],
+    :math:`d` is the pipeline transmission distance [km], :math:`OPEX` is the
+    OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the discount rate,
+    :math:`AHP` is the annual hydrogen production [kg], :math:`L` is the
+    lifetime of the pipeline [year], and :math:`F_{OPEX}` is the ratio of the
+    OPEX to the CAPEX.
     """
     f = sum(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
