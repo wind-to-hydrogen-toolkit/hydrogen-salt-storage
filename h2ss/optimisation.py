@@ -318,7 +318,7 @@ def electrolyser_capacity(
     will then be transported to onshore infrastructure by pipeline. The losses
     incurred by pipeline transmission are very low" [#Dinh24a]_.
     """
-    return n_turbines * wt_power * cap_ratio
+    return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):

@@ -51,8 +51,9 @@ def test_number_of_turbines():
     n_turbines_func = []
     for owf_cap, wt_power in zip(owf_cap_list, wt_power_list):
         n_turbines_func.append(
-            opt.number_of_turbines(owf_cap=np.array(owf_cap),
-            wt_power=np.array(wt_power))
+            opt.number_of_turbines(
+                owf_cap=np.array(owf_cap), wt_power=np.array(wt_power)
+            )
         )
         n_turbines.append(int(owf_cap / wt_power))
     assert n_turbines_func == n_turbines
@@ -110,10 +111,12 @@ def test_electrolyser_capacity():
     e_cap_func = []
     for n_turbines, cap in zip(n_turbines_list, cap_ratio_list):
         e_cap_func.append(
-            opt.electrolyser_capacity(n_turbines=n_turbines, cap_ratio=cap)
+            opt.electrolyser_capacity(
+                n_turbines=np.array(n_turbines), cap_ratio=np.array(cap)
+            )
         )
         owf_cap = n_turbines * opt.REF_RATED_POWER
-        e_cap.append(owf_cap * cap)
+        e_cap.append(int(owf_cap * cap))
     assert e_cap_func == e_cap
 
 
