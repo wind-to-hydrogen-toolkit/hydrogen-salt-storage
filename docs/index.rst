@@ -30,19 +30,6 @@ Installation
 
 This project uses `Python <https://www.python.org/>`_ 3.11.
 
-Installation of the ``h2ss`` module
-+++++++++++++++++++++++++++++++++++
-
-.. code-block:: shell
-
-   python -m venv .venv
-   source .venv/bin/activate
-   python -m pip install --upgrade pip
-   python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
-
-Installation of the project (including notebooks) from source
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 Clone the Git repository:
 
 .. code-block:: shell
@@ -64,12 +51,6 @@ Run tests:
 .. code-block:: shell
 
    python -m pytest
-
-To generate a coverage report with the tests:
-
-.. code-block:: shell
-
-   coverage run -m pytest && coverage report -m
 
 Indices and tables
 ------------------

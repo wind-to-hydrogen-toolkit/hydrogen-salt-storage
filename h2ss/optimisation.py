@@ -6,7 +6,7 @@ References
     Ahmann, J., and Busch, J. (2019). Oregon Offshore Wind Site Feasibility
     and Cost Study. Technical Report NREL/TP-5000-74597. Golden, CO: National
     Renewable Energy Laboratory. https://doi.org/10.2172/1570430.
-.. [#Dinh23a] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
+.. [#Dinh23] Dinh, Q. V., Dinh, V. N., Mosadeghi, H., Todesco Pereira, P. H.,
     and Leahy, P. G. (2023). ‘A geospatial method for estimating the
     levelised cost of hydrogen production from offshore wind’,
     International Journal of Hydrogen Energy, 48(40), pp. 15000–15013.
@@ -20,8 +20,11 @@ References
     production from dedicated offshore wind farms’, International Journal of
     Hydrogen Energy, 46(48), pp. 24620–24631.
     https://doi.org/10.1016/j.ijhydene.2020.04.232.
-.. [#Dinh23b] Dinh, Q. V., Todesco Pereira, P. H., Dinh, V. N., Nagle, A. J.,
-    and Leahy, P. G. (2023). ‘Optimising the levelised cost of transmission
+.. [#Dinh24a] Dinh, Q. V., Dinh, V. N., and Leahy, P. G. (2024). ‘A
+    differential evolution model for optimising the size and cost of
+    electrolysers coupled with offshore wind farms’.
+.. [#Dinh24b] Dinh, Q. V., Todesco Pereira, P. H., Dinh, V. N., Nagle, A. J.,
+    and Leahy, P. G. (2024). ‘Optimising the levelised cost of transmission
     for green hydrogen and ammonia in new-build offshore energy
     infrastructure: pipelines, tankers, and HVDC’.
 .. [#Baufume13] Baufumé, S., Grüger, F., Grube, T., Krieg, D., Linssen, J.,
@@ -129,12 +132,12 @@ def weibull_probability_distribution(v, k, c):
     Notes
     -----
     The Weibull probability distribution function, :math:`f(v)` [s m⁻¹] is
-    based on Eqn. (1) of [#Dinh23a]_, where :math:`k` and :math:`C`
+    based on Eqn. (1) of [#Dinh23]_, where :math:`k` and :math:`C`
     [m s⁻¹] are the shape and scale Weibull distribution parameters,
     respectively, and :math:`v` is the wind speed.
 
     .. math::
-        f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k-1}
+        f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k - 1}
         \\cdot \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
 
     See also [#Pryor18]_, Eqn. (2).
@@ -172,6 +175,35 @@ def weibull_power_curve(v, k, c):
     return power_curve
 
 
+def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
+    """Number of reference wind turbines in the offshore wind farm.
+
+    Parameters
+    ----------
+    owf_cap : float
+        Maximum nameplate capacity of the proposed offshore wind farm [MW]
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
+
+    Returns
+    -------
+    int
+        Number of wind turbines in the offshore wind farm comprising of
+        reference wind turbines
+
+    Notes
+    -----
+    The number of turbines, :math:`n` of an offshore wind farm was determined
+    using the floor division of the wind farm's maximum nameplate capacity,
+    :math:`P_{owf}` [MW] by the reference wind turbine's rated power,
+    :math:`P_{rated}` [MW].
+
+    .. math::
+        n = \\left\\lfloor \\frac{P_{owf}}{P_{rated}} \\right\\rfloor
+    """
+    return (owf_cap / wt_power).astype(int)
+
+
 def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     """Annual energy production of the wind farm.
 
@@ -194,17 +226,17 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
 
     Notes
     -----
-    The annual energy production, :math:`AEP` [MWh], is based on Eqn. (3)
-    of [#Dinh23a]_, where :math:`n_T` is the number of turbines in the wind
-    farm, :math:`w_{loss}` is the wake loss, which is assumed to be a constant
+    The annual energy production, :math:`E_{annual}` [MWh], is based on Eqn.
+    (3) of [#Dinh23]_, where :math:`n` is the number of turbines in the wind
+    farm, :math:`w` is the wake loss, which is assumed to be a constant
     value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in and
     cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
     the wind turbine power output, and :math:`f(v)` [s m⁻¹] is the Weibull
     probability distribution function.
 
     .. math::
-        AEP = 365 \\times 24 \\times n_T \\times
-        \\left( 1 - w_{loss} \\right) \\times
+        E_{annual} = 365 \\times 24 \\times n \\times
+        \\left( 1 - w \\right) \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -243,21 +275,70 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
 
     Notes
     -----
-    Eqn. (4) of [#Dinh23a]_, based on [#Dinh21]_. Constant values are based on
+    Eqn. (4) of [#Dinh23]_, based on [#Dinh21]_. Constant values are based on
     Table 3 of [#Dinh21]_ for proton exchange membrane (PEM) electrolysers
     predicted for the year 2030.
 
     .. math::
-        AHP = \\frac{AEP}{\\frac{E_{elec}}{\\eta_{conv}} + E_{pcl}}
+        m_{annual} = \\frac{E_{annual}}{\\frac{E_{electrolyser}}{\\eta} +
+        E_{plant}}
 
-    where :math:`AHP` is the annual hydrogen production [kg], :math:`AEP` is
-    the annual energy production of wind farm [MWh], :math:`E_{elec}` is the
-    electricity required to supply the electrolyser to produce 1 kg of
-    hydrogen [MWh kg⁻¹], :math:`\\eta_{conv}` is the conversion efficiency of
-    the electrolyser, and :math:`E_{pcl}` is the electricity consumed by other
-    parts of the hydrogen plant [MWh kg⁻¹].
+    where :math:`m_{annual}` is the annual hydrogen production [kg],
+    :math:`E_{annual}` is the annual energy production of wind farm [MWh],
+    :math:`E_{electrolyser}` is the electricity required to supply the
+    electrolyser to produce 1 kg of hydrogen [MWh kg⁻¹], :math:`\\eta` is the
+    conversion efficiency of the electrolyser, and :math:`E_{plant}` is the
+    electricity consumed by other parts of the hydrogen plant [MWh kg⁻¹].
     """
     return aep / (e_elec / eta_conv + e_pcl)
+
+
+def electrolyser_capacity(
+    n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.837
+):
+    """
+    Calculate the electrolyser capacity for an offshore wind farm.
+
+    Parameters
+    ----------
+    n_turbines : int
+        Number of wind turbines in wind farm
+    wt_power : float
+        Rated power of the reference wind turbine [MW]
+    cap_ratio : float
+        Ratio of electrolyser capacity to the wind farm capacity
+
+    Returns
+    -------
+    int
+        Electrolyser capacity [MW]
+
+    Notes
+    -----
+    In the offshore electrolyser concept of [#Dinh24a]_, the electricity from
+    an offshore wind farm "is supplied to the electrolyser by medium voltage
+    alternating current (AC) cable. The electrolyser requires direct current
+    (DC) electricity input so this concept includes an AC-DC converter. The
+    hydrogen obtained is compressed and delivered onshore by hydrogen
+    pipelines".
+
+    The "energy from the offshore wind farm is only subjected to wake losses
+    and a small amount of electricity loss in the site network and the AC-DC
+    converter before being supplied to the electrolyser. The hydrogen obtained
+    will then be transported to onshore infrastructure by pipeline. The losses
+    incurred by pipeline transmission are very low" [#Dinh24a]_.
+
+    The electrolyser capacity, :math:`P_{electrolyser}` [MW] is rounded down
+    to an integer and is the product of the number of reference wind turbines
+    of the offshore wind farm, :math:`n`, the rated power of the reference
+    wind turbine, :math:`P_{rated}`, and the ratio of the electrolyser
+    capacity to the offshore wind farm capacity, :math:`F_{electrolyser}`.
+
+    .. math::
+        P_{electrolyser} = \\left\\lfloor n \\cdot P_{rated} \\cdot
+        F_{electrolyser} \\right\\rfloor
+    """
+    return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
 def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
@@ -281,7 +362,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
 
     Notes
     -----
-    See Eqn. (18) of [#Dinh23a]_ and Section 3.1 of [#Dinh23b]_, from which
+    See Eqn. (18) of [#Dinh23]_ and Section 3.1 of [#Dinh24b]_, from which
     the following text has been taken.
 
     The estimation of offshore pipeline costs is based on the onshore pipeline
@@ -301,16 +382,16 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
 
     .. math::
-        CAPEX_{pipe} = 2 \\, \\left( 16,000,000 \\, \\frac{E_{cap}
-        \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi} + 1,197,200 \\,
-        \\sqrt{\\frac{E_{cap} \\cdot P_{rate}}{\\rho \\cdot u \\cdot \\pi}}
-        + 329,000 \\right)
+        CAPEX = 2 \\, \\left( 16,000,000 \\, \\frac{P_{electrolyser}
+        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197,200 \\,
+        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H2} \\cdot v_{H2}
+        \\cdot \\pi}} + 329,000 \\right)
 
-    where :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
-    [€ km⁻¹], :math:`E_{cap}` is the electrolyser capacity [MW],
-    :math:`P_{rate}` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
-    :math:`\\rho` is the mass density of hydrogen [kg m⁻³], and :math:`u` is
-    the average fluid velocity [m s⁻¹].
+    where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
+    [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],
+    :math:`EPR` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
+    :math:`\\rho_{H2}` is the mass density of hydrogen [kg m⁻³], and
+    :math:`v_{H2}` is the average fluid velocity [m s⁻¹].
     """
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
@@ -320,7 +401,7 @@ def lcot_pipeline(
     capex,
     transmission_distance,
     ahp,
-    opex_factor=0.02,
+    opex_ratio=0.02,
     discount_rate=0.08,
     lifetime=30,
 ):
@@ -334,7 +415,7 @@ def lcot_pipeline(
         Pipeline transmission distance [km]
     ahp : float
         Annual hydrogen production [kg]
-    opex_factor : float
+    opex_ratio : float
         Ratio of the operational expenditure (OPEX) to the CAPEX; the OPEX is
         calculated as a percentage of the CAPEX
     discount_rate : float
@@ -350,7 +431,7 @@ def lcot_pipeline(
     Notes
     -----
     See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
-    (22) of [#Dinh23b]_; see Tables 2 and 3 for the assumptions and constants
+    (22) of [#Dinh24b]_; see Tables 2 and 3 for the assumptions and constants
     used.
 
     .. math::
@@ -358,21 +439,24 @@ def lcot_pipeline(
         components}}
         {\\mathrm{lifetime\\ hydrogen\\ transported}}
     .. math::
-        LCOT_{pipe} = \\frac{CAPEX_{pipe} \\cdot d + \\sum_{l=0}^{L}
-        \\frac{OPEX_{pipe}}{{(1 + DR)}^l}}
+        OPEX = CAPEX \\cdot F_{OPEX}
+    .. math::
+        LCOT = \\frac{CAPEX \\cdot d + \\sum_{l=0}^{L}
+        \\frac{OPEX}{{(1 + DR)}^l}}
         {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
-    where :math:`LCOT_{pipe}` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
-    :math:`CAPEX_{pipe}` is the CAPEX of the pipeline per km of pipeline
-    [€ km⁻¹], :math:`d` is the pipeline transmission distance [km],
-    :math:`OPEX_{pipe}` is the OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the
-    discount rate, :math:`AHP` is the annual hydrogen production [kg], and
-    :math:`L` is the lifetime of the pipeline [year].
+    where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
+    :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline [€ km⁻¹],
+    :math:`d` is the pipeline transmission distance [km], :math:`OPEX` is the
+    OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the discount rate,
+    :math:`AHP` is the annual hydrogen production [kg], :math:`L` is the
+    lifetime of the pipeline [year], and :math:`F_{OPEX}` is the ratio of the
+    OPEX to the CAPEX.
     """
     f = sum(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
-    opex = capex * opex_factor
+    opex = capex * opex_ratio
     return (capex * transmission_distance + opex * f) / (ahp * f)
 
 

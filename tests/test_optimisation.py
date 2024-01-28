@@ -43,6 +43,22 @@ def test_weibull_probability_distribution():
     assert weibull_func == weibull
 
 
+def test_number_of_turbines():
+    """Test ``h2ss.optimisation.number_of_turbines``"""
+    owf_cap_list = [500, 600, 700, 800, 900]
+    wt_power_list = [10, 11, 12, 13, 14]
+    n_turbines = []
+    n_turbines_func = []
+    for owf_cap, wt_power in zip(owf_cap_list, wt_power_list):
+        n_turbines_func.append(
+            opt.number_of_turbines(
+                owf_cap=np.array(owf_cap), wt_power=np.array(wt_power)
+            )
+        )
+        n_turbines.append(int(owf_cap / wt_power))
+    assert n_turbines_func == n_turbines
+
+
 def integrate_lambda(k, c):
     """Lambda function for the quad integration test below"""
     return lambda v: (
@@ -87,6 +103,23 @@ def test_annual_hydrogen_production():
     ) == aep / (e_elec / eta_conv + e_pcl)
 
 
+def test_electrolyser_capacity():
+    """Test ``h2ss.optimisation.electrolyser_capacity``"""
+    n_turbines_list = [25, 50, 75, 100, 125]
+    cap_ratio_list = [0.9, 0.88, 0.86, 0.84, 0.82]
+    e_cap = []
+    e_cap_func = []
+    for n_turbines, cap in zip(n_turbines_list, cap_ratio_list):
+        e_cap_func.append(
+            opt.electrolyser_capacity(
+                n_turbines=np.array(n_turbines), cap_ratio=np.array(cap)
+            )
+        )
+        owf_cap = n_turbines * opt.REF_RATED_POWER
+        e_cap.append(int(owf_cap * cap))
+    assert e_cap_func == e_cap
+
+
 def test_capex_pipeline():
     """Test ``h2ss.optimisation.capex_pipeline``"""
     e_cap = 500
@@ -104,10 +137,10 @@ def test_lcot_pipeline():
     capex = 1000
     transmission_distance = 100
     ahp = 500
-    opex_factor = 0.03
+    opex_ratio = 0.03
     discount_rate = 0.05
     lifetime = 40
-    opex = capex * opex_factor
+    opex = capex * opex_ratio
     lcot = (
         capex * transmission_distance
         + sum(
@@ -122,7 +155,7 @@ def test_lcot_pipeline():
         capex=capex,
         transmission_distance=transmission_distance,
         ahp=ahp,
-        opex_factor=opex_factor,
+        opex_ratio=opex_ratio,
         discount_rate=discount_rate,
         lifetime=lifetime,
     )

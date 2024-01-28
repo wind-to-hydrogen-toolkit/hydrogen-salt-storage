@@ -10,6 +10,7 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
@@ -112,10 +113,10 @@ caverns = fns.label_caverns(
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
 # total capacity
-caverns[["capacity"]].sum().iloc[0]
+print("{:.2f}".format(caverns[["capacity"]].sum().iloc[0]))
 
 # total working mass
-caverns[["working_mass"]].sum().iloc[0]
+print("{:.2E}".format(caverns[["working_mass"]].sum().iloc[0]))
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -130,13 +131,11 @@ data = fns.read_weibull_data(
     dat_extent=extent,
 )
 
-data
-
 # generate Weibull distribution
 ref_data = {}
 for n in data["Name"]:
     ref_data[n] = {}
-    ref_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3100)]
+    ref_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3000)]
     ref_data[n]["power_curve"] = []
     ref_data[n][n] = []
     for v in ref_data[n]["wind_speed"]:
@@ -165,6 +164,7 @@ ax = ref_data.plot(
 )
 ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
 ax.set_ylabel("Power [MW]")
+plt.yticks([3 * n for n in range(6)])
 sns.despine()
 
 ax = ref_data.drop(columns=["power_curve"]).plot(
@@ -185,10 +185,10 @@ sns.despine()
 # ## Annual energy production [MWh]
 
 # max wind farm capacity
-data["capacity"] = [1300, 824, 500]
+data["cap"] = [1300, 824, 500]
 
 # number of 15 MW turbines, rounded down to the nearest integer
-data["n_turbines"] = (data["capacity"] / 15).astype(int)
+data["n_turbines"] = opt.number_of_turbines(owf_cap=data["cap"])
 
 aep = []
 for n in data["Name"]:
@@ -211,8 +211,6 @@ data["AHP"] = opt.annual_hydrogen_production(aep=data["AEP"])
 # ## AHP as a proportion of the total working mass
 
 data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
-
-data
 
 # ## Number of caverns required based on cumulative working mass and AHP
 
@@ -285,16 +283,18 @@ caverns = caverns.rename(columns={"distanceNorth": "distanceNISA"})
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
-# 1,000 MW electrolyser
-capex = opt.capex_pipeline(e_cap=1000)
+# calculate electrolyser capacity
+data["E_cap"] = opt.electrolyser_capacity(n_turbines=data["n_turbines"])
 
-capex
+data["CAPEX"] = opt.capex_pipeline(e_cap=data["E_cap"])
+
+data
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
 for wf in ["Codling", "Dublin", "NISA"]:
     caverns[f"LCOT_{wf}"] = opt.lcot_pipeline(
-        capex=capex,
+        capex=data[data["Name"].str.contains(wf)]["CAPEX"].values[0],
         transmission_distance=caverns[f"distance{wf}"],
         ahp=data[data["Name"].str.contains(wf)]["AHP"].values[0],
     )
@@ -386,7 +386,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
         elif n == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n - 1]} - {classes[1:][n]}"
+            label = f"{classes[1:][n - 1]:.2f} - {classes[1:][n]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -404,4 +404,4 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
     plt.show()
 
 
-plot_map_facet(caverns, [0.04 * n for n in range(6)])
+plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
