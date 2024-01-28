@@ -435,11 +435,11 @@ def lcot_pipeline(
     used.
 
     .. math::
-        OPEX = CAPEX \\cdot F_{OPEX}
-    .. math::
         LCOT = \\frac{\\mathrm{total\\ lifecycle\\ costs\\ of\\ all\\
         components}}
         {\\mathrm{lifetime\\ hydrogen\\ transported}}
+    .. math::
+        OPEX = CAPEX \\cdot F_{OPEX}
     .. math::
         LCOT = \\frac{CAPEX \\cdot d + \\sum_{l=0}^{L}
         \\frac{OPEX}{{(1 + DR)}^l}}
