@@ -113,6 +113,8 @@ def corrected_cavern_volume(
     float
         Corrected cavern volume [m³]
 
+    Notes
+    -----
     The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
     applying several correction factors to the bulk cavern volume,
     :math:`V_{bulk}` [m³] as detailed in [#Williams22]_, Eqn. (1).
@@ -325,8 +327,8 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     between the stored mass of hydrogen at maximum, :math:`m_{max}` and
     minimum, :math:`m_{min}` operating pressures [kg], which were derived
     using the minimum, :math:`\\rho_{min}` and maximum, :math:`\\rho_{max}`
-    hydrogen densities [kg m⁻³], respectively, and the cavern volume
-    :math:`V_{cavern}`, [m³].
+    hydrogen densities [kg m⁻³], respectively, and the cavern volume,
+    :math:`V_{cavern}` [m³].
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
