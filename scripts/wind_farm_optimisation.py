@@ -276,6 +276,15 @@ for x in range(len(data)):
 # total number of caverns
 print(f"Total number of caverns required: {31 + 19 + 13} - {41 + 25 + 17}")
 
+# number of caverns as a percentage of the total available caverns
+print(
+    "Number of caverns required as a percentage of all available caverns:",
+    "{:.2f}".format((31 + 19 + 13) / 357 * 100),
+    "-",
+    "{:.2f}".format((41 + 25 + 17) / 357 * 100),
+    "%",
+)
+
 # total capacity
 total_cap = 3410.4 + 2060.41 + 1410.31
 print(f"Total capacity (approx.):", "{:.2f}".format(total_cap), "GWh")

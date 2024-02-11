@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Sensitivity Analysis
+# # Sensitivity analysis
 
 import os
 import sys
