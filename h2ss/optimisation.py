@@ -193,14 +193,13 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
 
     Notes
     -----
-    The number of turbines, :math:`n_{turbines}` of an offshore wind farm was
+    The number of turbines, :math:`n` of an offshore wind farm was
     determined using the floor division of the wind farm's maximum nameplate
     capacity, :math:`P_{owf}` [MW] by the reference wind turbine's rated power,
     :math:`P_{rated}` [MW].
 
     .. math::
-        n_{turbines} = \\left\\lfloor \\frac{P_{owf}}{P_{rated}}
-        \\right\\rfloor
+        n = \\left\\lfloor \\frac{P_{owf}}{P_{rated}} \\right\\rfloor
     """
     return (owf_cap / wt_power).astype(int)
 
@@ -228,7 +227,7 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     Notes
     -----
     The annual energy production, :math:`E_{annual}` [MWh], is based on Eqn.
-    (3) of [#Dinh23]_, where :math:`n_{turbines}` is the number of turbines in
+    (3) of [#Dinh23]_, where :math:`n` is the number of turbines in
     the wind farm, :math:`w` is the wake loss, which is assumed to be a
     constant value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in
     and cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
@@ -236,7 +235,7 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     probability distribution function.
 
     .. math::
-        E_{annual} = 365 \\times 24 \\times n_{turbines} \\times
+        E_{annual} = 365 \\times 24 \\times n \\times
         \\left( 1 - w \\right) \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
@@ -331,13 +330,13 @@ def electrolyser_capacity(
 
     The electrolyser capacity, :math:`P_{electrolyser}` [MW] is rounded down
     to an integer and is the product of the number of reference wind turbines
-    of the offshore wind farm, :math:`n_{turbines}`, the rated power of the
+    of the offshore wind farm, :math:`n`, the rated power of the
     reference wind turbine, :math:`P_{rated}`, and the ratio of the
     electrolyser capacity to the offshore wind farm capacity,
     :math:`F_{electrolyser}`.
 
     .. math::
-        P_{electrolyser} = \\left\\lfloor n_{turbines} \\cdot P_{rated} \\cdot
+        P_{electrolyser} = \\left\\lfloor n \\cdot P_{rated} \\cdot
         F_{electrolyser} \\right\\rfloor
     """
     return (n_turbines * wt_power * cap_ratio).astype(int)
