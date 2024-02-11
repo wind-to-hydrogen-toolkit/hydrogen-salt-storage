@@ -433,6 +433,11 @@ caverns = fns.label_caverns(
 # calculate volumes and capacities
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
+# proportion of working gas to total gas
+caverns["working_mass_pct"] = caverns["working_mass"] / (
+    caverns["working_mass"] + caverns["mass_operating_min"]
+)
+
 caverns.drop(
     [
         "x",
@@ -447,13 +452,24 @@ caverns.drop(
     axis=1,
 ).describe()
 
-# cavern volumes
-list(caverns["cavern_volume"].unique())
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
 
-# total volume
-caverns[["cavern_volume"]].sum().iloc[0]
-
-# total capacity
-caverns[["capacity"]].sum().iloc[0]
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
+    "%",
+)
 
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)

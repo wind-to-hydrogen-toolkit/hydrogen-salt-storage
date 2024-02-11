@@ -112,11 +112,16 @@ caverns = fns.label_caverns(
 # calculate volumes and capacities
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
-# total capacity
-print("{:.2f}".format(caverns[["capacity"]].sum().iloc[0]))
-
-# total working mass
-print("{:.2E}".format(caverns[["working_mass"]].sum().iloc[0]))
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -216,30 +221,73 @@ data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
 
 working_mass_cumsum_1 = (
     caverns.sort_values("working_mass", ascending=False)
-    .reset_index()["working_mass"]
+    .reset_index()[["working_mass", "capacity"]]
     .cumsum()
 )
 
 working_mass_cumsum_2 = (
-    caverns.sort_values("working_mass").reset_index()["working_mass"].cumsum()
+    caverns.sort_values("working_mass")
+    .reset_index()[["working_mass", "capacity"]]
+    .cumsum()
 )
 
 for x in range(len(data)):
     print(data["Name"].iloc[x])
-    print("Working mass [kg]:", data["AHP"].iloc[x])
+    print("Working mass [kg]:", "{:.6E}".format(data["AHP"].iloc[x]))
     print(
         "Number of caverns required:",
-        working_mass_cumsum_1.loc[working_mass_cumsum_1 >= data["AHP"].iloc[x]]
+        working_mass_cumsum_1.loc[
+            working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
+        ]
         .head(1)
         .index[0]
         + 1,
         "-",
-        working_mass_cumsum_2.loc[working_mass_cumsum_2 >= data["AHP"].iloc[x]]
+        working_mass_cumsum_2.loc[
+            working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
+        ]
         .head(1)
         .index[0]
         + 1,
     )
+    print(
+        "Capacity (approx.) [GWh]:",
+        max(
+            "{:.2f}".format(
+                working_mass_cumsum_1.loc[
+                    working_mass_cumsum_1["working_mass"]
+                    >= data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0]
+            ),
+            "{:.2f}".format(
+                working_mass_cumsum_2.loc[
+                    working_mass_cumsum_2["working_mass"]
+                    >= data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0]
+            ),
+        ),
+    )
     print("-" * 50)
+
+# total number of caverns
+print(f"Total number of caverns required: {31 + 19 + 13} - {41 + 25 + 17}")
+
+# total capacity
+total_cap = 3410.4 + 2060.41 + 1410.31
+print(f"Total capacity (approx.):", "{:.2f}".format(total_cap), "GWh")
+
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(total_cap / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(total_cap / 1000 / 84 * 100),
+    "%",
+)
 
 # ## Calculate distance between caverns and the wind farms and injection point [km]
 
