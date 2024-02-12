@@ -50,7 +50,7 @@ Run tests:
 
 .. code-block:: shell
 
-   python -m pytest
+   python -m pytest --cov
 
 Indices and tables
 ------------------

@@ -32,13 +32,7 @@ python -m pip install -r requirements.txt
 To run tests:
 
 ```sh
-python -m pytest
-```
-
-To generate a coverage report with the tests:
-
-```sh
-coverage run -m pytest && coverage report -m
+python -m pytest --cov
 ```
 
 ### Installation of the `h2ss` module

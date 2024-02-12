@@ -52,20 +52,11 @@
         {
             "label": "pytest",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest",
+            "command": "source .venv/bin/activate && python -m pytest --cov",
             "problemMatcher": [],
             "group": {
                 "kind": "test",
                 "isDefault": true
-            }
-        },
-        {
-            "label": "pytest-coverage",
-            "type": "shell",
-            "command": "source .venv/bin/activate && coverage run -m pytest && coverage report -m",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
             }
         },
         {

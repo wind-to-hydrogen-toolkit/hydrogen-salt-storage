@@ -1,7 +1,6 @@
 black[jupyter]
 cartopy
 contextily
-coverage
 dask
 flake8
 geocube
@@ -14,5 +13,5 @@ pooch
 pydata-sphinx-theme
 pyfluids
 pylint
-pytest
+pytest-cov
 seaborn
