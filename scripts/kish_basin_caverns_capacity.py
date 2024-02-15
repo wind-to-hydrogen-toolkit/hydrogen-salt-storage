@@ -438,6 +438,74 @@ caverns["working_mass_pct"] = caverns["working_mass"] / (
     caverns["working_mass"] + caverns["mass_operating_min"]
 )
 
+fig, axes = plt.subplots(1, 4, figsize=(11, 4.5))
+sns.boxplot(
+    caverns.reset_index(),
+    y="cavern_depth",
+    color=sns.color_palette("rocket", 1)[0],
+    width=0.2,
+    ax=axes[0],
+    legend=False,
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[0].set_ylabel("Top depth [m]")
+axes[0].set_yticklabels(
+    ["{:,}".format(int(x)) for x in list(axes[0].get_yticks())]
+)
+sns.boxplot(
+    (caverns[["p_operating_min", "p_operating_max"]] / 1e6)
+    .rename(
+        columns={
+            "p_operating_min": "min",
+            "p_operating_max": "max",
+        }
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.4,
+    ax=axes[1],
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[1].set_ylabel("Operating pressure [MPa]")
+axes[1].legend()
+sns.boxplot(
+    (caverns[["mass_operating_min", "working_mass"]] / 1e6)
+    .rename(
+        columns={
+            "mass_operating_min": "cushion",
+            "working_mass": "working",
+        }
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.4,
+    ax=axes[2],
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[2].set_ylabel("Gas mass [kt]")
+axes[2].legend()
+sns.boxplot(
+    caverns.reset_index(),
+    y="capacity",
+    color=sns.color_palette("rocket", 1)[0],
+    width=0.2,
+    ax=axes[3],
+    legend=False,
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[3].set_ylabel("Energy storage capacity [GWh]")
+sns.despine(bottom=True)
+plt.tight_layout()
+plt.show()
+
 caverns.drop(
     [
         "x",

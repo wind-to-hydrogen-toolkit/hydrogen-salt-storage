@@ -332,11 +332,11 @@ for i in range(len(wind_farms)):
                 + caverns.iloc[[j]]["distance_ip"].values[0]
             )
         )
-    caverns[f"distance{wind_farms['Name_'][i]}"] = distance_wf[
+    caverns[f"dist_{wind_farms['Name_'][i]}"] = distance_wf[
         wind_farms["Name_"][i]
     ]
 
-caverns = caverns.rename(columns={"distanceNorth": "distanceNISA"})
+caverns = caverns.rename(columns={"dist_North": "dist_NISA"})
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
@@ -352,7 +352,7 @@ data
 for wf in ["Codling", "Dublin", "NISA"]:
     caverns[f"LCOT_{wf}"] = opt.lcot_pipeline(
         capex=data[data["Name"].str.contains(wf)]["CAPEX"].values[0],
-        transmission_distance=caverns[f"distance{wf}"],
+        transmission_distance=caverns[f"dist_{wf}"],
         ahp=data[data["Name"].str.contains(wf)]["AHP"].values[0],
     )
 
@@ -362,14 +362,51 @@ caverns[
         "working_mass",
         "capacity",
         "distance_ip",
-        "distanceCodling",
-        "distanceDublin",
-        "distanceNISA",
+        "dist_Codling",
+        "dist_Dublin",
+        "dist_NISA",
         "LCOT_Codling",
         "LCOT_Dublin",
         "LCOT_NISA",
     ]
 ].describe()
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+sns.boxplot(
+    caverns.filter(like="dist_")
+    .set_axis(
+        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.35,
+    ax=axes[0],
+    legend=False,
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[0].set_ylabel("Transmission distance [km]")
+sns.boxplot(
+    caverns.filter(like="LCOT_")
+    .set_axis(
+        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.35,
+    ax=axes[1],
+    linecolor="black",
+    linewidth=1.1,
+)
+axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
+axes[1].legend(loc="lower right")
+sns.despine(bottom=True)
+plt.tight_layout()
+plt.show()
 
 # ## Maps
 
