@@ -47,6 +47,12 @@ FLOOR_THICKNESS = 10
 CAVERN_DIAMETER = 80
 CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
+MIN_OPT_DEPTH = 1000
+MAX_OPT_DEPTH = 1500
+MIN_DEPTH = 500
+MAX_DEPTH = 2000
+
+depth_dict = {"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH}
 
 
 def zones_of_interest(
@@ -272,7 +278,7 @@ def generate_caverns_hexagonal_grid(
 def cavern_dataframe(
     dat_zone,
     cavern_df,
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+    depths=depth_dict,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
 ):
@@ -641,7 +647,7 @@ def generate_caverns_with_constraints(
 def label_caverns(
     cavern_df,
     heights,
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+    depths=depth_dict,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
 ):
@@ -666,28 +672,54 @@ def label_caverns(
         A dataframe of potential caverns labelled by cavern height and top
         depth ranges
     """
+    heights = sorted(heights)
     # label caverns by height
     if len(heights) == 1:
         cavern_df["height"] = heights[0]
     else:
-        conditions = [
-            (
-                cavern_df["Thickness"]
-                < (heights[1] + roof_thickness + floor_thickness)
-            ),
-            (
-                cavern_df["Thickness"]
-                >= (heights[1] + roof_thickness + floor_thickness)
-            )
-            & (
-                cavern_df["Thickness"]
-                < (heights[2] + roof_thickness + floor_thickness)
-            ),
-            (
-                cavern_df["Thickness"]
-                >= (heights[2] + roof_thickness + floor_thickness)
-            ),
-        ]
+        conditions = []
+        for n, y in enumerate(heights):
+            if n == 0:
+                conditions.append((
+                    cavern_df["Thickness"]
+                    < (heights[1] + roof_thickness + floor_thickness)
+                ))
+            elif n == len(heights) - 1:
+                conditions.append(
+                    (
+                        cavern_df["Thickness"]
+                        >= (heights[n] + roof_thickness + floor_thickness)
+                    )
+                )
+            else:
+                conditions.append(
+                    (
+                        cavern_df["Thickness"]
+                        >= (heights[n] + roof_thickness + floor_thickness)
+                    )
+                    & (
+                        cavern_df["Thickness"]
+                        < (heights[n + 1] + roof_thickness + floor_thickness)
+                    )
+                )
+        # conditions = [
+        #     (
+        #         cavern_df["Thickness"]
+        #         < (heights[1] + roof_thickness + floor_thickness)
+        #     ),
+        #     (
+        #         cavern_df["Thickness"]
+        #         >= (heights[1] + roof_thickness + floor_thickness)
+        #     )
+        #     & (
+        #         cavern_df["Thickness"]
+        #         < (heights[2] + roof_thickness + floor_thickness)
+        #     ),
+        #     (
+        #         cavern_df["Thickness"]
+        #         >= (heights[2] + roof_thickness + floor_thickness)
+        #     ),
+        # ]
         choices = [str(x) for x in heights]
         cavern_df["height"] = np.select(conditions, choices)
 
