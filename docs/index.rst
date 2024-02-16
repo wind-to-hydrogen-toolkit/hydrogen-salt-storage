@@ -8,7 +8,7 @@ Storage of hydrogen from offshore wind in salt caverns
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
-Source code is available on GitHub: https://github.com/nmstreethran/hydrogen-salt-storage.
+Source code is available on GitHub: https://github.com/H-Wind-UCC/hydrogen-salt-storage.
 
 Acknowledgements
 ----------------
@@ -34,7 +34,7 @@ Clone the Git repository:
 
 .. code-block:: shell
 
-   git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+   git clone https://github.com/H-Wind-UCC/hydrogen-salt-storage.git
    cd hydrogen-salt-storage
 
 Create a virtual environment and install all requirements:
