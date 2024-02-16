@@ -13,7 +13,7 @@ Source code is available on GitHub: https://github.com/H-Wind-UCC/hydrogen-salt-
 Acknowledgements
 ----------------
 
-This research was supported by a research grant from `Science Foundation Ireland (SFI) <http://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the `H-Wind <https://www.marei.ie/project/h-wind/>`_ academic-industry consortium members: `DP Energy <https://dpenergy.com/>`_, `ESB <https://esb.ie/>`_, `Equinor <https://www.equinor.com/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
+The `H-Wind <https://www.marei.ie/project/h-wind/>`_ project was supported by a research grant from `Science Foundation Ireland (SFI) <https://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the industry consortium members: `DP Energy <https://dpenergy.com/>`_, `ESB <https://esb.ie/>`_, `Equinor <https://www.equinor.com/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
 
 Contents
 --------
