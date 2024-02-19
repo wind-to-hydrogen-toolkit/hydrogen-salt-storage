@@ -5,7 +5,7 @@ Read the Docs: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Acknowledgements
 
-The [H-Wind](https://www.marei.ie/project/h-wind) project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [ESB](https://esb.ie/), [Equinor](https://www.equinor.com/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
+The [H-Wind](https://www.marei.ie/project/h-wind) project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
 
 ## Installation
 
