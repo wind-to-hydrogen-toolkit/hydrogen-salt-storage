@@ -324,7 +324,7 @@ def cavern_dataframe(
     cavern_df.drop(columns=["index_right"], inplace=True)
 
     # remove duplicate caverns at each location - keep the layer at the optimal
-    # depth, followed by the thicker layer and then deeper layers
+    # depth, followed by the thicker layer
     conditions = [
         (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
         (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
@@ -336,7 +336,7 @@ def cavern_dataframe(
     choices = [1, 2, 1]
     cavern_df["depth_criteria"] = np.select(conditions, choices)
     cavern_df = cavern_df.sort_values(
-        ["depth_criteria", "Thickness", "TopDepthSeabed"], ascending=False
+        ["depth_criteria", "Thickness"], ascending=False
     ).drop_duplicates(["geometry"])
     cavern_df = cavern_df.drop(columns=["depth_criteria"])
 
@@ -702,24 +702,6 @@ def label_caverns(
                         < (heights[n + 1] + roof_thickness + floor_thickness)
                     )
                 )
-        # conditions = [
-        #     (
-        #         cavern_df["Thickness"]
-        #         < (heights[1] + roof_thickness + floor_thickness)
-        #     ),
-        #     (
-        #         cavern_df["Thickness"]
-        #         >= (heights[1] + roof_thickness + floor_thickness)
-        #     )
-        #     & (
-        #         cavern_df["Thickness"]
-        #         < (heights[2] + roof_thickness + floor_thickness)
-        #     ),
-        #     (
-        #         cavern_df["Thickness"]
-        #         >= (heights[2] + roof_thickness + floor_thickness)
-        #     ),
-        # ]
         choices = [str(x) for x in heights]
         cavern_df["height"] = np.select(conditions, choices)
 
