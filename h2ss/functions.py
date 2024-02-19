@@ -52,7 +52,12 @@ MAX_OPT_DEPTH = 1500
 MIN_DEPTH = 500
 MAX_DEPTH = 2000
 
-depth_dict = {"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH}
+depth_dict = {
+    "min": MIN_DEPTH,
+    "min_opt": MIN_OPT_DEPTH,
+    "max_opt": MAX_OPT_DEPTH,
+    "max": MAX_DEPTH,
+}
 
 
 def zones_of_interest(
@@ -680,10 +685,12 @@ def label_caverns(
         conditions = []
         for n, y in enumerate(heights):
             if n == 0:
-                conditions.append((
-                    cavern_df["Thickness"]
-                    < (heights[1] + roof_thickness + floor_thickness)
-                ))
+                conditions.append(
+                    (
+                        cavern_df["Thickness"]
+                        < (heights[1] + roof_thickness + floor_thickness)
+                    )
+                )
             elif n == len(heights) - 1:
                 conditions.append(
                     (

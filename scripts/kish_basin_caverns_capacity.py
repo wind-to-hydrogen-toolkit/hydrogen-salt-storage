@@ -162,8 +162,25 @@ caverns.drop(
 # cavern volumes
 list(caverns["cavern_volume"].unique())
 
-# total capacity
-caverns[["capacity"]].sum().iloc[0]
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
+
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
+    "%",
+)
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
@@ -228,6 +245,7 @@ def plot_map_alt(
     plt.figure(figsize=(20, 11.5))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles = []
+    classes = sorted(classes)
 
     # halite boundary - use buffering to smooth the outline
     shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)

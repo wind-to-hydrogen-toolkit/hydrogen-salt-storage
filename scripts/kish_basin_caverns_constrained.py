@@ -348,7 +348,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
             column="Thickness",
             zorder=3,
             markersize=markersize,
-            cmap=sns.color_palette("flare", as_cmap=True),
+            cmap="flare",
             linewidth=0,
             marker=".",
             scheme="UserDefined",

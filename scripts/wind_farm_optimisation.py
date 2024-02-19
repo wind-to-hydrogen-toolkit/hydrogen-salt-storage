@@ -231,70 +231,69 @@ working_mass_cumsum_2 = (
     .cumsum()
 )
 
+caverns_low = []
+caverns_high = []
+cap_max = []
 for x in range(len(data)):
     print(data["Name"].iloc[x])
     print("Working mass [kg]:", "{:.6E}".format(data["AHP"].iloc[x]))
-    print(
-        "Number of caverns required:",
+    caverns_low.append(
         working_mass_cumsum_1.loc[
             working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
         ]
         .head(1)
         .index[0]
-        + 1,
-        "-",
+        + 1
+    )
+    caverns_high.append(
         working_mass_cumsum_2.loc[
             working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
         ]
         .head(1)
         .index[0]
-        + 1,
+        + 1
     )
-    print(
-        "Capacity (approx.) [GWh]:",
+    print(f"Number of caverns required: {caverns_low[x]} - {caverns_high[x]}")
+    cap_max.append(
         max(
-            "{:.2f}".format(
-                working_mass_cumsum_1.loc[
-                    working_mass_cumsum_1["working_mass"]
-                    >= data["AHP"].iloc[x]
-                ]
-                .head(1)["capacity"]
-                .values[0]
-            ),
-            "{:.2f}".format(
-                working_mass_cumsum_2.loc[
-                    working_mass_cumsum_2["working_mass"]
-                    >= data["AHP"].iloc[x]
-                ]
-                .head(1)["capacity"]
-                .values[0]
-            ),
-        ),
+            working_mass_cumsum_1.loc[
+                working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
+            ]
+            .head(1)["capacity"]
+            .values[0],
+            working_mass_cumsum_2.loc[
+                working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
+            ]
+            .head(1)["capacity"]
+            .values[0],
+        )
     )
+    print("Capacity (approx.) [GWh]:", "{:.2f}".format(cap_max[x]))
     print("-" * 50)
 
 # total number of caverns
-print(f"Total number of caverns required: {31 + 19 + 13} - {41 + 25 + 17}")
+print(
+    f"Total number of caverns required: {sum(caverns_low)} - {sum(caverns_high)}"
+)
 
 # number of caverns as a percentage of the total available caverns
 print(
     "Number of caverns required as a percentage of all available caverns:",
-    "{:.2f}".format((31 + 19 + 13) / 357 * 100),
+    "{:.2f}".format(sum(caverns_low) / len(caverns) * 100),
     "-",
-    "{:.2f}".format((41 + 25 + 17) / 357 * 100),
+    "{:.2f}".format(sum(caverns_high) / len(caverns) * 100),
     "%",
 )
 
 # total capacity
-total_cap = 3410.4 + 2060.41 + 1410.31
-print(f"Total capacity (approx.):", "{:.2f}".format(total_cap), "GWh")
+print(f"Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(total_cap / 1000 / 122 * 100),
+    "{:.2f}".format(sum(cap_max) / 1000 / 122 * 100),
     "-",
-    "{:.2f}".format(total_cap / 1000 / 84 * 100),
+    "{:.2f}".format(sum(cap_max) / 1000 / 84 * 100),
     "%",
 )
 
@@ -421,6 +420,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
         int(n * 255 / (len(classes) - 2)) for n in range(len(classes) - 1)
     ]
     legend_handles = []
+    classes = sorted(classes)
 
     for a, wf in enumerate(["Codling", "Dublin", "NISA"]):
         ax = fig.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
