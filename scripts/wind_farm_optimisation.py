@@ -385,6 +385,7 @@ sns.boxplot(
     legend=False,
     linecolor="black",
     linewidth=1.1,
+    gap=0.15,
 )
 axes[0].set_ylabel("Transmission distance [km]")
 sns.boxplot(
@@ -400,6 +401,7 @@ sns.boxplot(
     ax=axes[1],
     linecolor="black",
     linewidth=1.1,
+    gap=0.15,
 )
 axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
 axes[1].legend(loc="lower right")

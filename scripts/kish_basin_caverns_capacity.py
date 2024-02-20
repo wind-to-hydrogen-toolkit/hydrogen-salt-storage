@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib import ticker
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
@@ -155,6 +156,11 @@ caverns["capacity"] = cap.energy_storage_capacity(
 
 # ## Stats
 
+# proportion of working gas to total gas
+caverns["working_mass_pct"] = caverns["working_mass"] / (
+    caverns["working_mass"] + caverns["mass_operating_min"]
+)
+
 caverns.drop(
     ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
 ).describe()
@@ -231,6 +237,9 @@ axes[0].set_ylabel("Number of caverns")
 sns.despine()
 plt.tight_layout()
 plt.show()
+
+# copy dataframe
+caverns_pot_all = caverns.copy()
 
 # ## Maps
 
@@ -456,74 +465,6 @@ caverns["working_mass_pct"] = caverns["working_mass"] / (
     caverns["working_mass"] + caverns["mass_operating_min"]
 )
 
-fig, axes = plt.subplots(1, 4, figsize=(11, 4.5))
-sns.boxplot(
-    caverns.reset_index(),
-    y="cavern_depth",
-    color=sns.color_palette("rocket", 1)[0],
-    width=0.2,
-    ax=axes[0],
-    legend=False,
-    linecolor="black",
-    linewidth=1.1,
-)
-axes[0].set_ylabel("Top depth [m]")
-axes[0].set_yticklabels(
-    ["{:,}".format(int(x)) for x in list(axes[0].get_yticks())]
-)
-sns.boxplot(
-    (caverns[["p_operating_min", "p_operating_max"]] / 1e6)
-    .rename(
-        columns={
-            "p_operating_min": "min",
-            "p_operating_max": "max",
-        }
-    )
-    .melt(),
-    y="value",
-    hue="variable",
-    palette="rocket_r",
-    width=0.4,
-    ax=axes[1],
-    linecolor="black",
-    linewidth=1.1,
-)
-axes[1].set_ylabel("Operating pressure [MPa]")
-axes[1].legend()
-sns.boxplot(
-    (caverns[["mass_operating_min", "working_mass"]] / 1e6)
-    .rename(
-        columns={
-            "mass_operating_min": "cushion",
-            "working_mass": "working",
-        }
-    )
-    .melt(),
-    y="value",
-    hue="variable",
-    palette="rocket_r",
-    width=0.4,
-    ax=axes[2],
-    linecolor="black",
-    linewidth=1.1,
-)
-axes[2].set_ylabel("Gas mass [kt]")
-axes[2].legend()
-sns.boxplot(
-    caverns.reset_index(),
-    y="capacity",
-    color=sns.color_palette("rocket", 1)[0],
-    width=0.2,
-    ax=axes[3],
-    legend=False,
-    linecolor="black",
-    linewidth=1.1,
-)
-axes[3].set_ylabel("Energy storage capacity [GWh]")
-sns.despine(bottom=True)
-plt.tight_layout()
-plt.show()
-
 caverns.drop(
     [
         "x",
@@ -559,3 +500,157 @@ print(
 )
 
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
+
+# ## Distribution
+
+
+def cavern_boxplot(caverns):
+    fig, axes = plt.subplots(1, 4, figsize=(11, 4.5))
+    sns.boxplot(
+        caverns,
+        y="cavern_depth",
+        color=sns.color_palette("rocket", 1)[0],
+        width=0.2,
+        ax=axes[0],
+        legend=False,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes[0].set_ylabel("Top depth [m]")
+    axes[0].get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+    )
+    sns.boxplot(
+        (caverns[["p_operating_min", "p_operating_max"]] / 1e6)
+        .rename(
+            columns={
+                "p_operating_min": "min",
+                "p_operating_max": "max",
+            }
+        )
+        .melt(),
+        y="value",
+        hue="variable",
+        palette="rocket_r",
+        width=0.4,
+        ax=axes[1],
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes[1].set_ylabel("Operating pressure [MPa]")
+    axes[1].legend()
+    sns.boxplot(
+        (caverns[["mass_operating_min", "working_mass"]] / 1e6)
+        .rename(
+            columns={
+                "mass_operating_min": "cushion",
+                "working_mass": "working",
+            }
+        )
+        .melt(),
+        y="value",
+        hue="variable",
+        palette="rocket_r",
+        width=0.4,
+        ax=axes[2],
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes[2].set_ylabel("Gas mass [kt]")
+    axes[2].legend()
+    sns.boxplot(
+        caverns,
+        y="capacity",
+        color=sns.color_palette("rocket", 1)[0],
+        width=0.2,
+        ax=axes[3],
+        legend=False,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes[3].set_ylabel("Energy storage capacity [GWh]")
+    sns.despine(bottom=True)
+    plt.tight_layout()
+    plt.show()
+
+
+cavern_boxplot(caverns_pot_all)
+
+cavern_boxplot(caverns)
+
+fig, axes = plt.subplots(3, 2, figsize=(12, 8))
+for variable, label, axis in zip(
+    [
+        "cavern_depth",
+        "working_mass",
+        "p_operating_min",
+        "mass_operating_min",
+        "p_operating_max",
+        "capacity",
+    ],
+    [
+        "Top depth [m]",
+        "Working gas mass [kt]",
+        "Minimum operating pressure [MPa]",
+        "Cushion gas mass [kt]",
+        "Maximum operating pressure [MPa]",
+        "Energy storage capacity [GWh]",
+    ],
+    axes.flat,
+):
+    if variable in ["cavern_depth", "capacity"]:
+        d1 = caverns_pot_all[[variable]]
+        d2 = caverns[[variable]]
+    else:
+        d1 = caverns_pot_all[[variable]] / 1e6
+        d2 = caverns[[variable]] / 1e6
+    sns.boxplot(
+        pd.concat(
+            [d1.set_axis(["all"], axis=1), d2.set_axis(["optimal"], axis=1)]
+        )
+        .melt()
+        .dropna(),
+        x="value",
+        hue="variable",
+        palette="flare_r",
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.3,
+        width=0.55,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+        ax=axis,
+        legend=False,
+    )
+    axis.set_xlabel(label)
+    if variable == "cavern_depth":
+        axis.get_xaxis().set_major_formatter(
+            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+        )
+
+legend_handles = [
+    mpatches.Patch(
+        facecolor=sns.color_palette("flare_r", 2)[0],
+        label="All caverns",
+        edgecolor="black",
+    ),
+    mpatches.Patch(
+        facecolor=sns.color_palette("flare_r", 2)[1],
+        label="155 m caverns at optimal depth range",
+        edgecolor="black",
+    ),
+]
+plt.legend(
+    loc="lower right",
+    handles=legend_handles,
+)
+sns.despine()
+plt.tight_layout()
+plt.show()
