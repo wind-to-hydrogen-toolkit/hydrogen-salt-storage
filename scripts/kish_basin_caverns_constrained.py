@@ -101,6 +101,7 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={"shipping": shipping_b, "edge": edge_buffer},
 )
 
@@ -108,6 +109,7 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={"cables": cables_b, "edge": edge_buffer},
 )
 
@@ -115,6 +117,7 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={"wind_farms": wind_farms, "edge": edge_buffer},
 )
 
@@ -124,6 +127,7 @@ caverns, caverns_excl = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -348,7 +352,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
             column="Thickness",
             zorder=3,
             markersize=markersize,
-            cmap=sns.color_palette("flare", as_cmap=True),
+            cmap="flare",
             linewidth=0,
             marker=".",
             scheme="UserDefined",

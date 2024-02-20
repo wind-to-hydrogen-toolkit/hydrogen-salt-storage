@@ -193,9 +193,9 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
 
     Notes
     -----
-    The number of turbines, :math:`n` of an offshore wind farm was determined
-    using the floor division of the wind farm's maximum nameplate capacity,
-    :math:`P_{owf}` [MW] by the reference wind turbine's rated power,
+    The number of turbines, :math:`n` of an offshore wind farm was
+    determined using the floor division of the wind farm's maximum nameplate
+    capacity, :math:`P_{owf}` [MW] by the reference wind turbine's rated power,
     :math:`P_{rated}` [MW].
 
     .. math::
@@ -227,10 +227,10 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     Notes
     -----
     The annual energy production, :math:`E_{annual}` [MWh], is based on Eqn.
-    (3) of [#Dinh23]_, where :math:`n` is the number of turbines in the wind
-    farm, :math:`w` is the wake loss, which is assumed to be a constant
-    value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in and
-    cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
+    (3) of [#Dinh23]_, where :math:`n` is the number of turbines in
+    the wind farm, :math:`w` is the wake loss, which is assumed to be a
+    constant value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in
+    and cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
     the wind turbine power output, and :math:`f(v)` [s m⁻¹] is the Weibull
     probability distribution function.
 
@@ -330,9 +330,10 @@ def electrolyser_capacity(
 
     The electrolyser capacity, :math:`P_{electrolyser}` [MW] is rounded down
     to an integer and is the product of the number of reference wind turbines
-    of the offshore wind farm, :math:`n`, the rated power of the reference
-    wind turbine, :math:`P_{rated}`, and the ratio of the electrolyser
-    capacity to the offshore wind farm capacity, :math:`F_{electrolyser}`.
+    of the offshore wind farm, :math:`n`, the rated power of the
+    reference wind turbine, :math:`P_{rated}`, and the ratio of the
+    electrolyser capacity to the offshore wind farm capacity,
+    :math:`F_{electrolyser}`.
 
     .. math::
         P_{electrolyser} = \\left\\lfloor n \\cdot P_{rated} \\cdot
@@ -382,10 +383,10 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     i.e. the pipeline capacity is 33% oversized [#IEA19]_.
 
     .. math::
-        CAPEX = 2 \\, \\left( 16,000,000 \\, \\frac{P_{electrolyser}
-        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197,200 \\,
+        CAPEX = 2,000 \\, \\left( 16,000 \\, \\frac{P_{electrolyser}
+        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197.2 \\,
         \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H2} \\cdot v_{H2}
-        \\cdot \\pi}} + 329,000 \\right)
+        \\cdot \\pi}} + 329 \\right)
 
     where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],

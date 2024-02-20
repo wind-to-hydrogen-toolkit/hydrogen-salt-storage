@@ -129,19 +129,20 @@ weibull_k = weibull_k.overlay(land, how="difference")
 
 
 def plot_map(df, label):
+    """Plotting helper function"""
     plt.figure(figsize=(10, 10))
-    ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+    ax1 = plt.axes(projection=ccrs.epsg(rd.CRS))
 
     # add halite boundary - use buffering to smooth the outline
     shape.buffer(1000).buffer(-1000).boundary.plot(
-        ax=ax, color="black", linewidth=2
+        ax=ax1, color="black", linewidth=2
     )
 
     # wind farms
     colours = ["lime", "lime", "darkslategrey", "deepskyblue"]
     for index, colour in zip(range(len(wind_farms)), colours):
         wind_farms.iloc[[index]].plot(
-            ax=ax,
+            ax=ax1,
             hatch="///",
             facecolor="none",
             edgecolor=colour,
@@ -172,23 +173,23 @@ def plot_map(df, label):
         cmap="flare",
         figsize=(6, 6),
         legend=True,
-        ax=ax,
+        ax=ax1,
         zorder=1,
         legend_kwds={"label": label},
     )
 
     cx.add_basemap(
-        ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10
+        ax1, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10
     )
-    ax.gridlines(
+    ax1.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
     )
-    ax.add_artist(
+    ax1.add_artist(
         ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
     )
-    ax.legend(handles=legend_handles, loc="upper right")
+    ax1.legend(handles=legend_handles, loc="upper right")
 
     plt.title(None)
     plt.tight_layout()

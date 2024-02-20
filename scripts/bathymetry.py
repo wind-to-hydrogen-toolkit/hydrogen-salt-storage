@@ -75,6 +75,7 @@ data_.rio.resolution()
 
 
 def plot_bath_map(xds, levels=15, cmap="mako", vmax=None, vmin=None):
+    """Plotting helper function"""
     plt.figure(figsize=(10, 7))
     ax = plt.axes(projection=ccrs.epsg(rd.CRS))
     xds.plot.contourf(

@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib import ticker
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
@@ -88,6 +89,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -155,6 +157,11 @@ caverns["capacity"] = cap.energy_storage_capacity(
 
 # ## Stats
 
+# proportion of working gas to total gas
+caverns["working_mass_pct"] = caverns["working_mass"] / (
+    caverns["working_mass"] + caverns["mass_operating_min"]
+)
+
 caverns.drop(
     ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
 ).describe()
@@ -162,8 +169,25 @@ caverns.drop(
 # cavern volumes
 list(caverns["cavern_volume"].unique())
 
-# total capacity
-caverns[["capacity"]].sum().iloc[0]
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
+
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
+    "%",
+)
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
@@ -215,6 +239,9 @@ sns.despine()
 plt.tight_layout()
 plt.show()
 
+# copy dataframe
+caverns_pot_all = caverns.copy()
+
 # ## Maps
 
 # create exclusion buffer
@@ -226,20 +253,21 @@ def plot_map_alt(
 ):
     """Helper function to plot caverns within the zones of interest"""
     plt.figure(figsize=(20, 11.5))
-    axis = plt.axes(projection=ccrs.epsg(rd.CRS))
-    legend_handles = []
+    axis1 = plt.axes(projection=ccrs.epsg(rd.CRS))
+    legend_handles1 = []
+    classes = sorted(classes)
 
     # halite boundary - use buffering to smooth the outline
     shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
     shape.plot(
-        ax=axis,
+        ax=axis1,
         edgecolor="darkslategrey",
         color="none",
         linewidth=2,
         alpha=0.5,
         zorder=2,
     )
-    legend_handles.append(
+    legend_handles1.append(
         mpatches.Patch(
             facecolor="none",
             linewidth=2,
@@ -250,17 +278,17 @@ def plot_map_alt(
     )
 
     zones_gdf.plot(
-        ax=axis, zorder=1, linewidth=0, facecolor="white", alpha=0.45
+        ax=axis1, zorder=1, linewidth=0, facecolor="white", alpha=0.45
     )
     zones_gdf.plot(
-        ax=axis,
+        ax=axis1,
         zorder=2,
         edgecolor="slategrey",
         linestyle="dotted",
         linewidth=1.25,
         facecolor="none",
     )
-    legend_handles.append(
+    legend_handles1.append(
         mpatches.Patch(
             facecolor="none",
             linestyle="dotted",
@@ -271,7 +299,7 @@ def plot_map_alt(
     )
 
     pd.concat([buffer, wind_farms]).dissolve().clip(shape).plot(
-        ax=axis,
+        ax=axis1,
         facecolor="none",
         linewidth=0.65,
         edgecolor="slategrey",
@@ -279,7 +307,7 @@ def plot_map_alt(
         alpha=0.5,
         hatch="//",
     )
-    legend_handles.append(
+    legend_handles1.append(
         mpatches.Patch(
             facecolor="none",
             hatch="//",
@@ -290,7 +318,7 @@ def plot_map_alt(
         )
     )
 
-    legend_handles.append(
+    legend_handles1.append(
         mpatches.Patch(
             label="Hydrogen storage \ncapacity [GWh]", visible=False
         )
@@ -300,16 +328,16 @@ def plot_map_alt(
     for n, y in enumerate(colours):
         if n == 0:
             c = cavern_df[cavern_df["capacity"] < classes[1]]
-            label = f"< {classes[1]}"
+            label1 = f"< {classes[1]}"
         elif n == len(classes) - 1:
             c = cavern_df[cavern_df["capacity"] >= classes[n]]
-            label = f"≥ {classes[n]}"
+            label1 = f"≥ {classes[n]}"
         else:
             c = cavern_df[
                 (cavern_df["capacity"] >= classes[n])
                 & (cavern_df["capacity"] < classes[n + 1])
             ]
-            label = f"{classes[n]} - {classes[n + 1]}"
+            label1 = f"{classes[n]} - {classes[n + 1]}"
         if top_depth:
             for df, markersize in zip(
                 [
@@ -321,7 +349,7 @@ def plot_map_alt(
             ):
                 if len(df) > 0:
                     df.centroid.plot(
-                        ax=axis,
+                        ax=axis1,
                         zorder=3,
                         linewidth=0,
                         marker=".",
@@ -330,7 +358,7 @@ def plot_map_alt(
                     )
         else:
             gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-                ax=axis,
+                ax=axis1,
                 scheme="UserDefined",
                 classification_kwds={"bins": classes[1:]},
                 column="capacity",
@@ -339,26 +367,26 @@ def plot_map_alt(
                 cmap="flare",
                 markersize=20,
             )
-        legend_handles.append(
+        legend_handles1.append(
             mpatches.Patch(
-                facecolor=sns.color_palette("flare", 256)[y], label=label
+                facecolor=sns.color_palette("flare", 256)[y], label=label1
             )
         )
 
     if top_depth:
-        legend_handles.append(
+        legend_handles1.append(
             mpatches.Patch(label="Cavern top depth [m]", visible=False)
         )
-        for markersize, label in zip(
+        for markersize, label1 in zip(
             [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
         ):
-            legend_handles.append(
+            legend_handles1.append(
                 Line2D(
                     [0],
                     [0],
                     marker=".",
                     linewidth=0,
-                    label=label,
+                    label=label1,
                     color="darkslategrey",
                     markersize=markersize,
                 )
@@ -368,16 +396,16 @@ def plot_map_alt(
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
     cx.add_basemap(
-        axis, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels, zoom=12
+        axis1, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels, zoom=12
     )
-    axis.gridlines(
+    axis1.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
         xlabel_style={"fontsize": fontsize},
         ylabel_style={"fontsize": fontsize},
     )
-    axis.add_artist(
+    axis1.add_artist(
         ScaleBar(
             1,
             box_alpha=0,
@@ -390,7 +418,7 @@ def plot_map_alt(
     plt.legend(
         loc="lower right",
         bbox_to_anchor=(1, 0.05),
-        handles=legend_handles,
+        handles=legend_handles1,
         fontsize=fontsize,
     )
 
@@ -413,6 +441,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -433,6 +462,11 @@ caverns = fns.label_caverns(
 # calculate volumes and capacities
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
+# proportion of working gas to total gas
+caverns["working_mass_pct"] = caverns["working_mass"] / (
+    caverns["working_mass"] + caverns["mass_operating_min"]
+)
+
 caverns.drop(
     [
         "x",
@@ -447,13 +481,179 @@ caverns.drop(
     axis=1,
 ).describe()
 
-# cavern volumes
-list(caverns["cavern_volume"].unique())
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
 
-# total volume
-caverns[["cavern_volume"]].sum().iloc[0]
-
-# total capacity
-caverns[["capacity"]].sum().iloc[0]
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
+    "%",
+)
 
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
+
+# ## Distribution
+
+
+def cavern_boxplot(cavern_df):
+    """Helper function for creating boxplots"""
+    fig1, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
+    sns.boxplot(
+        cavern_df,
+        y="cavern_depth",
+        color=sns.color_palette("rocket", 1)[0],
+        width=0.2,
+        ax=axes1[0],
+        legend=False,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes1[0].set_ylabel("Top depth [m]")
+    axes1[0].get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+    )
+    sns.boxplot(
+        (cavern_df[["p_operating_min", "p_operating_max"]] / 1e6)
+        .rename(
+            columns={
+                "p_operating_min": "min",
+                "p_operating_max": "max",
+            }
+        )
+        .melt(),
+        y="value",
+        hue="variable",
+        palette="rocket_r",
+        width=0.4,
+        ax=axes1[1],
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes1[1].set_ylabel("Operating pressure [MPa]")
+    axes1[1].legend()
+    sns.boxplot(
+        (cavern_df[["mass_operating_min", "working_mass"]] / 1e6)
+        .rename(
+            columns={
+                "mass_operating_min": "cushion",
+                "working_mass": "working",
+            }
+        )
+        .melt(),
+        y="value",
+        hue="variable",
+        palette="rocket_r",
+        width=0.4,
+        ax=axes1[2],
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes1[2].set_ylabel("Gas mass [kt]")
+    axes1[2].legend()
+    sns.boxplot(
+        cavern_df,
+        y="capacity",
+        color=sns.color_palette("rocket", 1)[0],
+        width=0.2,
+        ax=axes1[3],
+        legend=False,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.1,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+    )
+    axes1[3].set_ylabel("Energy storage capacity [GWh]")
+    sns.despine(bottom=True)
+    plt.tight_layout()
+    plt.show()
+
+
+cavern_boxplot(caverns_pot_all)
+
+cavern_boxplot(caverns)
+
+fig, axes = plt.subplots(3, 2, figsize=(12, 8))
+for variable, label, axis in zip(
+    [
+        "cavern_depth",
+        "working_mass",
+        "p_operating_min",
+        "mass_operating_min",
+        "p_operating_max",
+        "capacity",
+    ],
+    [
+        "Top depth [m]",
+        "Working gas mass [kt]",
+        "Minimum operating pressure [MPa]",
+        "Cushion gas mass [kt]",
+        "Maximum operating pressure [MPa]",
+        "Energy storage capacity [GWh]",
+    ],
+    axes.flat,
+):
+    if variable in ["cavern_depth", "capacity"]:
+        d1 = caverns_pot_all[[variable]]
+        d2 = caverns[[variable]]
+    else:
+        d1 = caverns_pot_all[[variable]] / 1e6
+        d2 = caverns[[variable]] / 1e6
+    sns.boxplot(
+        pd.concat(
+            [d1.set_axis(["all"], axis=1), d2.set_axis(["optimal"], axis=1)]
+        )
+        .melt()
+        .dropna(),
+        x="value",
+        hue="variable",
+        palette="flare_r",
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.3,
+        width=0.55,
+        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
+        ax=axis,
+        legend=False,
+    )
+    axis.set_xlabel(label)
+    if variable == "cavern_depth":
+        axis.get_xaxis().set_major_formatter(
+            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+        )
+
+legend_handles = [
+    mpatches.Patch(
+        facecolor=sns.color_palette("flare_r", 2)[0],
+        label="All caverns",
+        edgecolor="black",
+    ),
+    mpatches.Patch(
+        facecolor=sns.color_palette("flare_r", 2)[1],
+        label="155 m caverns at optimal depth range",
+        edgecolor="black",
+    ),
+]
+plt.legend(
+    loc="lower right",
+    handles=legend_handles,
+)
+sns.despine()
+plt.tight_layout()
+plt.show()

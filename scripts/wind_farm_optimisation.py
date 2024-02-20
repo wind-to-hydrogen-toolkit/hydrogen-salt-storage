@@ -90,6 +90,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -112,11 +113,16 @@ caverns = fns.label_caverns(
 # calculate volumes and capacities
 caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
 
-# total capacity
-print("{:.2f}".format(caverns[["capacity"]].sum().iloc[0]))
-
-# total working mass
-print("{:.2E}".format(caverns[["working_mass"]].sum().iloc[0]))
+# totals
+caverns[
+    [
+        "cavern_volume",
+        "working_mass",
+        "capacity",
+        "mass_operating_min",
+        "mass_operating_max",
+    ]
+].sum()
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -216,30 +222,81 @@ data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
 
 working_mass_cumsum_1 = (
     caverns.sort_values("working_mass", ascending=False)
-    .reset_index()["working_mass"]
+    .reset_index()[["working_mass", "capacity"]]
     .cumsum()
 )
 
 working_mass_cumsum_2 = (
-    caverns.sort_values("working_mass").reset_index()["working_mass"].cumsum()
+    caverns.sort_values("working_mass")
+    .reset_index()[["working_mass", "capacity"]]
+    .cumsum()
 )
 
+caverns_low = []
+caverns_high = []
+cap_max = []
 for x in range(len(data)):
     print(data["Name"].iloc[x])
-    print("Working mass [kg]:", data["AHP"].iloc[x])
-    print(
-        "Number of caverns required:",
-        working_mass_cumsum_1.loc[working_mass_cumsum_1 >= data["AHP"].iloc[x]]
+    print("Working mass [kg]:", "{:.6E}".format(data["AHP"].iloc[x]))
+    caverns_low.append(
+        working_mass_cumsum_1.loc[
+            working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
+        ]
         .head(1)
         .index[0]
-        + 1,
-        "-",
-        working_mass_cumsum_2.loc[working_mass_cumsum_2 >= data["AHP"].iloc[x]]
-        .head(1)
-        .index[0]
-        + 1,
+        + 1
     )
+    caverns_high.append(
+        working_mass_cumsum_2.loc[
+            working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
+        ]
+        .head(1)
+        .index[0]
+        + 1
+    )
+    print(f"Number of caverns required: {caverns_low[x]} - {caverns_high[x]}")
+    cap_max.append(
+        max(
+            working_mass_cumsum_1.loc[
+                working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
+            ]
+            .head(1)["capacity"]
+            .values[0],
+            working_mass_cumsum_2.loc[
+                working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
+            ]
+            .head(1)["capacity"]
+            .values[0],
+        )
+    )
+    print("Capacity (approx.) [GWh]:", "{:.2f}".format(cap_max[x]))
     print("-" * 50)
+
+# total number of caverns
+print(
+    f"Total number of caverns required: {sum(caverns_low)} - {sum(caverns_high)}"
+)
+
+# number of caverns as a percentage of the total available caverns
+print(
+    "Number of caverns required as a percentage of all available caverns:",
+    "{:.2f}".format(sum(caverns_low) / len(caverns) * 100),
+    "-",
+    "{:.2f}".format(sum(caverns_high) / len(caverns) * 100),
+    "%",
+)
+
+# total capacity
+print("Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
+
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
+    "{:.2f}".format(sum(cap_max) / 1000 / 122 * 100),
+    "-",
+    "{:.2f}".format(sum(cap_max) / 1000 / 84 * 100),
+    "%",
+)
 
 # ## Calculate distance between caverns and the wind farms and injection point [km]
 
@@ -275,11 +332,11 @@ for i in range(len(wind_farms)):
                 + caverns.iloc[[j]]["distance_ip"].values[0]
             )
         )
-    caverns[f"distance{wind_farms['Name_'][i]}"] = distance_wf[
+    caverns[f"dist_{wind_farms['Name_'][i]}"] = distance_wf[
         wind_farms["Name_"][i]
     ]
 
-caverns = caverns.rename(columns={"distanceNorth": "distanceNISA"})
+caverns = caverns.rename(columns={"dist_North": "dist_NISA"})
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
@@ -295,7 +352,7 @@ data
 for wf in ["Codling", "Dublin", "NISA"]:
     caverns[f"LCOT_{wf}"] = opt.lcot_pipeline(
         capex=data[data["Name"].str.contains(wf)]["CAPEX"].values[0],
-        transmission_distance=caverns[f"distance{wf}"],
+        transmission_distance=caverns[f"dist_{wf}"],
         ahp=data[data["Name"].str.contains(wf)]["AHP"].values[0],
     )
 
@@ -305,14 +362,53 @@ caverns[
         "working_mass",
         "capacity",
         "distance_ip",
-        "distanceCodling",
-        "distanceDublin",
-        "distanceNISA",
+        "dist_Codling",
+        "dist_Dublin",
+        "dist_NISA",
         "LCOT_Codling",
         "LCOT_Dublin",
         "LCOT_NISA",
     ]
 ].describe()
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+sns.boxplot(
+    caverns.filter(like="dist_")
+    .set_axis(
+        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.35,
+    ax=axes[0],
+    legend=False,
+    linecolor="black",
+    linewidth=1.1,
+    gap=0.15,
+)
+axes[0].set_ylabel("Transmission distance [km]")
+sns.boxplot(
+    caverns.filter(like="LCOT_")
+    .set_axis(
+        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
+    )
+    .melt(),
+    y="value",
+    hue="variable",
+    palette="rocket_r",
+    width=0.35,
+    ax=axes[1],
+    linecolor="black",
+    linewidth=1.1,
+    gap=0.15,
+)
+axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
+axes[1].legend(loc="lower right")
+sns.despine(bottom=True)
+plt.tight_layout()
+plt.show()
 
 # ## Maps
 
@@ -321,30 +417,31 @@ shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 def plot_map_facet(cavern_df, classes, fontsize=11.5):
     """Helper function for plotting LCOT facet maps"""
-    fig = plt.figure(figsize=(11, 11.75))
+    fig1 = plt.figure(figsize=(11, 11.75))
     xmin_, ymin_, xmax_, ymax_ = cavern_df.total_bounds
     colours = [
         int(n * 255 / (len(classes) - 2)) for n in range(len(classes) - 1)
     ]
     legend_handles = []
+    classes = sorted(classes)
 
-    for a, wf in enumerate(["Codling", "Dublin", "NISA"]):
-        ax = fig.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
+    for a, wf1 in enumerate(["Codling", "Dublin", "NISA"]):
+        ax1 = fig1.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
         gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-            ax=ax,
+            ax=ax1,
             scheme="UserDefined",
             classification_kwds={"bins": classes[1:]},
-            column=f"LCOT_{wf}",
+            column=f"LCOT_{wf1}",
             zorder=2,
             marker=".",
             cmap="flare",
             markersize=8,
         )
         shape.plot(
-            ax=ax, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
+            ax=ax1, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
         )
         cx.add_basemap(
-            ax,
+            ax1,
             crs=rd.CRS,
             source=cx.providers.CartoDB.VoyagerNoLabels,
             attribution=False,
@@ -353,7 +450,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             draw_labels = {"bottom": "x", "left": "y"}
         else:
             draw_labels = {"bottom": "x"}
-        ax.gridlines(
+        ax1.gridlines(
             draw_labels=draw_labels,
             color="none",
             xlabel_style={"fontsize": fontsize},
@@ -362,7 +459,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             yformatter=LatitudeFormatter(number_format=".2f"),
         )
         if a == 2:
-            ax.add_artist(
+            ax1.add_artist(
                 ScaleBar(
                     1,
                     box_alpha=0,
@@ -373,20 +470,20 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             )
         plt.xlim(xmin_ - 1000, xmax_ + 1000)
         plt.ylim(ymin_ - 1000, ymax_ + 1000)
-        if wf == "Codling":
-            ax.set_title(f"{wf} Wind Park")
-        elif wf == "Dublin":
-            ax.set_title(f"{wf} Array")
+        if wf1 == "Codling":
+            ax1.set_title(f"{wf1} Wind Park")
+        elif wf1 == "Dublin":
+            ax1.set_title(f"{wf1} Array")
         else:
-            ax.set_title("North Irish Sea Array")
+            ax1.set_title("North Irish Sea Array")
 
-    for n, c in enumerate(colours):
-        if n == 0:
-            label = f"< {classes[1:][n]}"
-        elif n == len(colours) - 1:
+    for n1, c in enumerate(colours):
+        if n1 == 0:
+            label = f"< {classes[1:][n1]}"
+        elif n1 == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n - 1]:.2f} - {classes[1:][n]:.2f}"
+            label = f"{classes[1:][n1 - 1]:.2f} - {classes[1:][n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label

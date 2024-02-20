@@ -8,12 +8,14 @@ Storage of hydrogen from offshore wind in salt caverns
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
-Source code is available on GitHub: https://github.com/nmstreethran/hydrogen-salt-storage.
+Source code is available on GitHub: https://github.com/H-Wind-UCC/hydrogen-salt-storage.
 
 Acknowledgements
 ----------------
 
-This research was supported by a research grant from `Science Foundation Ireland (SFI) <http://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the `H-Wind <https://www.marei.ie/project/h-wind/>`_ academic-industry consortium members: `DP Energy <https://dpenergy.com/>`_, `ESB <https://esb.ie/>`_, `Equinor <https://www.equinor.com/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
+The `H-Wind <https://www.marei.ie/project/h-wind/>`_ project was supported by a research grant from `Science Foundation Ireland (SFI) <https://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the industry consortium members: `DP Energy <https://dpenergy.com/>`_, `Equinor <https://www.equinor.com/>`_, `ESB <https://esb.ie/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
+
+.. image:: https://raw.githubusercontent.com/H-Wind-UCC/.github/main/images/logos.png
 
 Contents
 --------
@@ -34,7 +36,7 @@ Clone the Git repository:
 
 .. code-block:: shell
 
-   git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+   git clone https://github.com/H-Wind-UCC/hydrogen-salt-storage.git
    cd hydrogen-salt-storage
 
 Create a virtual environment and install all requirements:
@@ -50,7 +52,7 @@ Run tests:
 
 .. code-block:: shell
 
-   python -m pytest
+   python -m pytest --cov
 
 Indices and tables
 ------------------

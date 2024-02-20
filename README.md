@@ -5,7 +5,7 @@ Read the Docs: <https://hydrogen-salt-storage.readthedocs.io>
 
 ## Acknowledgements
 
-This research was supported by a research grant from [Science Foundation Ireland (SFI)](http://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the [H-Wind](https://www.marei.ie/project/h-wind) academic-industry consortium members: [DP Energy](https://dpenergy.com/), [ESB](https://esb.ie/), [Equinor](https://www.equinor.com/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
+The [H-Wind](https://www.marei.ie/project/h-wind) project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
 
 ## Installation
 
@@ -16,7 +16,7 @@ This project uses [Python](https://www.python.org/) 3.11.
 Clone this Git repository:
 
 ```sh
-git clone https://github.com/nmstreethran/hydrogen-salt-storage.git
+git clone https://github.com/H-Wind-UCC/hydrogen-salt-storage.git
 cd hydrogen-salt-storage
 ```
 
@@ -32,13 +32,7 @@ python -m pip install -r requirements.txt
 To run tests:
 
 ```sh
-python -m pytest
-```
-
-To generate a coverage report with the tests:
-
-```sh
-coverage run -m pytest && coverage report -m
+python -m pytest --cov
 ```
 
 ### Installation of the `h2ss` module
@@ -47,7 +41,7 @@ coverage run -m pytest && coverage report -m
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install git+https://github.com/nmstreethran/hydrogen-salt-storage
+python -m pip install git+https://github.com/H-Wind-UCC/hydrogen-salt-storage
 ```
 
 ## Documentation

@@ -6,7 +6,7 @@
         {
             "label": "nbconvert",
             "type": "shell",
-            "command": "source .venv/bin/activate && ./convert-notebooks.sh",
+            "command": "./convert-notebooks.sh",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -43,7 +43,7 @@
         {
             "label": "sanitise-notebooks",
             "type": "shell",
-            "command": "source .venv/bin/activate && jupyter nbconvert --sanitize-html --to notebook --inplace notebooks/*.ipynb",
+            "command": "source .venv/bin/activate && jupyter nbconvert --sanitize-html --to notebook --inplace docs/notebooks/*.ipynb",
             "problemMatcher": [],
             "group": {
                 "kind": "build"
@@ -52,20 +52,11 @@
         {
             "label": "pytest",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest",
+            "command": "source .venv/bin/activate && python -m pytest --cov",
             "problemMatcher": [],
             "group": {
                 "kind": "test",
                 "isDefault": true
-            }
-        },
-        {
-            "label": "pytest-coverage",
-            "type": "shell",
-            "command": "source .venv/bin/activate && coverage run -m pytest && coverage report -m",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
             }
         },
         {
