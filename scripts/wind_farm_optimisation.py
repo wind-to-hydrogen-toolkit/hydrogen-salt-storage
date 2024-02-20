@@ -90,6 +90,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
     zones_gdf=zones,
     zones_ds=zds,
     dat_extent=extent,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -286,7 +287,7 @@ print(
 )
 
 # total capacity
-print(f"Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
+print("Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
@@ -416,7 +417,7 @@ shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 def plot_map_facet(cavern_df, classes, fontsize=11.5):
     """Helper function for plotting LCOT facet maps"""
-    fig = plt.figure(figsize=(11, 11.75))
+    fig1 = plt.figure(figsize=(11, 11.75))
     xmin_, ymin_, xmax_, ymax_ = cavern_df.total_bounds
     colours = [
         int(n * 255 / (len(classes) - 2)) for n in range(len(classes) - 1)
@@ -424,23 +425,23 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
     legend_handles = []
     classes = sorted(classes)
 
-    for a, wf in enumerate(["Codling", "Dublin", "NISA"]):
-        ax = fig.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
+    for a, wf1 in enumerate(["Codling", "Dublin", "NISA"]):
+        ax1 = fig1.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
         gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-            ax=ax,
+            ax=ax1,
             scheme="UserDefined",
             classification_kwds={"bins": classes[1:]},
-            column=f"LCOT_{wf}",
+            column=f"LCOT_{wf1}",
             zorder=2,
             marker=".",
             cmap="flare",
             markersize=8,
         )
         shape.plot(
-            ax=ax, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
+            ax=ax1, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
         )
         cx.add_basemap(
-            ax,
+            ax1,
             crs=rd.CRS,
             source=cx.providers.CartoDB.VoyagerNoLabels,
             attribution=False,
@@ -449,7 +450,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             draw_labels = {"bottom": "x", "left": "y"}
         else:
             draw_labels = {"bottom": "x"}
-        ax.gridlines(
+        ax1.gridlines(
             draw_labels=draw_labels,
             color="none",
             xlabel_style={"fontsize": fontsize},
@@ -458,7 +459,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             yformatter=LatitudeFormatter(number_format=".2f"),
         )
         if a == 2:
-            ax.add_artist(
+            ax1.add_artist(
                 ScaleBar(
                     1,
                     box_alpha=0,
@@ -469,20 +470,20 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             )
         plt.xlim(xmin_ - 1000, xmax_ + 1000)
         plt.ylim(ymin_ - 1000, ymax_ + 1000)
-        if wf == "Codling":
-            ax.set_title(f"{wf} Wind Park")
-        elif wf == "Dublin":
-            ax.set_title(f"{wf} Array")
+        if wf1 == "Codling":
+            ax1.set_title(f"{wf1} Wind Park")
+        elif wf1 == "Dublin":
+            ax1.set_title(f"{wf1} Array")
         else:
-            ax.set_title("North Irish Sea Array")
+            ax1.set_title("North Irish Sea Array")
 
-    for n, c in enumerate(colours):
-        if n == 0:
-            label = f"< {classes[1:][n]}"
-        elif n == len(colours) - 1:
+    for n1, c in enumerate(colours):
+        if n1 == 0:
+            label = f"< {classes[1:][n1]}"
+        elif n1 == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n - 1]:.2f} - {classes[1:][n]:.2f}"
+            label = f"{classes[1:][n1 - 1]:.2f} - {classes[1:][n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label

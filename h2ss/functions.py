@@ -602,7 +602,12 @@ def generate_caverns_with_constraints(
         diameter=diameter,
         separation=separation,
     )
-    cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df, depths=depths, roof_thickness=roof_thickness)
+    cavern_df = cavern_dataframe(
+        dat_zone=zones_ds,
+        cavern_df=cavern_df,
+        depths=depths,
+        roof_thickness=roof_thickness,
+    )
     print("-" * 60)
 
     print("Without constraints, excluding salt formation edges...")
@@ -675,7 +680,7 @@ def label_caverns(
         cavern_df["height"] = heights[0]
     else:
         conditions = []
-        for n in range(len(heights)):
+        for n, _ in enumerate(heights):
             if n == 0:
                 conditions.append(
                     (

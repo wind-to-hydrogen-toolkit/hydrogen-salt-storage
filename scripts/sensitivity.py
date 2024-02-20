@@ -6,7 +6,6 @@
 import os
 import sys
 
-import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -78,6 +77,7 @@ def sensitivity_calc(
     min_depth_base,
     max_depth_base,
 ):
+    """Calculate sensitivity"""
     capacity_list = []
     for x in var_list:
         if quantity == "height":
@@ -128,6 +128,7 @@ def sensitivity_calc(
             zones_gdf=zones,
             zones_ds=zds,
             dat_extent=extent,
+            depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
             exclusions={
                 "wells": wells_b,
                 "wind_farms": wind_farms,
@@ -147,8 +148,9 @@ def sensitivity_calc(
     return capacity_list
 
 
-# https://stackoverflow.com/a/45669280
 class HiddenPrints:
+    """Suppress print statements: https://stackoverflow.com/a/45669280"""
+
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
@@ -159,7 +161,8 @@ class HiddenPrints:
 
 
 def sensitivity(height_base=155, min_depth_base=1000, max_depth_base=1500):
-    sdf = {}
+    """Calculate sensitivity"""
+    sdf1 = {}
 
     # base case
     with HiddenPrints():
@@ -185,14 +188,14 @@ def sensitivity(height_base=155, min_depth_base=1000, max_depth_base=1500):
                 max_depth_base=max_depth_base,
             )
 
-        sdf[y] = pd.DataFrame({"capacity": capacity_list, y: x})
+        sdf1[y] = pd.DataFrame({"capacity": capacity_list, y: x})
 
         # percentage change
-        sdf[y]["diff_capacity"] = (
-            (sdf[y]["capacity"] - base_case) / base_case * 100
+        sdf1[y]["diff_capacity"] = (
+            (sdf1[y]["capacity"] - base_case) / base_case * 100
         )
 
-    return sdf
+    return sdf1
 
 
 sdf = sensitivity()
