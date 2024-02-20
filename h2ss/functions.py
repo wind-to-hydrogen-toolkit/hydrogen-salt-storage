@@ -47,10 +47,6 @@ FLOOR_THICKNESS = 10
 CAVERN_DIAMETER = 80
 CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
-MIN_OPT_DEPTH = 1000
-MAX_OPT_DEPTH = 1500
-MIN_DEPTH = 500
-MAX_DEPTH = 2000
 
 
 def zones_of_interest(
@@ -276,7 +272,7 @@ def generate_caverns_hexagonal_grid(
 def cavern_dataframe(
     dat_zone,
     cavern_df,
-    depths={"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH,},
+    depths,
     roof_thickness=ROOF_THICKNESS,
 ):
     """Merge halite data for each cavern location and create a dataframe.
@@ -561,8 +557,10 @@ def generate_caverns_with_constraints(
     zones_ds,
     dat_extent,
     exclusions,
+    depths,
     diameter=CAVERN_DIAMETER,
     separation=CAVERN_SEPARATION,
+    roof_thickness=ROOF_THICKNESS,
 ):
     """Add constraints to cavern configuration.
 
@@ -584,10 +582,14 @@ def generate_caverns_with_constraints(
         ``"wind_farms"``: offshore wind farms;
         ``"wells"``: exporation wells;
         ``"shipwrecks"``: shipwrecks
+    depths : dict[str, float]
+        Dictionary of cavern top depth ranges [m] for labelling
     diameter : float
         Diameter of the cavern [m]
     separation : float
         Cavern separation distance [m]
+    roof_thickness : float
+        Salt roof thickness [m]
 
     Returns
     -------
@@ -600,7 +602,7 @@ def generate_caverns_with_constraints(
         diameter=diameter,
         separation=separation,
     )
-    cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df)
+    cavern_df = cavern_dataframe(dat_zone=zones_ds, cavern_df=cavern_df, depths=depths, roof_thickness=roof_thickness)
     print("-" * 60)
 
     print("Without constraints, excluding salt formation edges...")
@@ -642,7 +644,7 @@ def generate_caverns_with_constraints(
 def label_caverns(
     cavern_df,
     heights,
-    depths={"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH,},
+    depths,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
 ):
