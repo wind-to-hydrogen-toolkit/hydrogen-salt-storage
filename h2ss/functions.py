@@ -52,13 +52,6 @@ MAX_OPT_DEPTH = 1500
 MIN_DEPTH = 500
 MAX_DEPTH = 2000
 
-depth_dict = {
-    "min": MIN_DEPTH,
-    "min_opt": MIN_OPT_DEPTH,
-    "max_opt": MAX_OPT_DEPTH,
-    "max": MAX_DEPTH,
-}
-
 
 def zones_of_interest(
     dat_xr,
@@ -283,9 +276,8 @@ def generate_caverns_hexagonal_grid(
 def cavern_dataframe(
     dat_zone,
     cavern_df,
-    depths=depth_dict,
+    depths={"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH,},
     roof_thickness=ROOF_THICKNESS,
-    floor_thickness=FLOOR_THICKNESS,
 ):
     """Merge halite data for each cavern location and create a dataframe.
 
@@ -299,8 +291,6 @@ def cavern_dataframe(
         Dictionary of cavern top depth ranges [m] for labelling
     roof_thickness : float
         Salt roof thickness [m]
-    floor_thickness : float
-        Minimum salt floor thickness [m]
 
     Returns
     -------
@@ -652,7 +642,7 @@ def generate_caverns_with_constraints(
 def label_caverns(
     cavern_df,
     heights,
-    depths=depth_dict,
+    depths={"min": MIN_DEPTH, "min_opt": MIN_OPT_DEPTH, "max_opt": MAX_OPT_DEPTH, "max": MAX_DEPTH,},
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
 ):
@@ -683,7 +673,7 @@ def label_caverns(
         cavern_df["height"] = heights[0]
     else:
         conditions = []
-        for n, y in enumerate(heights):
+        for n in range(len(heights)):
             if n == 0:
                 conditions.append(
                     (
