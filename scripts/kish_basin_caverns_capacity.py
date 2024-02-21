@@ -183,10 +183,8 @@ caverns[
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
-    "%",
+    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
+    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
 )
 
 # total capacity at various depth/height combinations
@@ -337,7 +335,7 @@ def plot_map_alt(
                 (cavern_df["capacity"] >= classes[n])
                 & (cavern_df["capacity"] < classes[n + 1])
             ]
-            label1 = f"{classes[n]} - {classes[n + 1]}"
+            label1 = f"{classes[n]}–{classes[n + 1]}"
         if top_depth:
             for df, markersize in zip(
                 [
@@ -378,7 +376,7 @@ def plot_map_alt(
             mpatches.Patch(label="Cavern top depth [m]", visible=False)
         )
         for markersize, label1 in zip(
-            [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
+            [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
         ):
             legend_handles1.append(
                 Line2D(
@@ -495,10 +493,8 @@ caverns[
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
-    "%",
+    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
+    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
 )
 
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
@@ -641,19 +637,16 @@ for variable, label, axis in zip(
 legend_handles = [
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[0],
-        label="All caverns",
+        label="85–311 m tall caverns at 500–2,000 m depth",
         edgecolor="black",
     ),
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[1],
-        label="155 m caverns at optimal depth range",
+        label="155 m tall caverns at 1,000–1,500 m depth",
         edgecolor="black",
     ),
 ]
-plt.legend(
-    loc="lower right",
-    handles=legend_handles,
-)
+plt.legend(loc="lower right", handles=legend_handles, fontsize=11.5)
 sns.despine()
 plt.tight_layout()
 plt.show()

@@ -274,28 +274,24 @@ for x in range(len(data)):
 
 # total number of caverns
 print(
-    f"Total number of caverns required: {sum(caverns_low)} - {sum(caverns_high)}"
+    f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}"
 )
 
 # number of caverns as a percentage of the total available caverns
 print(
     "Number of caverns required as a percentage of all available caverns:",
-    "{:.2f}".format(sum(caverns_low) / len(caverns) * 100),
-    "-",
-    "{:.2f}".format(sum(caverns_high) / len(caverns) * 100),
-    "%",
+    f"{(sum(caverns_low) / len(caverns) * 100):.2f}–"
+    + f"{(sum(caverns_high) / len(caverns) * 100):.2f}%",
 )
 
 # total capacity
-print("Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
+print(f"Total capacity (approx.): {sum(cap_max):.2f} GWh")
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(sum(cap_max) / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(sum(cap_max) / 1000 / 84 * 100),
-    "%",
+    f"{(sum(cap_max) / 1000 / 122 * 100):.2f}–"
+    + f"{(sum(cap_max) / 1000 / 84 * 100):.2f}%",
 )
 
 # ## Calculate distance between caverns and the wind farms and injection point [km]
@@ -483,7 +479,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n1 - 1]:.2f} - {classes[1:][n1]:.2f}"
+            label = f"{classes[1:][n1 - 1]:.2f}–{classes[1:][n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label

@@ -179,7 +179,7 @@ buffer = buffer.overlay(land, how="difference")
 def plot_map(dat_xr):
     """Helper function to plot constraints and exclusions"""
     # initialise figure
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(10, 10))
     axis = plt.axes(projection=ccrs.epsg(rd.CRS))
 
     # halite boundary - use buffering to smooth the outline
@@ -251,7 +251,9 @@ def plot_map(dat_xr):
         )
 
     # add basemap and map elements
-    cx.add_basemap(axis, crs=rd.CRS, source=cx.providers.CartoDB.Voyager)
+    cx.add_basemap(
+        axis, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=11
+    )
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -372,7 +374,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
         mpatches.Patch(label="Cavern top depth [m]", visible=False)
     )
     for markersize, label in zip(
-        [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
+        [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
     ):
         legend_handles.append(
             Line2D(
