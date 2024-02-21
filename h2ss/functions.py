@@ -284,7 +284,11 @@ def cavern_dataframe(
     cavern_df : geopandas.GeoDataFrame
         Geodataframe of caverns within the zone of interest
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     roof_thickness : float
         Salt roof thickness [m]
 
@@ -583,7 +587,11 @@ def generate_caverns_with_constraints(
         ``"wells"``: exporation wells;
         ``"shipwrecks"``: shipwrecks
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     diameter : float
         Diameter of the cavern [m]
     separation : float
@@ -662,7 +670,11 @@ def label_caverns(
     heights : list[float]
         List of fixed caverns heights [m] for labelling
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
