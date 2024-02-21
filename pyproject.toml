@@ -45,10 +45,9 @@ notebooks = [
 ]
 test = [
   "black[jupyter]",
-  "coverage",
   "flake8",
   "pylint",
-  "pytest",
+  "pytest-cov",
 ]
 
 [tool.setuptools.packages.find]
