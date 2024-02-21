@@ -504,7 +504,7 @@ plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
 
 def cavern_boxplot(cavern_df):
     """Helper function for creating boxplots"""
-    fig1, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
+    _, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
     sns.boxplot(
         cavern_df,
         y="cavern_depth",

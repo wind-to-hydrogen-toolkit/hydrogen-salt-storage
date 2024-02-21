@@ -104,7 +104,7 @@ def make_stats_plots(dat_xr):
     plt.show()
 
     # histograms
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    _, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
     sns.histplot(
         dat_df.reset_index(),
         x="Thickness",
@@ -128,7 +128,7 @@ def make_stats_plots(dat_xr):
     plt.show()
 
     # box plots
-    fig, axes = plt.subplots(1, 3, figsize=(8, 4.5))
+    _, axes = plt.subplots(1, 3, figsize=(8, 4.5))
     sns.boxplot(
         dat_df.reset_index(),
         y="Thickness",

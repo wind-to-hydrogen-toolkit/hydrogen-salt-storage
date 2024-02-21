@@ -237,7 +237,7 @@ caverns_high = []
 cap_max = []
 for x in range(len(data)):
     print(data["Name"].iloc[x])
-    print("Working mass [kg]:", "{:.6E}".format(data["AHP"].iloc[x]))
+    print(f"Working mass [kg]: {(data['AHP'].iloc[x]):.6E}")
     caverns_low.append(
         working_mass_cumsum_1.loc[
             working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
@@ -254,7 +254,7 @@ for x in range(len(data)):
         .index[0]
         + 1
     )
-    print(f"Number of caverns required: {caverns_low[x]} - {caverns_high[x]}")
+    print(f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}")
     cap_max.append(
         max(
             working_mass_cumsum_1.loc[
@@ -269,7 +269,7 @@ for x in range(len(data)):
             .values[0],
         )
     )
-    print("Capacity (approx.) [GWh]:", "{:.2f}".format(cap_max[x]))
+    print(f"Capacity (approx.) [GWh]: {(cap_max[x]):.2f}")
     print("-" * 50)
 
 # total number of caverns
