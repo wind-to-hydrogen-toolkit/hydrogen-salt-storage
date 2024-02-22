@@ -764,7 +764,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
     Notes
     -----
     Data extracted for each wind farm in the area of interest, i.e. Kish
-    Basin: Codling, Dublin Array, and NISA.
+    Basin: Codling, Dublin Array, and North Irish Sea Array.
     """
     weibull_df = {}
 
