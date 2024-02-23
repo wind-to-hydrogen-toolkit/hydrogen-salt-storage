@@ -812,4 +812,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
     # merge
     weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
 
+    # remove abbreviation from name
+    weibull_df.at[2, "Name"] = weibull_df.at[2, "Name"].split(" (")[0]
+
     return weibull_df
