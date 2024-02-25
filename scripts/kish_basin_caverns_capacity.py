@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib import ticker
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -401,7 +402,9 @@ def plot_map_alt(
         alpha=0.25,
         color="darkslategrey",
         xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize, "rotation": 90},
+        xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+        yformatter=LatitudeFormatter(auto_hide=False, dms=True),
     )
     axis1.add_artist(
         ScaleBar(
@@ -576,6 +579,8 @@ def cavern_boxplot(cavern_df):
         flierprops={"markeredgecolor": "grey", "alpha": 0.5},
     )
     axes1[3].set_ylabel("Energy storage capacity [GWh]")
+    for a, _ in enumerate(axes1):
+        axes1[a].tick_params(axis="x", bottom=False)
     sns.despine(bottom=True)
     plt.tight_layout()
     plt.show()
@@ -629,6 +634,7 @@ for variable, label, axis in zip(
         legend=False,
     )
     axis.set_xlabel(label)
+    axis.tick_params(axis="y", left=False)
     if variable == "cavern_depth":
         axis.get_xaxis().set_major_formatter(
             ticker.FuncFormatter(lambda x, p: format(int(x), ","))
@@ -637,12 +643,12 @@ for variable, label, axis in zip(
 legend_handles = [
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[0],
-        label="85–311 m tall caverns at 500–2,000 m depth",
+        label="Cavern height: 85, 155 or 311 m\nCavern top depth: 500–2,000 m",
         edgecolor="black",
     ),
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[1],
-        label="155 m tall caverns at 1,000–1,500 m depth",
+        label="Cavern height: 155 m\nCavern top depth: 1,000–1,500 m",
         edgecolor="black",
     ),
 ]

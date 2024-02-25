@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
@@ -176,7 +177,7 @@ buffer = buffer.overlay(land, how="difference")
 # ## Maps
 
 
-def plot_map(dat_xr):
+def plot_map(dat_xr, fontsize=11.5):
     """Helper function to plot constraints and exclusions"""
     # initialise figure
     plt.figure(figsize=(10, 10))
@@ -258,12 +259,25 @@ def plot_map(dat_xr):
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
+        xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+        yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+        xlabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize, "rotation": 90},
     )
     axis.add_artist(
-        ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+        ScaleBar(
+            1,
+            box_alpha=0,
+            location="lower right",
+            color="darkslategrey",
+            font_properties={"size": fontsize},
+        )
     )
     plt.legend(
-        loc="lower right", bbox_to_anchor=(1, 0.05), handles=legend_handles
+        loc="lower right",
+        bbox_to_anchor=(1, 0.05),
+        handles=legend_handles,
+        fontsize=fontsize,
     )
     plt.title(None)
 
@@ -398,8 +412,10 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, fontsize=11.5):
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
         color="darkslategrey",
+        xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+        yformatter=LatitudeFormatter(auto_hide=False, dms=True),
         xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize, "rotation": 90},
     )
     axis.add_artist(
         ScaleBar(
