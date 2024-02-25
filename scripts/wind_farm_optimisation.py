@@ -485,7 +485,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
 plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
 
 
-def plot_map_extent(cavern_df, fontsize=11.5):
+def plot_map_extent(cavern_df):
     """Helper function for plotting extent map"""
     xmin_, _, xmax_, _ = extent.total_bounds
     _, ymin_, _, ymax_ = wind_farms.total_bounds
@@ -514,9 +514,6 @@ def plot_map_extent(cavern_df, fontsize=11.5):
         attribution=False,
     )
     ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
-    legend_handles = [
-        mpatches.Patch(facecolor="none", hatch="///", edgecolor="royalblue"),
-    ]
     map_labels = zip(
         zip(wind_farms.centroid.x, wind_farms.centroid.y), data["Name"]
     )

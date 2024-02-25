@@ -579,8 +579,8 @@ def cavern_boxplot(cavern_df):
         flierprops={"markeredgecolor": "grey", "alpha": 0.5},
     )
     axes1[3].set_ylabel("Energy storage capacity [GWh]")
-    for a, _ in enumerate(axes1):
-        axes1[a].tick_params(axis="x", bottom=False)
+    for a in axes1.flat:
+        a.tick_params(axis="x", bottom=False)
     sns.despine(bottom=True)
     plt.tight_layout()
     plt.show()
