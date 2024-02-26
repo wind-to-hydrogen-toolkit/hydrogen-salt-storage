@@ -643,12 +643,12 @@ for variable, label, axis in zip(
 legend_handles = [
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[0],
-        label="Cavern height: 85, 155 or 311 m\nCavern top depth: 500–2,000 m",
+        label="Height: 85, 155, or 311 m\nTop depth: 500–2,000 m",
         edgecolor="black",
     ),
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[1],
-        label="Cavern height: 155 m\nCavern top depth: 1,000–1,500 m",
+        label="Height: 155 m\nTop depth: 1,000–1,500 m",
         edgecolor="black",
     ),
 ]
