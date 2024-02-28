@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib import ticker
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -183,10 +184,8 @@ caverns[
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
-    "%",
+    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
+    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
 )
 
 # total capacity at various depth/height combinations
@@ -337,7 +336,7 @@ def plot_map_alt(
                 (cavern_df["capacity"] >= classes[n])
                 & (cavern_df["capacity"] < classes[n + 1])
             ]
-            label1 = f"{classes[n]} - {classes[n + 1]}"
+            label1 = f"{classes[n]}–{classes[n + 1]}"
         if top_depth:
             for df, markersize in zip(
                 [
@@ -378,7 +377,7 @@ def plot_map_alt(
             mpatches.Patch(label="Cavern top depth [m]", visible=False)
         )
         for markersize, label1 in zip(
-            [6, 3], ["1,000 - 1,500", "500 - 1,000 or \n1,500 - 2,000"]
+            [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
         ):
             legend_handles1.append(
                 Line2D(
@@ -403,7 +402,9 @@ def plot_map_alt(
         alpha=0.25,
         color="darkslategrey",
         xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize},
+        ylabel_style={"fontsize": fontsize, "rotation": 90},
+        xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+        yformatter=LatitudeFormatter(auto_hide=False, dms=True),
     )
     axis1.add_artist(
         ScaleBar(
@@ -495,10 +496,8 @@ caverns[
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(caverns["capacity"].sum() / 1000 / 84 * 100),
-    "%",
+    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
+    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
 )
 
 plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
@@ -508,7 +507,7 @@ plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
 
 def cavern_boxplot(cavern_df):
     """Helper function for creating boxplots"""
-    fig1, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
+    _, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
     sns.boxplot(
         cavern_df,
         y="cavern_depth",
@@ -580,6 +579,8 @@ def cavern_boxplot(cavern_df):
         flierprops={"markeredgecolor": "grey", "alpha": 0.5},
     )
     axes1[3].set_ylabel("Energy storage capacity [GWh]")
+    for a in axes1.flat:
+        a.tick_params(axis="x", bottom=False)
     sns.despine(bottom=True)
     plt.tight_layout()
     plt.show()
@@ -633,6 +634,7 @@ for variable, label, axis in zip(
         legend=False,
     )
     axis.set_xlabel(label)
+    axis.tick_params(axis="y", left=False)
     if variable == "cavern_depth":
         axis.get_xaxis().set_major_formatter(
             ticker.FuncFormatter(lambda x, p: format(int(x), ","))
@@ -641,19 +643,16 @@ for variable, label, axis in zip(
 legend_handles = [
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[0],
-        label="All caverns",
+        label="Height: 85, 155, or 311 m\nTop depth: 500–2,000 m",
         edgecolor="black",
     ),
     mpatches.Patch(
         facecolor=sns.color_palette("flare_r", 2)[1],
-        label="155 m caverns at optimal depth range",
+        label="Height: 155 m\nTop depth: 1,000–1,500 m",
         edgecolor="black",
     ),
 ]
-plt.legend(
-    loc="lower right",
-    handles=legend_handles,
-)
+plt.legend(loc="lower right", handles=legend_handles, fontsize=11.5)
 sns.despine()
 plt.tight_layout()
 plt.show()

@@ -14,6 +14,7 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import data as rd
@@ -33,6 +34,11 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
+
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
@@ -117,7 +123,14 @@ wind_farms_ = (
 # combine Codling wind farm polygons
 wind_farms_["Name_"] = wind_farms_["Name"].str.split(expand=True)[0]
 
-plt.figure(figsize=(10, 8))
+wind_farms_ = wind_farms_.dissolve(by="Name_")
+
+# remove abbreviation from name
+wind_farms_.at["North", "Name"] = wind_farms_.at["North", "Name"].split(" (")[
+    0
+]
+
+plt.figure(figsize=(11, 11))
 ax = plt.axes(projection=ccrs.epsg(rd.CRS))
 
 ds.max(dim="halite")["Thickness"].plot.contourf(
@@ -125,34 +138,49 @@ ds.max(dim="halite")["Thickness"].plot.contourf(
     alpha=0.65,
     robust=True,
     levels=15,
-    cbar_kwargs={"label": "Maximum Halite Thickness [m]"},
+    cbar_kwargs={
+        "label": "Maximum Halite Thickness [m]",
+        "aspect": 25,
+        "pad": 0.035,
+    },
 )
 
-plt.xlim(xmin - 7750, xmax + 7750)
-plt.ylim(ymin - 10500, ymax + 10500)
+plt.xlim(xmin - 8550, xmax + 1000)
+# plt.ylim(ymin - 10500, ymax + 10500)
 
 # wind farms
-colours = ["firebrick", "firebrick", "black", "royalblue"]
+colours = ["firebrick", "black", "royalblue"]
+legend_handles = []
 for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(rd.CRS).plot(
-        ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
+    wind_farms_.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+        ax=ax, hatch="///", facecolor="none", linewidth=2, edgecolor=colour
     )
-legend_handles = [
-    mpatches.Patch(
-        facecolor="none",
-        hatch="////",
-        edgecolor=colours[1:][x],
-        label=list(wind_farms_.dissolve("Name_")["Name"])[x],
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            hatch="///",
+            edgecolor=colour,
+            label=wind_farms_.iloc[[index]]["Name"].values[0],
+        )
     )
-    for x in range(len(wind_farms_.dissolve("Name_")))
-]
 
-cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
+cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager)
 ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+    xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+    yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+    ylabel_style={"rotation": 90},
 )
 ax.add_artist(
-    ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
+    ScaleBar(
+        1,
+        box_alpha=0,
+        location="lower right",
+        color="darkslategrey",
+        width_fraction=0.0075,
+    )
 )
 ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
 
@@ -172,20 +200,20 @@ plt.xlim(xmin - 7750, xmax + 7750)
 plt.ylim(ymin - 10500, ymax + 10500)
 
 # wind farms
-colours = ["firebrick", "firebrick", "seagreen", "royalblue"]
+colours = ["firebrick", "seagreen", "royalblue"]
+legend_handles = []
 for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(rd.CRS).plot(
-        ax=ax, hatch="///", facecolor="none", edgecolor=colour, linewidth=2
+    wind_farms_.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+        ax=ax, hatch="///", facecolor="none", linewidth=2, edgecolor=colour
     )
-legend_handles = [
-    mpatches.Patch(
-        facecolor="none",
-        hatch="////",
-        edgecolor=colours[1:][x],
-        label=list(wind_farms_.dissolve("Name_")["Name"])[x],
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            hatch="///",
+            edgecolor=colour,
+            label=wind_farms_.iloc[[index]]["Name"].values[0],
+        )
     )
-    for x in range(len(wind_farms_.dissolve("Name_")))
-]
 
 legend_handles.append(
     mpatches.Patch(
@@ -198,7 +226,12 @@ legend_handles.append(
 
 cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=10)
 ax.gridlines(
-    draw_labels={"bottom": "x", "left": "y"}, alpha=0.25, color="darkslategrey"
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+    xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+    yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+    ylabel_style={"rotation": 90},
 )
 ax.add_artist(
     ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")

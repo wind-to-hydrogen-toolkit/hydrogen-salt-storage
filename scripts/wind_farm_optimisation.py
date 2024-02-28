@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
+from matplotlib import patheffects
 from matplotlib_scalebar.scalebar import ScaleBar
 from shapely.geometry import Point
 
@@ -237,7 +238,7 @@ caverns_high = []
 cap_max = []
 for x in range(len(data)):
     print(data["Name"].iloc[x])
-    print("Working mass [kg]:", "{:.6E}".format(data["AHP"].iloc[x]))
+    print(f"Working mass [kg]: {(data['AHP'].iloc[x]):.6E}")
     caverns_low.append(
         working_mass_cumsum_1.loc[
             working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
@@ -254,7 +255,7 @@ for x in range(len(data)):
         .index[0]
         + 1
     )
-    print(f"Number of caverns required: {caverns_low[x]} - {caverns_high[x]}")
+    print(f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}")
     cap_max.append(
         max(
             working_mass_cumsum_1.loc[
@@ -269,33 +270,29 @@ for x in range(len(data)):
             .values[0],
         )
     )
-    print("Capacity (approx.) [GWh]:", "{:.2f}".format(cap_max[x]))
+    print(f"Capacity (approx.) [GWh]: {(cap_max[x]):.2f}")
     print("-" * 50)
 
 # total number of caverns
 print(
-    f"Total number of caverns required: {sum(caverns_low)} - {sum(caverns_high)}"
+    f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}"
 )
 
 # number of caverns as a percentage of the total available caverns
 print(
     "Number of caverns required as a percentage of all available caverns:",
-    "{:.2f}".format(sum(caverns_low) / len(caverns) * 100),
-    "-",
-    "{:.2f}".format(sum(caverns_high) / len(caverns) * 100),
-    "%",
+    f"{(sum(caverns_low) / len(caverns) * 100):.2f}–"
+    + f"{(sum(caverns_high) / len(caverns) * 100):.2f}%",
 )
 
 # total capacity
-print("Total capacity (approx.):", "{:.2f}".format(sum(cap_max)), "GWh")
+print(f"Total capacity (approx.): {sum(cap_max):.2f} GWh")
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
 print(
     "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    "{:.2f}".format(sum(cap_max) / 1000 / 122 * 100),
-    "-",
-    "{:.2f}".format(sum(cap_max) / 1000 / 84 * 100),
-    "%",
+    f"{(sum(cap_max) / 1000 / 122 * 100):.2f}–"
+    + f"{(sum(cap_max) / 1000 / 84 * 100):.2f}%",
 )
 
 # ## Calculate distance between caverns and the wind farms and injection point [km]
@@ -336,8 +333,6 @@ for i in range(len(wind_farms)):
         wind_farms["Name_"][i]
     ]
 
-caverns = caverns.rename(columns={"dist_North": "dist_NISA"})
-
 # ## CAPEX for pipeline [€ km⁻¹]
 
 # calculate electrolyser capacity
@@ -349,7 +344,7 @@ data
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-for wf in ["Codling", "Dublin", "NISA"]:
+for wf in list(wind_farms["Name_"]):
     caverns[f"LCOT_{wf}"] = opt.lcot_pipeline(
         capex=data[data["Name"].str.contains(wf)]["CAPEX"].values[0],
         transmission_distance=caverns[f"dist_{wf}"],
@@ -364,20 +359,16 @@ caverns[
         "distance_ip",
         "dist_Codling",
         "dist_Dublin",
-        "dist_NISA",
+        "dist_North",
         "LCOT_Codling",
         "LCOT_Dublin",
-        "LCOT_NISA",
+        "LCOT_North",
     ]
 ].describe()
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 sns.boxplot(
-    caverns.filter(like="dist_")
-    .set_axis(
-        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
-    )
-    .melt(),
+    caverns.filter(like="dist_").set_axis(list(data["Name"]), axis=1).melt(),
     y="value",
     hue="variable",
     palette="rocket_r",
@@ -389,12 +380,9 @@ sns.boxplot(
     gap=0.15,
 )
 axes[0].set_ylabel("Transmission distance [km]")
+axes[0].tick_params(axis="x", bottom=False)
 sns.boxplot(
-    caverns.filter(like="LCOT_")
-    .set_axis(
-        ["Codling Wind Park", "Dublin Array", "North Irish Sea Array"], axis=1
-    )
-    .melt(),
+    caverns.filter(like="LCOT_").set_axis(list(data["Name"]), axis=1).melt(),
     y="value",
     hue="variable",
     palette="rocket_r",
@@ -406,6 +394,7 @@ sns.boxplot(
 )
 axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
 axes[1].legend(loc="lower right")
+axes[1].tick_params(axis="x", bottom=False)
 sns.despine(bottom=True)
 plt.tight_layout()
 plt.show()
@@ -425,7 +414,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
     legend_handles = []
     classes = sorted(classes)
 
-    for a, wf1 in enumerate(["Codling", "Dublin", "NISA"]):
+    for a, wf1 in enumerate(list(wind_farms["Name_"])):
         ax1 = fig1.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
         gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
             ax=ax1,
@@ -446,17 +435,14 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             source=cx.providers.CartoDB.VoyagerNoLabels,
             attribution=False,
         )
-        if a in (0, 2):
-            draw_labels = {"bottom": "x", "left": "y"}
-        else:
-            draw_labels = {"bottom": "x"}
         ax1.gridlines(
-            draw_labels=draw_labels,
-            color="none",
+            draw_labels={"bottom": "x", "left": "y"},
+            color="lightslategrey",
+            alpha=0.25,
             xlabel_style={"fontsize": fontsize},
-            ylabel_style={"fontsize": fontsize},
-            xformatter=LongitudeFormatter(number_format=".2f"),
-            yformatter=LatitudeFormatter(number_format=".2f"),
+            ylabel_style={"fontsize": fontsize, "rotation": 90},
+            xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+            yformatter=LatitudeFormatter(auto_hide=False, dms=True),
         )
         if a == 2:
             ax1.add_artist(
@@ -470,12 +456,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             )
         plt.xlim(xmin_ - 1000, xmax_ + 1000)
         plt.ylim(ymin_ - 1000, ymax_ + 1000)
-        if wf1 == "Codling":
-            ax1.set_title(f"{wf1} Wind Park")
-        elif wf1 == "Dublin":
-            ax1.set_title(f"{wf1} Array")
-        else:
-            ax1.set_title("North Irish Sea Array")
+        ax1.set_title(list(data["Name"])[a])
 
     for n1, c in enumerate(colours):
         if n1 == 0:
@@ -483,7 +464,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[1:][-2]}"
         else:
-            label = f"{classes[1:][n1 - 1]:.2f} - {classes[1:][n1]:.2f}"
+            label = f"{classes[1:][n1 - 1]:.2f}–{classes[1:][n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -502,3 +483,75 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
 
 
 plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
+
+
+def plot_map_extent(cavern_df):
+    """Helper function for plotting extent map"""
+    xmin_, _, xmax_, _ = extent.total_bounds
+    _, ymin_, _, ymax_ = wind_farms.total_bounds
+    plt.figure(figsize=(6, 6))
+    ax2 = plt.axes(projection=ccrs.epsg(rd.CRS))
+    shape.plot(
+        ax=ax2, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
+    )
+    gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
+        ax=ax2, marker=".", markersize=2.5, color="firebrick"
+    )
+    gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).dissolve().buffer(
+        1000
+    ).envelope.boundary.plot(ax=ax2, color="darkslategrey")
+    wind_farms.plot(
+        ax=ax2, facecolor="none", hatch="///", edgecolor="royalblue"
+    )
+    plt.xlim(xmin_ - 19000, xmax_ + 1500)
+    plt.ylim(ymin_ - 3000, ymax_ + 3000)
+    injection_point.plot(ax=ax2, marker="*", color="darkslategrey")
+    basemap = cx.providers.CartoDB.VoyagerNoLabels
+    cx.add_basemap(
+        ax2,
+        crs=rd.CRS,
+        source=cx.providers.CartoDB.VoyagerNoLabels,
+        attribution=False,
+    )
+    ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
+    map_labels = zip(
+        zip(wind_farms.centroid.x, wind_farms.centroid.y), data["Name"]
+    )
+    for xy, lab in map_labels:
+        ax2.annotate(
+            text=lab,
+            xy=xy,
+            path_effects=[
+                patheffects.withStroke(linewidth=2.5, foreground="w")
+            ],
+            fontsize=13,
+            va="center",
+            fontweight="semibold",
+        )
+    ax2.annotate(
+        text="DUBLIN\nPORT",
+        xy=(
+            injection_point.centroid.x[0] - 1500,
+            injection_point.centroid.y[0],
+        ),
+        path_effects=[patheffects.withStroke(linewidth=2, foreground="w")],
+        fontsize=13,
+        va="center",
+        ha="right",
+        font="Montserrat",
+        fontweight="semibold",
+    )
+    ax2.add_artist(
+        ScaleBar(
+            1,
+            box_alpha=0,
+            location="lower right",
+            color="darkslategrey",
+            font_properties={"size": 11.5},
+        )
+    )
+    plt.tight_layout()
+    plt.show()
+
+
+plot_map_extent(caverns)

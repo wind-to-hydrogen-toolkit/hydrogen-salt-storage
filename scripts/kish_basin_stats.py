@@ -9,13 +9,16 @@ import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
 import seaborn as sns
-from cartopy.mpl.ticker import LongitudeFormatter
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import data as rd
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
+
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
 
 # ## Read data layers
 
@@ -104,7 +107,7 @@ def make_stats_plots(dat_xr):
     plt.show()
 
     # histograms
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    _, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
     sns.histplot(
         dat_df.reset_index(),
         x="Thickness",
@@ -128,7 +131,7 @@ def make_stats_plots(dat_xr):
     plt.show()
 
     # box plots
-    fig, axes = plt.subplots(1, 3, figsize=(8, 4.5))
+    _, axes = plt.subplots(1, 3, figsize=(8, 4.5))
     sns.boxplot(
         dat_df.reset_index(),
         y="Thickness",
@@ -203,7 +206,7 @@ def plot_facet_maps_distr(
             "location": "bottom",
             "aspect": 20,
             "shrink": 0.8,
-            "pad": 0.09,
+            "pad": 0.07,
             "extendfrac": 0.2,
             "label": label,
             "format": lambda x, _: f"{x:,.0f}",
@@ -217,15 +220,21 @@ def plot_facet_maps_distr(
         cx.add_basemap(axis, crs=dat_crs, source=basemap, attribution=False)
         # tick labels and attribution for basemap tiles
         if n in (0, 2):
-            axis.gridlines(draw_labels={"left": "y"}, color="none")
+            axis.gridlines(
+                draw_labels={"left": "y"},
+                color="none",
+                yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+                ylabel_style={"rotation": 90},
+                ylocs=[53.2, 53.4],
+            )
         if n in (2, 3):
             axis.gridlines(
                 draw_labels={"bottom": "x"},
                 color="none",
-                rotate_labels=90,
-                xpadding=20,
-                xformatter=LongitudeFormatter(number_format=".2f"),
+                xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+                xlocs=[-6.15, -5.85, -5.55],
             )
+        axis.gridlines(color="lightslategrey", alpha=0.25)
         if n == 3:
             if scalebar:
                 axis.add_artist(
@@ -243,7 +252,7 @@ def plot_facet_maps_distr(
                     xmin_ + 1000,
                     ymin_ + 1000,
                     basemap["attribution"],
-                    fontsize=9,
+                    fontsize=8,
                 )
     f.set_titles("{value}", weight="semibold")
     plt.show()
@@ -256,7 +265,6 @@ plot_facet_maps_distr(
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
     "Top Depth [m]",
-    scalebar=False,
 )
 
 plot_facet_maps_distr(
@@ -266,7 +274,6 @@ plot_facet_maps_distr(
     "Thickness",
     [85 + 90, 155 + 90, 311 + 90],
     "Thickness [m]",
-    attribution=False,
 )
 
 # compare depths

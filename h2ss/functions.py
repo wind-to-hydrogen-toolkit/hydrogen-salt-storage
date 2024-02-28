@@ -284,7 +284,11 @@ def cavern_dataframe(
     cavern_df : geopandas.GeoDataFrame
         Geodataframe of caverns within the zone of interest
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     roof_thickness : float
         Salt roof thickness [m]
 
@@ -583,7 +587,11 @@ def generate_caverns_with_constraints(
         ``"wells"``: exporation wells;
         ``"shipwrecks"``: shipwrecks
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     diameter : float
         Diameter of the cavern [m]
     separation : float
@@ -662,7 +670,11 @@ def label_caverns(
     heights : list[float]
         List of fixed caverns heights [m] for labelling
     depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
@@ -752,7 +764,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
     Notes
     -----
     Data extracted for each wind farm in the area of interest, i.e. Kish
-    Basin: Codling, Dublin Array, and NISA.
+    Basin: Codling, Dublin Array, and North Irish Sea Array.
     """
     weibull_df = {}
 
@@ -799,5 +811,8 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
 
     # merge
     weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
+
+    # remove abbreviation from name
+    weibull_df.at[2, "Name"] = weibull_df.at[2, "Name"].split(" (")[0]
 
     return weibull_df
