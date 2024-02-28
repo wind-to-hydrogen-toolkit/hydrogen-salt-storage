@@ -32,9 +32,9 @@
             }
         },
         {
-            "label": "format-py",
+            "label": "black-isort",
             "type": "shell",
-            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py",
+            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py **/*.ipynb",
             "problemMatcher": [],
             "group": {
                 "kind": "build"
@@ -60,27 +60,18 @@
             }
         },
         {
-            "label": "pytest-optimisation",
+            "label": "pylint-h2ss",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest tests/test_optimisation.py",
+            "command": "source .venv/bin/activate && pylint h2ss/*.py tests/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
             }
         },
         {
-            "label": "pytest-capacity",
+            "label": "pylint-scripts",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest tests/test_capacity.py",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
-            }
-        },
-        {
-            "label": "pylint",
-            "type": "shell",
-            "command": "source .venv/bin/activate && pylint **/*.py",
+            "command": "source .venv/bin/activate && pylint scripts/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
