@@ -219,6 +219,10 @@ data["AHP"] = opt.annual_hydrogen_production(aep=data["AEP"])
 
 data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
 
+# ## AHP converted to storage demand [GWh]
+
+data["demand"] = cap.energy_storage_capacity(m_working=data["AHP"])
+
 # ## Number of caverns required based on cumulative working mass and AHP
 
 working_mass_cumsum_1 = (
@@ -286,16 +290,9 @@ print(
 )
 
 # total capacity
-print(f"Total capacity (approx.): {sum(cap_max):.2f} GWh")
+print(f"Total maximum cavern capacity (approx.): {sum(cap_max):.2f} GWh")
 
-# compare to Ireland's electricity demand in 2050 (Deane, 2021)
-print(
-    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    f"{(sum(cap_max) / 1000 / 122 * 100):.2f}–"
-    + f"{(sum(cap_max) / 1000 / 84 * 100):.2f}%",
-)
-
-# ## Calculate distance between caverns and the wind farms and injection point [km]
+# ## Transmission distance [km]
 
 wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
 wind_farms = wind_farms.dissolve("Name_").reset_index()
@@ -341,6 +338,18 @@ data["E_cap"] = opt.electrolyser_capacity(n_turbines=data["n_turbines"])
 data["CAPEX"] = opt.capex_pipeline(e_cap=data["E_cap"])
 
 data
+
+# totals
+data[
+    ["cap", "n_turbines", "AEP", "AHP", "AHP_frac", "demand", "E_cap", "CAPEX"]
+].sum()
+
+# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+print(
+    "Storage demand as a percentage of Ireland's electricity demand in 2050:",
+    f"{(sum(data['demand']) / 1000 / 122 * 100):.2f}–"
+    + f"{(sum(data['demand']) / 1000 / 84 * 100):.2f}%",
+)
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
