@@ -4,13 +4,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "nbconvert",
+            "label": "convert-notebooks",
             "type": "shell",
             "command": "./convert-notebooks.sh",
             "problemMatcher": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             }
         },
         {
@@ -19,7 +18,8 @@
             "command": "source .venv/bin/activate && cd docs && make html",
             "problemMatcher": [],
             "group": {
-                "kind": "build"
+                "kind": "build",
+                "isDefault": true
             }
         },
         {
@@ -60,7 +60,7 @@
             }
         },
         {
-            "label": "pylint-h2ss",
+            "label": "pylint-scripts",
             "type": "shell",
             "command": "source .venv/bin/activate && pylint h2ss/*.py tests/*.py",
             "problemMatcher": [],
@@ -69,7 +69,7 @@
             }
         },
         {
-            "label": "pylint-scripts",
+            "label": "pylint-notebooks",
             "type": "shell",
             "command": "source .venv/bin/activate && pylint scripts/*.py",
             "problemMatcher": [],
