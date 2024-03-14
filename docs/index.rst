@@ -15,7 +15,7 @@ Acknowledgements
 
 The `H-Wind <https://www.marei.ie/project/h-wind/>`_ project was supported by a research grant from `Science Foundation Ireland (SFI) <https://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the industry consortium members: `DP Energy <https://dpenergy.com/>`_, `Equinor <https://www.equinor.com/>`_, `ESB <https://esb.ie/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
 
-.. image:: https://raw.githubusercontent.com/wind-to-hydrogen-toolkit/.github/main/images/logos.png
+.. image:: https://raw.githubusercontent.com/wind-to-hydrogen-toolkit/.github/main/images/logos-hwind.png
 
 Contents
 --------
