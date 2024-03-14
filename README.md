@@ -16,7 +16,7 @@ This project uses [Python](https://www.python.org/) 3.11.
 Clone this Git repository:
 
 ```sh
-git clone https://github.com/H-Wind-UCC/hydrogen-salt-storage.git
+git clone https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage.git
 cd hydrogen-salt-storage
 ```
 
@@ -41,7 +41,7 @@ python -m pytest --cov
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install git+https://github.com/H-Wind-UCC/hydrogen-salt-storage
+python -m pip install git+https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
 ```
 
 ## Documentation

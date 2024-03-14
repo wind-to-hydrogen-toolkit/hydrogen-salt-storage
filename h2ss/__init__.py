@@ -2,7 +2,7 @@
 
 Optimising green hydrogen storage in man-made submarine salt caverns
 
-https://github.com/H-Wind-UCC/hydrogen-salt-storage
+https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
 https://hydrogen-salt-storage.readthedocs.io
 """
 

@@ -14,7 +14,7 @@ project = "hydrogen-salt-storage"
 copyright = "2023-2024, Nithiya Streethran"
 author = "Nithiya Streethran"
 
-github_url = f"https://github.com/H-Wind-UCC/{project}"
+github_url = f"https://github.com/wind-to-hydrogen-toolkit/{project}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

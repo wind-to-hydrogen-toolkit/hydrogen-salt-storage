@@ -55,8 +55,8 @@ where = ["h2ss"]
 
 [project.urls]
 Documentation = "https://hydrogen-salt-storage.readthedocs.io/"
-Repository = "https://github.com/H-Wind-UCC/hydrogen-salt-storage.git"
-Issues = "https://github.com/H-Wind-UCC/hydrogen-salt-storage/issues"
+Repository = "https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage.git"
+Issues = "https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/issues"
 
 [tool.black]
 line-length = 79
