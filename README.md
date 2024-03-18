@@ -41,7 +41,7 @@ python -m pytest --cov
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install git+https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
+python -m pip install https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/archive/refs/heads/main.zip
 ```
 
 ## Documentation
