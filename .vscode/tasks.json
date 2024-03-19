@@ -86,5 +86,17 @@
                 "kind": "test"
             }
         },
+        {
+            "label": "prune-remote",
+            "type": "shell",
+            "command": "git fetch --prune",
+            "problemMatcher": []
+        },
+        {
+            "label": "prune-local",
+            "type": "shell",
+            "command": "git prune --dry-run --verbose",
+            "problemMatcher": []
+        }
     ]
 }
