@@ -21,7 +21,7 @@ github_url = f"https://github.com/wind-to-hydrogen-toolkit/{project}"
 
 extensions = [
     "sphinx.ext.autodoc",
-    # "sphinx.ext.viewcode",
+    "sphinx.ext.viewcode",
     "myst_nb",
 ]
 
@@ -30,6 +30,8 @@ autodoc_member_order = "bysource"
 
 # disable execution of Jupyter notebooks
 nb_execution_mode = "off"
+
+viewcode_line_numbers = True
 
 # templates_path = ["_templates"]
 
