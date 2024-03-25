@@ -231,7 +231,7 @@ def pressure_operating(
     the salt above the casing shoe. :math:`\\rho_{overburden}` and
     :math:`\\rho_{salt}` are the densities of the overburden and salt,
     respectively [kg m⁻³]. :math:`g` is the acceleration due to gravity
-    [m s⁻²]. :math:`p_{H2min}` and :math:`p_{H2max}` are the minimum and
+    [m s⁻²]. :math:`p_{H_2min}` and :math:`p_{H_2max}` are the minimum and
     maximum cavern operating pressures, respectively [Pa].
     """
     p_casing = (
