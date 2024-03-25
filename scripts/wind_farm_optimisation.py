@@ -445,14 +445,20 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             attribution=False,
         )
         ax1.gridlines(
-            draw_labels={"bottom": "x", "left": "y"},
+            draw_labels={"bottom": "x"},
             color="lightslategrey",
             alpha=0.25,
             xlabel_style={"fontsize": fontsize},
-            ylabel_style={"fontsize": fontsize, "rotation": 90},
             xformatter=LongitudeFormatter(auto_hide=False, dms=True),
-            yformatter=LatitudeFormatter(auto_hide=False, dms=True),
         )
+        if not a == 1:
+            ax1.gridlines(
+                draw_labels={"left": "y"},
+                color="lightslategrey",
+                alpha=0.25,
+                ylabel_style={"fontsize": fontsize, "rotation": 90},
+                yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+            )
         if a == 2:
             ax1.add_artist(
                 ScaleBar(
@@ -531,7 +537,7 @@ def plot_map_extent(cavern_df):
             text=lab,
             xy=xy,
             path_effects=[
-                patheffects.withStroke(linewidth=2.5, foreground="w")
+                patheffects.withStroke(linewidth=2.5, foreground="white")
             ],
             fontsize=13,
             va="center",
@@ -543,7 +549,7 @@ def plot_map_extent(cavern_df):
             injection_point.centroid.x[0] - 1500,
             injection_point.centroid.y[0],
         ),
-        path_effects=[patheffects.withStroke(linewidth=2, foreground="w")],
+        path_effects=[patheffects.withStroke(linewidth=2, foreground="white")],
         fontsize=13,
         va="center",
         ha="right",

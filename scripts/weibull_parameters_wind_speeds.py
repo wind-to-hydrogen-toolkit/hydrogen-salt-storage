@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Weibull parameters of wind speeds - 150m above ground level
+# # Weibull parameters of wind speeds - 150 m above ground level
 #
 # - <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
 # - <https://gis.seai.ie/wind/>
