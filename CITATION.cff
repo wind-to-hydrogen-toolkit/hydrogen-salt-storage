@@ -1,0 +1,27 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Storage of hydrogen from offshore wind in salt caverns
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - family-names: Streethran
+    given-names: Nithiya
+    orcid: 'https://orcid.org/0000-0003-0575-5798'
+    affiliation: University College Cork
+repository-code: >-
+  https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
+url: 'https://hydrogen-salt-storage.readthedocs.io'
+abstract: >-
+  Optimising production and long-term bulk storage of
+  hydrogen from offshore wind in salt caverns in the Irish
+  Sea.
+keywords:
+  - hydrogen from offshore wind
+  - long-term bulk hydrogen storage
+  - submarine salt caverns
+  - hydrogen economy in Ireland
+  - geological storage
+license: Apache-2.0
+version: 0.1.0

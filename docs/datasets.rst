@@ -12,7 +12,7 @@ Datasets used in this project. These datasets are not to be used for navigation 
    Shipwrecks in Irish Waters | INFOMAR / Geological Survey Ireland / Marine Institute / National Monuments Service / Department of Housing, Local Government and Heritage | [#isde2]_ | Shapefile | 2023-10-24
    Frequently Used Routes (300 gross tonnes and above) | Department of Housing, Local Government and Heritage / EMODnet | [#datagovie3]_ [#housinggovie2]_ | Shapefile | 2022-07-19
    Irish Sea Subsea Cables and Renewable Energy Structures | KIS-ORCA | [#kisorca]_ | Olex Fishing Plotter File | 2023-02-27
-   Weibull Parameters of Wind Speeds 2001 to 2010 - 150m above ground level | Sustainable Energy Authority of Ireland | [#datagovie4]_ [#seai]_ | Shapefile | 2021-06-30
+   Weibull Parameters of Wind Speeds 2001 to 2010 - 150 m above ground level | Sustainable Energy Authority of Ireland | [#datagovie4]_ [#seai]_ | Shapefile | 2021-06-30
    Provinces - National Statutory Boundaries - 2019 - Ungeneralised | Ordnance Survey Ireland / Tailte Éireann | [#datagovie5]_ [#osi]_ | Shapefile | 2022-07-07
    Kish Basin Halite | HYSS | [#hyss]_ | DAT (ASCII XYZ) | 2023-07
    EMODnet Digital Bathymetry - DTM | EMODnet | [#emodnet1]_ [#emodnet2]_ [#emodnet3]_ | netCDF | 2022

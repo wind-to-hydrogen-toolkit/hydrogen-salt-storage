@@ -4,13 +4,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "nbconvert",
+            "label": "convert-notebooks",
             "type": "shell",
             "command": "./convert-notebooks.sh",
             "problemMatcher": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             }
         },
         {
@@ -19,7 +18,8 @@
             "command": "source .venv/bin/activate && cd docs && make html",
             "problemMatcher": [],
             "group": {
-                "kind": "build"
+                "kind": "build",
+                "isDefault": true
             }
         },
         {
@@ -32,9 +32,9 @@
             }
         },
         {
-            "label": "format-py",
+            "label": "black-isort",
             "type": "shell",
-            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py",
+            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py **/*.ipynb",
             "problemMatcher": [],
             "group": {
                 "kind": "build"
@@ -60,27 +60,18 @@
             }
         },
         {
-            "label": "pytest-optimisation",
+            "label": "pylint-scripts",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest tests/test_optimisation.py",
+            "command": "source .venv/bin/activate && pylint h2ss/*.py tests/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
             }
         },
         {
-            "label": "pytest-capacity",
+            "label": "pylint-notebooks",
             "type": "shell",
-            "command": "source .venv/bin/activate && python -m pytest tests/test_capacity.py",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
-            }
-        },
-        {
-            "label": "pylint",
-            "type": "shell",
-            "command": "source .venv/bin/activate && pylint **/*.py",
+            "command": "source .venv/bin/activate && pylint scripts/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "test"
@@ -95,5 +86,17 @@
                 "kind": "test"
             }
         },
+        {
+            "label": "prune-remote",
+            "type": "shell",
+            "command": "git fetch --prune",
+            "problemMatcher": []
+        },
+        {
+            "label": "prune-local",
+            "type": "shell",
+            "command": "git prune --dry-run --verbose",
+            "problemMatcher": []
+        }
     ]
 }

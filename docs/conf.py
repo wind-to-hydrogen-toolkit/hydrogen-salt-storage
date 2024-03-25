@@ -14,14 +14,14 @@ project = "hydrogen-salt-storage"
 copyright = "2023-2024, Nithiya Streethran"
 author = "Nithiya Streethran"
 
-github_url = f"https://github.com/H-Wind-UCC/{project}"
+github_url = f"https://github.com/wind-to-hydrogen-toolkit/{project}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
-    # "sphinx.ext.viewcode",
+    "sphinx.ext.viewcode",
     "myst_nb",
 ]
 
@@ -30,6 +30,8 @@ autodoc_member_order = "bysource"
 
 # disable execution of Jupyter notebooks
 nb_execution_mode = "off"
+
+viewcode_line_numbers = True
 
 # templates_path = ["_templates"]
 

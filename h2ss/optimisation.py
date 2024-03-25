@@ -384,15 +384,15 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
 
     .. math::
         CAPEX = 2,000 \\, \\left( 16,000 \\, \\frac{P_{electrolyser}
-        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197.2 \\,
-        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H2} \\cdot v_{H2}
+        \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2} \\cdot \\pi} + 1,197.2 \\,
+        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2}
         \\cdot \\pi}} + 329 \\right)
 
     where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],
     :math:`EPR` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
-    :math:`\\rho_{H2}` is the mass density of hydrogen [kg m⁻³], and
-    :math:`v_{H2}` is the average fluid velocity [m s⁻¹].
+    :math:`\\rho_{H_2}` is the mass density of hydrogen [kg m⁻³], and
+    :math:`v_{H_2}` is the average fluid velocity [m s⁻¹].
     """
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)

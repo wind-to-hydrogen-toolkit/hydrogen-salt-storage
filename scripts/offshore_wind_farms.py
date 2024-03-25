@@ -139,7 +139,7 @@ ds.max(dim="halite")["Thickness"].plot.contourf(
     robust=True,
     levels=15,
     cbar_kwargs={
-        "label": "Maximum Halite Thickness [m]",
+        "label": "Maximum halite thickness [m]",
         "aspect": 25,
         "pad": 0.035,
     },

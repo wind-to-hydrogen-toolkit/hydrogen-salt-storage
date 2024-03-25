@@ -8,6 +8,7 @@ import os
 import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
+# import matplotlib.patches as mpatches
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -178,8 +179,6 @@ def plot_facet_maps_distr(
     v,
     levels,
     label,
-    scalebar=True,
-    attribution=True,
 ):
     """
     Helper function to plot facet maps of the halite layers
@@ -192,6 +191,8 @@ def plot_facet_maps_distr(
     """
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
+    levels = sorted(levels)
+    legend_handles = []
 
     f = dat_xr[v].plot.contourf(
         col="halite",
@@ -211,8 +212,33 @@ def plot_facet_maps_distr(
             "label": label,
             "format": lambda x, _: f"{x:,.0f}",
         },
+        # add_colorbar=False,
         col_wrap=2,
     )
+
+    # colours = [int(n * 255 / (len(levels) - 1)) for n in range(len(levels))]
+    # for n, (level, colour) in enumerate(zip(levels, colours)):
+    #     if n == 0:
+    #         legend_handles.append(
+    #             mpatches.Patch(
+    #                 facecolor=sns.color_palette("flare", 256)[colour],
+    #                 label=f"< {level}"
+    #             )
+    #         )
+    #     elif n == len(levels) - 1:
+    #         legend_handles.append(
+    #             mpatches.Patch(
+    #                 facecolor=sns.color_palette("flare", 256)[colour],
+    #                 label=f"> {levels[n - 1]}"
+    #             )
+    #         )
+    #     else:
+    #         legend_handles.append(
+    #             mpatches.Patch(
+    #                 facecolor=sns.color_palette("flare", 256)[colour],
+    #                 label=f"{levels[n - 1]}–{level}"
+    #             )
+    #         )
 
     # add a basemap
     basemap = cx.providers.CartoDB.PositronNoLabels
@@ -236,25 +262,30 @@ def plot_facet_maps_distr(
             )
         axis.gridlines(color="lightslategrey", alpha=0.25)
         if n == 3:
-            if scalebar:
-                axis.add_artist(
-                    ScaleBar(
-                        1,
-                        box_alpha=0,
-                        location="lower right",
-                        color="darkslategrey",
-                        width_fraction=0.015,
-                    )
+            axis.add_artist(
+                ScaleBar(
+                    1,
+                    box_alpha=0,
+                    location="lower right",
+                    color="darkslategrey",
+                    width_fraction=0.015,
                 )
+            )
         if n == 2:
-            if attribution:
-                axis.text(
-                    xmin_ + 1000,
-                    ymin_ + 1000,
-                    basemap["attribution"],
-                    fontsize=8,
-                )
+            axis.text(
+                xmin_ + 1000,
+                ymin_ + 1000,
+                basemap["attribution"],
+                fontsize=8,
+            )
     f.set_titles("{value}", weight="semibold")
+    # plt.legend(
+    #     bbox_to_anchor=(0.875, -0.12),
+    #     title=label,
+    #     handles=legend_handles,
+    #     fontsize=11.5,
+    #     ncols=3
+    # )
     plt.show()
 
 
@@ -264,7 +295,7 @@ plot_facet_maps_distr(
     rd.CRS,
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
-    "Top Depth [m]",
+    "Top depth [m]",
 )
 
 plot_facet_maps_distr(
