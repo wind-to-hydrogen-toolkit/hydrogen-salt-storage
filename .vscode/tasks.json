@@ -95,7 +95,7 @@
         {
             "label": "prune-local",
             "type": "shell",
-            "command": "git prune --dry-run --verbose",
+            "command": "git prune --verbose",
             "problemMatcher": []
         }
     ]
