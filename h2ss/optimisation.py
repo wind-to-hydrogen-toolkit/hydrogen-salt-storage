@@ -384,8 +384,8 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
 
     .. math::
         CAPEX = 2,000 \\, \\left( 16,000 \\, \\frac{P_{electrolyser}
-        \\cdot EPR}{\\rho_{H2} \\cdot v_{H2} \\cdot \\pi} + 1,197.2 \\,
-        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H2} \\cdot v_{H2}
+        \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2} \\cdot \\pi} + 1,197.2 \\,
+        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2}
         \\cdot \\pi}} + 329 \\right)
 
     where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline

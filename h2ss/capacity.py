@@ -165,7 +165,7 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
 
     .. math::
         T_{midpoint} = T_0 + \\Delta_T \\,
-        \\frac{(z + 0.5 \\, h)}{1,000} + 273.15
+        \\frac{z + 0.5 \\, h}{1,000} + 273.15
 
     where :math:`T_{midpoint}` is the cavern mid-point temperature [K],
     :math:`T_0` is the mean annual surface temperature [°C], :math:`\\Delta_T`
@@ -221,9 +221,9 @@ def pressure_operating(
         p_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
         \\cdot t_{salt}) \\, g
     .. math::
-        p_{H2min} = 0.3 \\, p_{casing}
+        p_{H_2min} = 0.3 \\, p_{casing}
     .. math::
-        p_{H2max} = 0.8 \\, p_{casing}
+        p_{H_2max} = 0.8 \\, p_{casing}
 
     :math:`p_{casing}` is the lithostatic pressure at the casing shoe [Pa].
     The thickness of the overburden, :math:`t_{overburden}` [m] is the same
@@ -317,9 +317,9 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     cushion gas requirement.
 
     .. math::
-        m_{min} = \\rho_{H2min} \\cdot V_{cavern}
+        m_{min} = \\rho_{H_2min} \\cdot V_{cavern}
     .. math::
-        m_{max} = \\rho_{H2max} \\cdot V_{cavern}
+        m_{max} = \\rho_{H_2max} \\cdot V_{cavern}
     .. math::
         m_{working} = m_{max} - m_{min}
 
