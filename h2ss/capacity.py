@@ -326,9 +326,9 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     The working mass of hydrogen, :math:`m_{working}` [kg] is the difference
     between the stored mass of hydrogen at maximum, :math:`m_{max}` and
     minimum, :math:`m_{min}` operating pressures [kg], which were derived
-    using the minimum, :math:`\\rho_{min}` and maximum, :math:`\\rho_{max}`
-    hydrogen densities [kg m⁻³], respectively, and the cavern volume,
-    :math:`V_{cavern}` [m³].
+    using the minimum, :math:`\\rho_{H_2min}` and maximum,
+    :math:`\\rho_{H_2max}` hydrogen densities [kg m⁻³], respectively, and the
+    cavern volume, :math:`V_{cavern}` [m³].
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern
