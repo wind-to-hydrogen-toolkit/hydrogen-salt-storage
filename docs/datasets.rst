@@ -8,8 +8,8 @@ Datasets used in this project. These datasets are not to be used for navigation 
    :delim: |
 
    Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [#datagovie1]_ [#housinggovie1]_ | Shapefile | 2023-09-11
-   Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [#isde1]_ [#datagovie2]_ | Shapefile | 2021-02-01
-   Shipwrecks in Irish Waters | INFOMAR / Geological Survey Ireland / Marine Institute / National Monuments Service / Department of Housing, Local Government and Heritage | [#isde2]_ | Shapefile | 2023-10-24
+   Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [#marine1]_ [#datagovie2]_ | Shapefile | 2021-02-01
+   Shipwrecks in Irish Waters | INFOMAR / Geological Survey Ireland / Marine Institute / National Monuments Service / Department of Housing, Local Government and Heritage | [#marine2]_ | Shapefile | 2023-10-24
    Frequently Used Routes (300 gross tonnes and above) | Department of Housing, Local Government and Heritage / EMODnet | [#datagovie3]_ [#housinggovie2]_ | Shapefile | 2022-07-19
    Irish Sea Subsea Cables and Renewable Energy Structures | KIS-ORCA | [#kisorca]_ | Olex Fishing Plotter File | 2023-02-27
    Weibull Parameters of Wind Speeds 2001 to 2010 - 150 m above ground level | Sustainable Energy Authority of Ireland | [#datagovie4]_ [#seai]_ | Shapefile | 2021-06-30
@@ -20,9 +20,9 @@ Datasets used in this project. These datasets are not to be used for navigation 
 .. rubric:: Footnotes
 .. [#datagovie1] https://data.gov.ie/dataset/wind-farms-foreshore-process
 .. [#housinggovie1] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process
-.. [#isde1] https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
+.. [#marine1] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
 .. [#datagovie2] https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
-.. [#isde2] https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
+.. [#marine2] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
 .. [#datagovie3] https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1
 .. [#housinggovie2] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above
 .. [#kisorca] https://kis-orca.org/downloads/
