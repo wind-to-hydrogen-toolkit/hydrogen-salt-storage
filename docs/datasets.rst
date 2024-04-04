@@ -19,17 +19,17 @@ Datasets used in this project. These datasets are not to be used for navigation 
 
 .. rubric:: Footnotes
 .. [#datagovie1] https://data.gov.ie/dataset/wind-farms-foreshore-process
-.. [#housinggovie1] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process
+.. [#housinggovie1] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process/about
 .. [#marine1] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
 .. [#datagovie2] https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
 .. [#marine2] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
 .. [#datagovie3] https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1
-.. [#housinggovie2] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above
+.. [#housinggovie2] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above/about
 .. [#kisorca] https://kis-orca.org/downloads/
 .. [#datagovie4] https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level
 .. [#seai] https://gis.seai.ie/wind/
 .. [#datagovie5] https://data.gov.ie/dataset/provinces-national-statutory-boundaries-2019
-.. [#osi] https://data-osi.opendata.arcgis.com/maps/osi::provinces-national-statutory-boundaries-2019
+.. [#osi] https://data-osi.opendata.arcgis.com/maps/osi::provinces-national-statutory-boundaries-2019/about
 .. [#hyss] https://hyss.ie
 .. [#emodnet1] https://emodnet.ec.europa.eu/en/bathymetry
 .. [#emodnet2] https://emodnet.ec.europa.eu/geonetwork/emodnet/eng/catalog.search#/metadata/53e69177-16cc-4b7a-a6e1-2a4f245e4dbd
