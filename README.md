@@ -9,7 +9,7 @@ The [H-Wind](https://www.marei.ie/project/h-wind) project was supported by a res
 
 ## Installation
 
-This project uses [Python](https://www.python.org/) 3.11.
+This project uses [Python](https://www.python.org/) ≥ 3.11.
 
 ### Installation of the project (including notebooks) from source
 

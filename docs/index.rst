@@ -30,7 +30,7 @@ Contents
 Installation
 ------------
 
-This project uses `Python <https://www.python.org/>`_ 3.11.
+This project uses `Python <https://www.python.org/>`_ ≥ 3.11.
 
 Clone the Git repository:
 
