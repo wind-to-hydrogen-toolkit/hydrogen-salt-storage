@@ -338,6 +338,30 @@ def cavern_dataframe(
     return cavern_df
 
 
+def constraint_cavern_volumes(cavern_df, volume_case="low"):
+    """Discard caverns with corrected volumes lower than recommended.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Geodataframe of caverns within the zone of interest
+    volume_case : str
+        Cavern volume corresponding to a Hystories Project investment scenario
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Dataframe of available caverns
+    """
+    if volume_case == "low":
+        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 185000 * .85]
+    elif volume_case == "mid":
+        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 380000 * .85]
+    elif volume_case == "high":
+        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 815000 * .85]
+    return cavern_df
+
+
 def constraint_halite_edge(dat_xr, buffer=PILLAR_WIDTH):
     """The edge of each halite member as a constraint.
 
@@ -556,15 +580,35 @@ def exclude_constraint(cavern_df, cavern_all, exclusions, key):
     return cavern_df
 
 
-def generate_caverns_with_constraints(
-    zones_gdf,
+def generate_caverns(zones_gdf,
     zones_ds,
-    dat_extent,
+    dat_extent, depths, diameter=CAVERN_DIAMETER, separation=CAVERN_SEPARATION, roof_thickness=ROOF_THICKNESS):
+    cavern_df = generate_caverns_hexagonal_grid(
+        dat_extent=dat_extent,
+        zones_df=zones_gdf,
+        diameter=diameter,
+        separation=separation,
+    )
+    cavern_df = cavern_dataframe(
+        dat_zone=zones_ds,
+        cavern_df=cavern_df,
+        depths=depths,
+        roof_thickness=roof_thickness,
+    )
+    return cavern_df
+
+
+def generate_caverns_with_constraints(
+    # zones_gdf,
+    # zones_ds,
+    # dat_extent,
+    cavern_df,
     exclusions,
-    depths,
-    diameter=CAVERN_DIAMETER,
-    separation=CAVERN_SEPARATION,
-    roof_thickness=ROOF_THICKNESS,
+    # depths,
+    volume_case=None,
+    # diameter=CAVERN_DIAMETER,
+    # separation=CAVERN_SEPARATION,
+    # roof_thickness=ROOF_THICKNESS,
 ):
     """Add constraints to cavern configuration.
 
@@ -592,6 +636,8 @@ def generate_caverns_with_constraints(
         ``"min_opt"``: minimum optimal depth;
         ``"max_opt"``: maximum optimal depth;
         ``"max"``: maximum depth
+    volume_case : str or None
+        Cavern volume based on the Hystories Project investment scenario
     diameter : float
         Diameter of the cavern [m]
     separation : float
@@ -604,21 +650,25 @@ def generate_caverns_with_constraints(
     tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Dataframe of available and excluded caverns
     """
-    cavern_df = generate_caverns_hexagonal_grid(
-        dat_extent=dat_extent,
-        zones_df=zones_gdf,
-        diameter=diameter,
-        separation=separation,
-    )
-    cavern_df = cavern_dataframe(
-        dat_zone=zones_ds,
-        cavern_df=cavern_df,
-        depths=depths,
-        roof_thickness=roof_thickness,
-    )
+    # cavern_df = generate_caverns_hexagonal_grid(
+    #     dat_extent=dat_extent,
+    #     zones_df=zones_gdf,
+    #     diameter=diameter,
+    #     separation=separation,
+    # )
+    # cavern_df = cavern_dataframe(
+    #     dat_zone=zones_ds,
+    #     cavern_df=cavern_df,
+    #     depths=depths,
+    #     roof_thickness=roof_thickness,
+    # )
+    # print("-" * 60)
+
+    print("Without constraints...")
+    print(f"Number of potential caverns: {len(cavern_df):,}")
     print("-" * 60)
 
-    print("Without constraints, excluding salt formation edges...")
+    print("Excluding salt formation edges...")
     cavern_dict = {}
     for h in cavern_df["halite"].unique():
         cavern_dict[h] = cavern_df[cavern_df["halite"] == h]
@@ -632,9 +682,16 @@ def generate_caverns_with_constraints(
         )
     cavern_df = pd.concat(cavern_dict.values())
     print(f"Number of potential caverns: {len(cavern_df):,}")
+    print("-" * 60)
+
+    if volume_case:
+        print(f"Excluding caverns with free gas volumes below the {volume_case} case...")
+        cavern_df = constraint_cavern_volumes(cavern_df=cavern_df, volume_case=volume_case)
+        print(f"Number of potential caverns: {len(cavern_df):,}")
+        print("-" * 60)
+
     # keep original
     cavern_all = cavern_df.copy()
-    print("-" * 60)
 
     for c in ["shipping", "wind_farms", "cables", "wells", "shipwrecks"]:
         print(f"Exclude {c.replace('_', ' ')}...")
