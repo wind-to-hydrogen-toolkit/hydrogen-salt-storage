@@ -31,6 +31,11 @@ References
     Available at:
     https://assets.gov.ie/202763/9160dd51-b119-44cf-a224-8b5302347e7d.pdf
     (Accessed: 10 November 2023).
+.. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
+    cavern and porous media underground storage site. Hystories deliverable
+    D7.1-1. Hystories. Available at:
+    https://hystories.eu/wp-content/uploads/2022/05/Hystories_D7.1-1-Conceptual-design-of-salt-cavern-and-porous-media-underground-storage-site.pdf
+    (Accessed: 9 October 2023).
 """
 
 import os
@@ -352,6 +357,11 @@ def constraint_cavern_volumes(cavern_df, volume_case="low"):
     -------
     geopandas.GeoDataFrame
         Dataframe of available caverns
+
+    Notes
+    -----
+    See [#Jannel22]_ for the Hystories Project investment scenarios. The
+    volume used is the free gas volume of a cavern. The volume - 15% is used.
     """
     if volume_case == "low":
         cavern_df = cavern_df[cavern_df["cavern_volume"] >= 185000 * .85]
