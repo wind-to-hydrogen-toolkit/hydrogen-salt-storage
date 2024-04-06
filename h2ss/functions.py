@@ -656,8 +656,8 @@ def generate_caverns_with_constraints(
 
 def label_caverns(
     cavern_df,
-    heights,
     depths,
+    heights=None,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
 ):
@@ -667,14 +667,15 @@ def label_caverns(
     ----------
     cavern_df : geopandas.GeoDataFrame
         Dataframe of potential caverns
-    heights : list[float]
-        List of fixed caverns heights [m] for labelling
     depths : dict[str, float]
         Dictionary of cavern top depth ranges [m] for labelling:
         ``"min"``: minimum depth;
         ``"min_opt"``: minimum optimal depth;
         ``"max_opt"``: maximum optimal depth;
         ``"max"``: maximum depth
+    heights : list[float] or None
+        List of fixed caverns heights [m] for labelling; if ``None``, the
+        actual height is used
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
@@ -686,40 +687,44 @@ def label_caverns(
         A dataframe of potential caverns labelled by cavern height and top
         depth ranges
     """
-    heights = sorted(heights)
     # label caverns by height
-    if len(heights) == 1:
-        cavern_df["height"] = heights[0]
+    if heights:
+        heights = sorted(heights)
+        if len(heights) == 1:
+            cavern_df["height"] = heights[0]
+        else:
+            conditions = []
+            for n, _ in enumerate(heights):
+                if n == 0:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            < (heights[1] + roof_thickness + floor_thickness)
+                        )
+                    )
+                elif n == len(heights) - 1:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            >= (heights[n] + roof_thickness + floor_thickness)
+                        )
+                    )
+                else:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            >= (heights[n] + roof_thickness + floor_thickness)
+                        )
+                        & (
+                            cavern_df["Thickness"]
+                            < (heights[n + 1] + roof_thickness + floor_thickness)
+                        )
+                    )
+            choices = [str(x) for x in heights]
+            cavern_df["height"] = np.select(conditions, choices)
+        cavern_df["cavern_height"] = cavern_df["height"].astype(float)
     else:
-        conditions = []
-        for n, _ in enumerate(heights):
-            if n == 0:
-                conditions.append(
-                    (
-                        cavern_df["Thickness"]
-                        < (heights[1] + roof_thickness + floor_thickness)
-                    )
-                )
-            elif n == len(heights) - 1:
-                conditions.append(
-                    (
-                        cavern_df["Thickness"]
-                        >= (heights[n] + roof_thickness + floor_thickness)
-                    )
-                )
-            else:
-                conditions.append(
-                    (
-                        cavern_df["Thickness"]
-                        >= (heights[n] + roof_thickness + floor_thickness)
-                    )
-                    & (
-                        cavern_df["Thickness"]
-                        < (heights[n + 1] + roof_thickness + floor_thickness)
-                    )
-                )
-        choices = [str(x) for x in heights]
-        cavern_df["height"] = np.select(conditions, choices)
+        cavern_df["cavern_height"] = cavern_df["Thickness"] - roof_thickness - floor_thickness
 
     # label caverns by depth
     conditions = [
@@ -737,8 +742,6 @@ def label_caverns(
     ]
     cavern_df["depth"] = np.select(conditions, choices)
 
-    # create columns for the cavern heights and top depths
-    cavern_df["cavern_height"] = cavern_df["height"].astype(float)
     cavern_df["cavern_depth"] = cavern_df["TopDepthSeabed"] + roof_thickness
 
     return cavern_df
