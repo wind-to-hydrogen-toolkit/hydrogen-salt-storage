@@ -580,46 +580,17 @@ def exclude_constraint(cavern_df, cavern_all, exclusions, key):
     return cavern_df
 
 
-def generate_caverns(zones_gdf,
-    zones_ds,
-    dat_extent, depths, diameter=CAVERN_DIAMETER, separation=CAVERN_SEPARATION, roof_thickness=ROOF_THICKNESS):
-    cavern_df = generate_caverns_hexagonal_grid(
-        dat_extent=dat_extent,
-        zones_df=zones_gdf,
-        diameter=diameter,
-        separation=separation,
-    )
-    cavern_df = cavern_dataframe(
-        dat_zone=zones_ds,
-        cavern_df=cavern_df,
-        depths=depths,
-        roof_thickness=roof_thickness,
-    )
-    return cavern_df
-
-
 def generate_caverns_with_constraints(
-    # zones_gdf,
-    # zones_ds,
-    # dat_extent,
     cavern_df,
     exclusions,
-    # depths,
     volume_case=None,
-    # diameter=CAVERN_DIAMETER,
-    # separation=CAVERN_SEPARATION,
-    # roof_thickness=ROOF_THICKNESS,
 ):
     """Add constraints to cavern configuration.
 
     Parameters
     ----------
-    zones_gdf : geopandas.GeoDataFrame
-        GeoPandas dataframe of zones of interest
-    zones_ds : xarray.Dataset
-        Xarray dataset of zones of interest
-    dat_extent : geopandas.GeoSeries
-        Extent of the data
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of available caverns
     exclusions : dict[str, geopandas.GeoDataFrame]
         Dictionary of exclusions data; ``"edge"`` must be present in the
         dictionary, but if any other of the following keys do not exist in the
@@ -630,40 +601,14 @@ def generate_caverns_with_constraints(
         ``"wind_farms"``: offshore wind farms;
         ``"wells"``: exporation wells;
         ``"shipwrecks"``: shipwrecks
-    depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling:
-        ``"min"``: minimum depth;
-        ``"min_opt"``: minimum optimal depth;
-        ``"max_opt"``: maximum optimal depth;
-        ``"max"``: maximum depth
     volume_case : str or None
         Cavern volume based on the Hystories Project investment scenario
-    diameter : float
-        Diameter of the cavern [m]
-    separation : float
-        Cavern separation distance [m]
-    roof_thickness : float
-        Salt roof thickness [m]
 
     Returns
     -------
     tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
         Dataframe of available and excluded caverns
     """
-    # cavern_df = generate_caverns_hexagonal_grid(
-    #     dat_extent=dat_extent,
-    #     zones_df=zones_gdf,
-    #     diameter=diameter,
-    #     separation=separation,
-    # )
-    # cavern_df = cavern_dataframe(
-    #     dat_zone=zones_ds,
-    #     cavern_df=cavern_df,
-    #     depths=depths,
-    #     roof_thickness=roof_thickness,
-    # )
-    # print("-" * 60)
-
     print("Without constraints...")
     print(f"Number of potential caverns: {len(cavern_df):,}")
     print("-" * 60)
