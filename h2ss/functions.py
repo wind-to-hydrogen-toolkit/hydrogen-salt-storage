@@ -70,7 +70,7 @@ def zones_of_interest(
         Dictionary containing the following:
         ``"height"``: cavern height [m];
         ``"min_depth"``: minimum cavern depth [m];
-        ``"max_depth"``: Maximum cavern depth [m]
+        ``"max_depth"``: maximum cavern depth [m]
     roof_thickness : float
         Salt roof thickness [m]
     floor_thickness : float
@@ -436,15 +436,19 @@ def label_caverns(
     return cavern_df
 
 
-def constraint_cavern_volumes(cavern_df, volume_case="low"):
+def constraint_cavern_volumes(
+    cavern_df, volume_case=380000, minimum_fraction=0.85
+):
     """Discard caverns with corrected volumes lower than recommended.
 
     Parameters
     ----------
     cavern_df : geopandas.GeoDataFrame
         Geodataframe of caverns within the zone of interest
-    volume_case : str
+    volume_case : float
         Cavern volume corresponding to a Hystories Project investment scenario
+    minimum_fraction : float
+        The fraction of ``volume_case`` that is allowed as the minimum
 
     Returns
     -------
@@ -454,15 +458,10 @@ def constraint_cavern_volumes(cavern_df, volume_case="low"):
     Notes
     -----
     See [#Jannel22]_ for the Hystories Project investment scenarios. The
-    volume used is the free gas volume of a cavern. The volume - 15% is used.
+    volume used is the free gas volume of a cavern. The volume should be no
+    less than 85% of the case's volume.
     """
-    if volume_case == "low":
-        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 185000 * .85]
-    elif volume_case == "mid":
-        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 380000 * .85]
-    elif volume_case == "high":
-        cavern_df = cavern_df[cavern_df["cavern_volume"] >= 815000 * .85]
-    return cavern_df
+    return cavern_df[cavern_df["cavern_volume"] >= volume_case * minimum_fraction]
 
 
 def constraint_halite_edge(dat_xr, buffer=PILLAR_WIDTH):
@@ -733,7 +732,7 @@ def generate_caverns_with_constraints(
     print("-" * 60)
 
     if volume_case:
-        print(f"Excluding caverns with free gas volumes below the {volume_case} case...")
+        print(f"Excluding caverns with free gas volumes below the specified case...")
         cavern_df = constraint_cavern_volumes(cavern_df=cavern_df, volume_case=volume_case)
         print(f"Number of potential caverns: {len(cavern_df):,}")
         print("-" * 60)
