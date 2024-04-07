@@ -16,6 +16,11 @@ References
     with Python’, 7 September. Available at:
     https://sabrinadchan.github.io/data-blog/building-a-hexagonal-cartogram.html
     (Accessed: 1 January 2024).
+.. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
+    cavern and porous media underground storage site. Hystories deliverable
+    D7.1-1. Hystories. Available at:
+    https://hystories.eu/wp-content/uploads/2022/05/Hystories_D7.1-1-Conceptual-design-of-salt-cavern-and-porous-media-underground-storage-site.pdf
+    (Accessed: 9 October 2023).
 .. [#DECC23] Department of the Environment, Climate and Communications (2023).
     Draft Offshore Renewable Energy Development Plan II (OREDP II). Government
     of Ireland. Available at:
@@ -31,11 +36,6 @@ References
     Available at:
     https://assets.gov.ie/202763/9160dd51-b119-44cf-a224-8b5302347e7d.pdf
     (Accessed: 10 November 2023).
-.. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
-    cavern and porous media underground storage site. Hystories deliverable
-    D7.1-1. Hystories. Available at:
-    https://hystories.eu/wp-content/uploads/2022/05/Hystories_D7.1-1-Conceptual-design-of-salt-cavern-and-porous-media-underground-storage-site.pdf
-    (Accessed: 9 October 2023).
 """
 
 import os
@@ -339,6 +339,99 @@ def cavern_dataframe(
         ["depth_criteria", "Thickness"], ascending=False
     ).drop_duplicates(["geometry"])
     cavern_df = cavern_df.drop(columns=["depth_criteria"])
+
+    return cavern_df
+
+
+def label_caverns(
+    cavern_df,
+    depths,
+    heights=None,
+    roof_thickness=ROOF_THICKNESS,
+    floor_thickness=FLOOR_THICKNESS,
+):
+    """Label cavern dataframe by height and depth.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    depths : dict[str, float]
+        Dictionary of cavern top depth ranges [m] for labelling:
+        ``"min"``: minimum depth;
+        ``"min_opt"``: minimum optimal depth;
+        ``"max_opt"``: maximum optimal depth;
+        ``"max"``: maximum depth
+    heights : list[float] or None
+        List of fixed caverns heights [m] for labelling; if ``None``, the
+        actual height is used
+    roof_thickness : float
+        Salt roof thickness [m]
+    floor_thickness : float
+        Minimum salt floor thickness [m]
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        A dataframe of potential caverns labelled by cavern height and top
+        depth ranges
+    """
+    # label caverns by height
+    if heights:
+        heights = sorted(heights)
+        if len(heights) == 1:
+            cavern_df["height"] = heights[0]
+        else:
+            conditions = []
+            for n, _ in enumerate(heights):
+                if n == 0:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            < (heights[1] + roof_thickness + floor_thickness)
+                        )
+                    )
+                elif n == len(heights) - 1:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            >= (heights[n] + roof_thickness + floor_thickness)
+                        )
+                    )
+                else:
+                    conditions.append(
+                        (
+                            cavern_df["Thickness"]
+                            >= (heights[n] + roof_thickness + floor_thickness)
+                        )
+                        & (
+                            cavern_df["Thickness"]
+                            < (heights[n + 1] + roof_thickness + floor_thickness)
+                        )
+                    )
+            choices = [str(x) for x in heights]
+            cavern_df["height"] = np.select(conditions, choices)
+        cavern_df["cavern_height"] = cavern_df["height"].astype(float)
+    else:
+        cavern_df["cavern_height"] = cavern_df["Thickness"] - roof_thickness - floor_thickness
+
+    # label caverns by depth
+    conditions = [
+        (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
+        (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
+        & (
+            cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)
+        ),
+        (cavern_df["TopDepthSeabed"] > (depths["max_opt"] - roof_thickness)),
+    ]
+    choices = [
+        f"{depths['min']:,} - {depths['min_opt']:,}",
+        f"{depths['min_opt']:,} - {depths['max_opt']:,}",
+        f"{depths['max_opt']:,} - {depths['max']:,}",
+    ]
+    cavern_df["depth"] = np.select(conditions, choices)
+
+    cavern_df["cavern_depth"] = cavern_df["TopDepthSeabed"] + roof_thickness
 
     return cavern_df
 
@@ -664,99 +757,6 @@ def generate_caverns_with_constraints(
     )
 
     return cavern_df, caverns_excl
-
-
-def label_caverns(
-    cavern_df,
-    depths,
-    heights=None,
-    roof_thickness=ROOF_THICKNESS,
-    floor_thickness=FLOOR_THICKNESS,
-):
-    """Label cavern dataframe by height and depth.
-
-    Parameters
-    ----------
-    cavern_df : geopandas.GeoDataFrame
-        Dataframe of potential caverns
-    depths : dict[str, float]
-        Dictionary of cavern top depth ranges [m] for labelling:
-        ``"min"``: minimum depth;
-        ``"min_opt"``: minimum optimal depth;
-        ``"max_opt"``: maximum optimal depth;
-        ``"max"``: maximum depth
-    heights : list[float] or None
-        List of fixed caverns heights [m] for labelling; if ``None``, the
-        actual height is used
-    roof_thickness : float
-        Salt roof thickness [m]
-    floor_thickness : float
-        Minimum salt floor thickness [m]
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        A dataframe of potential caverns labelled by cavern height and top
-        depth ranges
-    """
-    # label caverns by height
-    if heights:
-        heights = sorted(heights)
-        if len(heights) == 1:
-            cavern_df["height"] = heights[0]
-        else:
-            conditions = []
-            for n, _ in enumerate(heights):
-                if n == 0:
-                    conditions.append(
-                        (
-                            cavern_df["Thickness"]
-                            < (heights[1] + roof_thickness + floor_thickness)
-                        )
-                    )
-                elif n == len(heights) - 1:
-                    conditions.append(
-                        (
-                            cavern_df["Thickness"]
-                            >= (heights[n] + roof_thickness + floor_thickness)
-                        )
-                    )
-                else:
-                    conditions.append(
-                        (
-                            cavern_df["Thickness"]
-                            >= (heights[n] + roof_thickness + floor_thickness)
-                        )
-                        & (
-                            cavern_df["Thickness"]
-                            < (heights[n + 1] + roof_thickness + floor_thickness)
-                        )
-                    )
-            choices = [str(x) for x in heights]
-            cavern_df["height"] = np.select(conditions, choices)
-        cavern_df["cavern_height"] = cavern_df["height"].astype(float)
-    else:
-        cavern_df["cavern_height"] = cavern_df["Thickness"] - roof_thickness - floor_thickness
-
-    # label caverns by depth
-    conditions = [
-        (cavern_df["TopDepthSeabed"] < (depths["min_opt"] - roof_thickness)),
-        (cavern_df["TopDepthSeabed"] >= (depths["min_opt"] - roof_thickness))
-        & (
-            cavern_df["TopDepthSeabed"] <= (depths["max_opt"] - roof_thickness)
-        ),
-        (cavern_df["TopDepthSeabed"] > (depths["max_opt"] - roof_thickness)),
-    ]
-    choices = [
-        f"{depths['min']:,} - {depths['min_opt']:,}",
-        f"{depths['min_opt']:,} - {depths['max_opt']:,}",
-        f"{depths['max_opt']:,} - {depths['max']:,}",
-    ]
-    cavern_df["depth"] = np.select(conditions, choices)
-
-    cavern_df["cavern_depth"] = cavern_df["TopDepthSeabed"] + roof_thickness
-
-    return cavern_df
 
 
 def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
