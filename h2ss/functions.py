@@ -54,12 +54,29 @@ CAVERN_DIAMETER = 80
 CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
 NTG_SLOPE = 0.0009251759226446605
-NTG_INTERSECT = 0.2616769604617021
+NTG_INTERCEPT = 0.2616769604617021
 
 
-def net_to_gross(dat_xr, slope=NTG_SLOPE, intersect=NTG_INTERSECT, max=0.75):
-    """Estimate the net-to-gross for a given halite thickness."""
-    ntg = slope * dat_xr.Thickness + intersect
+def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max=0.75):
+    """Estimate the net-to-gross for a given halite thickness.
+
+    Parameters
+    ----------
+    dat_xr : xarray.Dataset
+        Xarray dataset of the halite data
+    slope : float
+        Slope of the net-to-gross linear regression
+    intercept : float
+        y-intercept of the net-to-gross linear regression
+    max : float
+        Maximum allowed value for the net-to-gross
+
+    Returns
+    -------
+    xarray.Dataset
+        Xarray dataset of the halite with net-to-gross information
+    """
+    ntg = slope * dat_xr.Thickness + intercept
     ntg = xr.where(ntg > 0.75, 0.75, ntg)
     dat_xr = dat_xr.assign(NetToGross=ntg)
     dat_xr = dat_xr.assign(ThicknessNet=dat_xr.Thickness * dat_xr.NetToGross)
@@ -80,7 +97,7 @@ def zones_of_interest(
         Xarray dataset of the halite data
     constraints : dict[str, float]
         Dictionary containing the following:
-        ``"height"``: cavern height [m];
+        ``"net_height"``: net cavern height [m];
         ``"min_depth"``: minimum cavern depth [m];
         ``"max_depth"``: maximum cavern depth [m]
     roof_thickness : float
@@ -99,7 +116,7 @@ def zones_of_interest(
         (
             (
                 dat_xr.ThicknessNet
-                >= constraints["height"] + roof_thickness + floor_thickness
+                >= constraints["net_height"] + roof_thickness + floor_thickness
             )
             & (
                 dat_xr.TopDepthSeabed
