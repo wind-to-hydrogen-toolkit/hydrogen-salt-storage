@@ -44,10 +44,9 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import shapely
+import xarray as xr
 
 from h2ss import data as rd
-
-import xarray as xr
 
 ROOF_THICKNESS = 80
 FLOOR_THICKNESS = 10
@@ -59,8 +58,7 @@ NTG_INTERSECT = 0.2616769604617021
 
 
 def net_to_gross(dat_xr, slope=NTG_SLOPE, intersect=NTG_INTERSECT, max=0.75):
-    """Estimate the net-to-gross for a given halite thickness.
-    """
+    """Estimate the net-to-gross for a given halite thickness."""
     ntg = slope * dat_xr.Thickness + intersect
     ntg = xr.where(ntg > 0.75, 0.75, ntg)
     dat_xr = dat_xr.assign(NetToGross=ntg)
@@ -102,8 +100,8 @@ def zones_of_interest(
             (
                 dat_xr.ThicknessNet
                 >= constraints["height"] + roof_thickness + floor_thickness
-            ) &
-            (
+            )
+            & (
                 dat_xr.TopDepthSeabed
                 >= constraints["min_depth"] - roof_thickness
             )
@@ -421,14 +419,20 @@ def label_caverns(
                         )
                         & (
                             cavern_df["Thickness"]
-                            < (heights[n + 1] + roof_thickness + floor_thickness)
+                            < (
+                                heights[n + 1]
+                                + roof_thickness
+                                + floor_thickness
+                            )
                         )
                     )
             choices = [str(x) for x in heights]
             cavern_df["height"] = np.select(conditions, choices)
         cavern_df["cavern_height"] = cavern_df["height"].astype(float)
     else:
-        cavern_df["cavern_height"] = cavern_df["Thickness"] - roof_thickness - floor_thickness
+        cavern_df["cavern_height"] = (
+            cavern_df["Thickness"] - roof_thickness - floor_thickness
+        )
 
     # label caverns by depth
     conditions = [
@@ -476,7 +480,9 @@ def constraint_cavern_volumes(
     volume used is the free gas volume of a cavern. The volume should be no
     less than 85% of the case's volume.
     """
-    return cavern_df[cavern_df["cavern_volume"] >= volume_case * minimum_fraction]
+    return cavern_df[
+        cavern_df["cavern_volume"] >= volume_case * minimum_fraction
+    ]
 
 
 def constraint_halite_edge(dat_xr, buffer=PILLAR_WIDTH):
@@ -747,8 +753,12 @@ def generate_caverns_with_constraints(
     print("-" * 60)
 
     if volume_case:
-        print(f"Excluding caverns with free gas volumes below the specified case...")
-        cavern_df = constraint_cavern_volumes(cavern_df=cavern_df, volume_case=volume_case)
+        print(
+            f"Excluding caverns with free gas volumes below the specified case..."
+        )
+        cavern_df = constraint_cavern_volumes(
+            cavern_df=cavern_df, volume_case=volume_case
+        )
         print(f"Number of potential caverns: {len(cavern_df):,}")
         print("-" * 60)
 

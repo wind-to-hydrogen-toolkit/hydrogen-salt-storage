@@ -8,6 +8,7 @@ References
     (Accessed: 8 February 2024).
 """
 
+
 def electricity_demand_ie(caverns_df):
     """Compare the total capacity to Ireland's electricity demand in 2050.
 
