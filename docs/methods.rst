@@ -9,4 +9,5 @@ Methods
    methods/functions
    methods/capacity
    methods/optimisation
+   methods/compare
    methods/tests
