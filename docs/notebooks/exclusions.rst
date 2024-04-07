@@ -10,3 +10,4 @@ Exclusions
    subsea_cables
    shipwrecks
    ireland_boundary
+   kish_basin_constraints
