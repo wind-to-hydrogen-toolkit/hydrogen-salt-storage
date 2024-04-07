@@ -47,11 +47,25 @@ import shapely
 
 from h2ss import data as rd
 
+import xarray as xr
+
 ROOF_THICKNESS = 80
 FLOOR_THICKNESS = 10
 CAVERN_DIAMETER = 80
 CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
+NTG_SLOPE = 0.0009251759226446605
+NTG_INTERSECT = 0.2616769604617021
+
+
+def net_to_gross(dat_xr, slope=NTG_SLOPE, intersect=NTG_INTERSECT, max=0.75):
+    """Estimate the net-to-gross for a given halite thickness.
+    """
+    ntg = slope * dat_xr.Thickness + intersect
+    ntg = xr.where(ntg > 0.75, 0.75, ntg)
+    dat_xr = dat_xr.assign(NetToGross=ntg)
+    dat_xr = dat_xr.assign(ThicknessNet=dat_xr.Thickness * dat_xr.NetToGross)
+    return dat_xr
 
 
 def zones_of_interest(
@@ -82,13 +96,14 @@ def zones_of_interest(
         A (multi)polygon geodataframe of the zones of interest and an Xarray
         dataset of the zones of interest
     """
+    dat_xr = net_to_gross(dat_xr=dat_xr)
     zds = dat_xr.where(
         (
             (
-                dat_xr.Thickness
+                dat_xr.ThicknessNet
                 >= constraints["height"] + roof_thickness + floor_thickness
-            )
-            & (
+            ) &
+            (
                 dat_xr.TopDepthSeabed
                 >= constraints["min_depth"] - roof_thickness
             )
