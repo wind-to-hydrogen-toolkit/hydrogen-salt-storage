@@ -16,11 +16,6 @@ References
     with Python’, 7 September. Available at:
     https://sabrinadchan.github.io/data-blog/building-a-hexagonal-cartogram.html
     (Accessed: 1 January 2024).
-.. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
-    cavern and porous media underground storage site. Hystories deliverable
-    D7.1-1. Hystories. Available at:
-    https://hystories.eu/wp-content/uploads/2022/05/Hystories_D7.1-1-Conceptual-design-of-salt-cavern-and-porous-media-underground-storage-site.pdf
-    (Accessed: 9 October 2023).
 .. [#DECC23] Department of the Environment, Climate and Communications (2023).
     Draft Offshore Renewable Energy Development Plan II (OREDP II). Government
     of Ireland. Available at:
@@ -55,9 +50,10 @@ CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
 NTG_SLOPE = 0.0009251759226446605
 NTG_INTERCEPT = 0.2616769604617021
+MAX_NTG = 0.75
 
 
-def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max=0.75):
+def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max_ntg=MAX_NTG):
     """Estimate the net-to-gross for a given halite thickness.
 
     Parameters
@@ -68,7 +64,7 @@ def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max=0.75):
         Slope of the net-to-gross linear regression
     intercept : float
         y-intercept of the net-to-gross linear regression
-    max : float
+    max_ntg : float
         Maximum allowed value for the net-to-gross
 
     Returns
@@ -77,7 +73,7 @@ def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max=0.75):
         Xarray dataset of the halite with net-to-gross information
     """
     ntg = slope * dat_xr.Thickness + intercept
-    ntg = xr.where(ntg > 0.75, 0.75, ntg)
+    ntg = xr.where(ntg > max_ntg, max_ntg, ntg)
     dat_xr = dat_xr.assign(NetToGross=ntg)
     dat_xr = dat_xr.assign(ThicknessNet=dat_xr.Thickness * dat_xr.NetToGross)
     return dat_xr
@@ -88,6 +84,7 @@ def zones_of_interest(
     constraints,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
+    max_ntg=MAX_NTG
 ):
     """Generate zones of interest by applying thickness and depth constraints.
 
@@ -104,6 +101,8 @@ def zones_of_interest(
         Salt roof thickness [m]
     floor_thickness : float
         Minimum salt floor thickness [m]
+    max_ntg : float
+        Maximum allowed value for the net-to-gross
 
     Returns
     -------
@@ -111,7 +110,7 @@ def zones_of_interest(
         A (multi)polygon geodataframe of the zones of interest and an Xarray
         dataset of the zones of interest
     """
-    dat_xr = net_to_gross(dat_xr=dat_xr)
+    dat_xr = net_to_gross(dat_xr=dat_xr, max_ntg=max_ntg)
     zds = dat_xr.where(
         (
             (
@@ -410,7 +409,7 @@ def label_caverns(
     if heights:
         heights = sorted(heights)
         if len(heights) == 1:
-            cavern_df["height"] = heights[0]
+            cavern_df["cavern_height"] = heights[0]
         else:
             conditions = []
             for n, _ in enumerate(heights):
@@ -444,8 +443,8 @@ def label_caverns(
                         )
                     )
             choices = [str(x) for x in heights]
-            cavern_df["height"] = np.select(conditions, choices)
-        cavern_df["cavern_height"] = cavern_df["height"].astype(float)
+            cavern_df["cavern_height"] = np.select(conditions, choices)
+        cavern_df["cavern_height"] = cavern_df["cavern_height"].astype(float)
     else:
         cavern_df["cavern_height"] = (
             cavern_df["Thickness"] - roof_thickness - floor_thickness
@@ -470,36 +469,6 @@ def label_caverns(
     cavern_df["cavern_depth"] = cavern_df["TopDepthSeabed"] + roof_thickness
 
     return cavern_df
-
-
-def constraint_cavern_volumes(
-    cavern_df, volume_case=380000, minimum_fraction=0.85
-):
-    """Discard caverns with corrected volumes lower than recommended.
-
-    Parameters
-    ----------
-    cavern_df : geopandas.GeoDataFrame
-        Geodataframe of caverns within the zone of interest
-    volume_case : float
-        Cavern volume corresponding to a Hystories Project investment scenario
-    minimum_fraction : float
-        The fraction of ``volume_case`` that is allowed as the minimum
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        Dataframe of available caverns
-
-    Notes
-    -----
-    See [#Jannel22]_ for the Hystories Project investment scenarios. The
-    volume used is the free gas volume of a cavern. The volume should be no
-    less than 85% of the case's volume.
-    """
-    return cavern_df[
-        cavern_df["cavern_volume"] >= volume_case * minimum_fraction
-    ]
 
 
 def constraint_halite_edge(dat_xr, buffer=PILLAR_WIDTH):
@@ -720,11 +689,7 @@ def exclude_constraint(cavern_df, cavern_all, exclusions, key):
     return cavern_df
 
 
-def generate_caverns_with_constraints(
-    cavern_df,
-    exclusions,
-    volume_case=None,
-):
+def generate_caverns_with_constraints(cavern_df, exclusions):
     """Add constraints to cavern configuration.
 
     Parameters
@@ -741,8 +706,6 @@ def generate_caverns_with_constraints(
         ``"wind_farms"``: offshore wind farms;
         ``"wells"``: exporation wells;
         ``"shipwrecks"``: shipwrecks
-    volume_case : str or None
-        Cavern volume based on the Hystories Project investment scenario
 
     Returns
     -------
@@ -768,16 +731,6 @@ def generate_caverns_with_constraints(
     cavern_df = pd.concat(cavern_dict.values())
     print(f"Number of potential caverns: {len(cavern_df):,}")
     print("-" * 60)
-
-    if volume_case:
-        print(
-            f"Excluding caverns with free gas volumes below the specified case..."
-        )
-        cavern_df = constraint_cavern_volumes(
-            cavern_df=cavern_df, volume_case=volume_case
-        )
-        print(f"Number of potential caverns: {len(cavern_df):,}")
-        print("-" * 60)
 
     # keep original
     cavern_all = cavern_df.copy()
