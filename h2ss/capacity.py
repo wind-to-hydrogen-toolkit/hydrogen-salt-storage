@@ -157,7 +157,7 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
     depth_top : float
         Cavern top depth [m]
     t_0 : float
-        Mean annual surface temperature [°C]
+        Mean annual seabed surface temperature [°C]
     delta_t : float
         Geothermal gradient; change in temperature with depth [°C km⁻¹]
 
@@ -250,8 +250,9 @@ def pressure_operating(
 
     See [#Williams22]_, Eqn. (3) and (4). This function has been modified to
     include sea water depth and density to suit offshore conditions.
-    The sea water density is assumed as the mean value at 10 °C at a salinity
-    of 35 g kg⁻¹, and a surface pressure of 1 atm [#Nayar23]_ [#Nayar16]_.
+    The sea water density is assumed as the mean value at a temperature of 10
+    °C, a salinity of 35 g kg⁻¹, and a surface pressure of 1 atm [#Nayar23]_
+    [#Nayar16]_.
     """
     p_casing = (
         rho_overburden * thickness_overburden + rho_salt * thickness_salt

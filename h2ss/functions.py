@@ -365,7 +365,7 @@ def cavern_dataframe(
     choices = [1, 2, 1]
     cavern_df["depth_criteria"] = np.select(conditions, choices)
     cavern_df = cavern_df.sort_values(
-        ["depth_criteria", "Thickness"], ascending=False
+        ["depth_criteria", "ThicknessNet"], ascending=False
     ).drop_duplicates(["geometry"])
     cavern_df = cavern_df.drop(columns=["depth_criteria"])
 
@@ -416,25 +416,25 @@ def label_caverns(
                 if n == 0:
                     conditions.append(
                         (
-                            cavern_df["Thickness"]
+                            cavern_df["ThicknessNet"]
                             < (heights[1] + roof_thickness + floor_thickness)
                         )
                     )
                 elif n == len(heights) - 1:
                     conditions.append(
                         (
-                            cavern_df["Thickness"]
+                            cavern_df["ThicknessNet"]
                             >= (heights[n] + roof_thickness + floor_thickness)
                         )
                     )
                 else:
                     conditions.append(
                         (
-                            cavern_df["Thickness"]
+                            cavern_df["ThicknessNet"]
                             >= (heights[n] + roof_thickness + floor_thickness)
                         )
                         & (
-                            cavern_df["Thickness"]
+                            cavern_df["ThicknessNet"]
                             < (
                                 heights[n + 1]
                                 + roof_thickness
@@ -447,7 +447,7 @@ def label_caverns(
         cavern_df["cavern_height"] = cavern_df["cavern_height"].astype(float)
     else:
         cavern_df["cavern_height"] = (
-            cavern_df["Thickness"] - roof_thickness - floor_thickness
+            cavern_df["ThicknessNet"] - roof_thickness - floor_thickness
         )
 
     # label caverns by depth
