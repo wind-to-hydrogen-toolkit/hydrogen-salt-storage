@@ -184,10 +184,12 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
 
 
 def pressure_operating(
+    depth_water,
     thickness_overburden,
     thickness_salt=50,
     rho_overburden=2400,
     rho_salt=2200,
+    rho_water=1036,
     minf=0.3,
     maxf=0.8,
 ):
@@ -195,6 +197,8 @@ def pressure_operating(
 
     Parameters
     ----------
+    depth_water : float
+        Sea water depth [m]
     thickness_overburden : float
         Overburden thickness / halite top depth [m]
     thickness_salt : float
@@ -203,6 +207,8 @@ def pressure_operating(
         Density of the overburden [kg m⁻³]
     rho_salt : float
         Density of the halite [kg m⁻³]
+    rho_water : float
+        Density of the sea water [kg m⁻³]
     minf : float
         Factor of lithostatic pressure for the minimum operating pressure
     maxf : float
@@ -218,8 +224,8 @@ def pressure_operating(
     See [#Williams22]_, Eqn. (3) and (4).
 
     .. math::
-        p_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
-        \\cdot t_{salt}) \\, g
+        p_{casing} = (\\rho_{water} \\cdot t_{water} + \\rho_{overburden}
+        \\cdot t_{overburden} + \\rho_{salt} \\cdot t_{salt}) \\, g
     .. math::
         p_{H_2min} = 0.3 \\, p_{casing}
     .. math::
@@ -236,6 +242,7 @@ def pressure_operating(
     """
     p_casing = (
         rho_overburden * thickness_overburden + rho_salt * thickness_salt
+        + rho_water * depth_water
     ) * 9.81
     p_operating_min = minf * p_casing
     p_operating_max = maxf * p_casing
