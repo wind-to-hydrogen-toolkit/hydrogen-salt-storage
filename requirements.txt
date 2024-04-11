@@ -14,5 +14,6 @@ pydata-sphinx-theme
 pyfluids
 pylint
 pytest-cov
+SALib
 seaborn
 statsmodels
