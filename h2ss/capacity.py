@@ -18,6 +18,13 @@ References
     Overview of Deep Geothermal Energy and Its Potential on the Island of
     Ireland’, First Break, 41(2), pp. 33–43.
     https://doi.org/10.3997/1365-2397.fb2023009.
+.. [#Nayar23] Nayar, K.G., Sharqawy, M.H. and Lienhard V, J.H. (2023)
+    Thermophysical properties of seawater. Available at:
+    https://web.mit.edu/seawater (Accessed: 10 April 2024).
+.. [#Nayar16] Nayar, K.G. et al. (2016) ‘Thermophysical properties of seawater:
+    A review and new correlations that include pressure dependence’,
+    Desalination, 390, pp. 1–24. Available at:
+    https://doi.org/10.1016/j.desal.2016.02.024.
 .. [#Caglayan20] Caglayan, D. G., Weber, N., Heinrichs, H. U., Linßen, J.,
     Robinius, M., Kukla, P. A., and Stolten, D. (2020). ‘Technical potential
     of salt caverns for hydrogen storage in Europe’, International Journal of
@@ -150,7 +157,7 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
     depth_top : float
         Cavern top depth [m]
     t_0 : float
-        Mean annual surface temperature [°C]
+        Mean annual seabed surface temperature [°C]
     delta_t : float
         Geothermal gradient; change in temperature with depth [°C km⁻¹]
 
@@ -184,10 +191,12 @@ def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):
 
 
 def pressure_operating(
+    depth_water,
     thickness_overburden,
     thickness_salt=50,
     rho_overburden=2400,
     rho_salt=2200,
+    rho_water=1027,
     minf=0.3,
     maxf=0.8,
 ):
@@ -195,6 +204,8 @@ def pressure_operating(
 
     Parameters
     ----------
+    depth_water : float
+        Sea water depth [m]
     thickness_overburden : float
         Overburden thickness / halite top depth [m]
     thickness_salt : float
@@ -203,6 +214,8 @@ def pressure_operating(
         Density of the overburden [kg m⁻³]
     rho_salt : float
         Density of the halite [kg m⁻³]
+    rho_water : float
+        Density of the sea water [kg m⁻³]
     minf : float
         Factor of lithostatic pressure for the minimum operating pressure
     maxf : float
@@ -215,11 +228,9 @@ def pressure_operating(
 
     Notes
     -----
-    See [#Williams22]_, Eqn. (3) and (4).
-
     .. math::
-        p_{casing} = (\\rho_{overburden} \\cdot t_{overburden} + \\rho_{salt}
-        \\cdot t_{salt}) \\, g
+        p_{casing} = (\\rho_{water} \\cdot t_{water} + \\rho_{overburden}
+        \\cdot t_{overburden} + \\rho_{salt} \\cdot t_{salt}) \\, g
     .. math::
         p_{H_2min} = 0.3 \\, p_{casing}
     .. math::
@@ -228,14 +239,25 @@ def pressure_operating(
     :math:`p_{casing}` is the lithostatic pressure at the casing shoe [Pa].
     The thickness of the overburden, :math:`t_{overburden}` [m] is the same
     as the depth to top of salt. :math:`t_{salt}` [m] is the thickness of
-    the salt above the casing shoe. :math:`\\rho_{overburden}` and
-    :math:`\\rho_{salt}` are the densities of the overburden and salt,
-    respectively [kg m⁻³]. :math:`g` is the acceleration due to gravity
-    [m s⁻²]. :math:`p_{H_2min}` and :math:`p_{H_2max}` are the minimum and
+    the salt above the casing shoe. :math:`t_{water}` [m] is the sea water
+    depth. :math:`\\rho_{water}`, :math:`\\rho_{overburden}`, and
+    :math:`\\rho_{salt}` are the densities of the sea water, overburden, and
+    salt, respectively [kg m⁻³]. :math:`g` is the acceleration due to gravity
+    [m s⁻²].
+
+    :math:`p_{H_2min}` and :math:`p_{H_2max}` are the minimum and
     maximum cavern operating pressures, respectively [Pa].
+
+    See [#Williams22]_, Eqn. (3) and (4). This function has been modified to
+    include sea water depth and density to suit offshore conditions.
+    The sea water density is assumed as the mean value at a temperature of 10
+    °C, a salinity of 35 g kg⁻¹, and a surface pressure of 1 atm [#Nayar23]_
+    [#Nayar16]_.
     """
     p_casing = (
-        rho_overburden * thickness_overburden + rho_salt * thickness_salt
+        rho_overburden * thickness_overburden
+        + rho_salt * thickness_salt
+        + rho_water * depth_water
     ) * 9.81
     p_operating_min = minf * p_casing
     p_operating_max = maxf * p_casing
@@ -326,9 +348,9 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     The working mass of hydrogen, :math:`m_{working}` [kg] is the difference
     between the stored mass of hydrogen at maximum, :math:`m_{max}` and
     minimum, :math:`m_{min}` operating pressures [kg], which were derived
-    using the minimum, :math:`\\rho_{min}` and maximum, :math:`\\rho_{max}`
-    hydrogen densities [kg m⁻³], respectively, and the cavern volume,
-    :math:`V_{cavern}` [m³].
+    using the minimum, :math:`\\rho_{H_2min}` and maximum,
+    :math:`\\rho_{H_2max}` hydrogen densities [kg m⁻³], respectively, and the
+    cavern volume, :math:`V_{cavern}` [m³].
     """
     m_min_operating = rho_h2_min * v_cavern
     m_max_operating = rho_h2_max * v_cavern

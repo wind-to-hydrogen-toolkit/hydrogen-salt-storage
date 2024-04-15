@@ -201,11 +201,14 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     )
     xds = xds.assign(TopDepthSeabed=xds["TopDepth"] + bath["elevation"])
     xds = xds.assign(BaseDepthSeabed=xds["BaseDepth"] + bath["elevation"])
+    # hacky way to prevent multiple grid mappings
+    xds = xds.assign(Bathymetry=xds["TopDepth"] * 0 + bath["elevation"])
     for v in ["TopDepth", "BaseDepth"]:
         xds[f"{v}Seabed"].attrs = xds[v].attrs
         xds[f"{v}Seabed"].attrs["long_name"] = (
             xds[f"{v}Seabed"].attrs["long_name"] + " relative to the sea-floor"
         )
+    xds["Bathymetry"].attrs = bath["elevation"].attrs
     return xds, dat_extent
 
 

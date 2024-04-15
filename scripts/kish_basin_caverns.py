@@ -136,7 +136,8 @@ plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 # ### Cavern calculations in a regular hexagonal grid
 
 caverns = fns.generate_caverns_hexagonal_grid(
-    dat_extent=extent, zones_df=zones, diameter=80
+    dat_extent=extent,
+    zones_df=zones,
 )
 
 len_hex = len(caverns)
@@ -145,6 +146,8 @@ len_hex
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
-# percentage increase in the number of caverns when using a regular hexagonal
-# grid configuration compared to a square grid
-(len_hex - len_square) / len_square * 100
+print(
+    "Percentage increase in the number of caverns when using a regular "
+    "hexagonal grid configuration compared to a square grid: "
+    f"{(len_hex - len_square) / len_square * 100:.3f}%"
+)

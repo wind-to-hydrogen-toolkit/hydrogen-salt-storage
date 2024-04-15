@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Wind farm optimisation
+# # Wind farm optimisation with net-to-gross
 
 import os
 
@@ -73,25 +73,46 @@ _, cables_b = fns.constraint_subsea_cables(
     data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
+# ## HYSS case
+
+CAVERN_DIAMETER = 85
+SEPARATION = 4 * CAVERN_DIAMETER
+PILLAR_WIDTH = 3 * CAVERN_DIAMETER
+
 # distance from salt formation edge
-edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
+edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=PILLAR_WIDTH)
 
 # ## Zones of interest
 
-# height = 155 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
-# separation = 320 m
 zones, zds = fns.zones_of_interest(
     dat_xr=ds,
-    constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
+    constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
-# ## Exclusions
+# ## Generate caverns
+
+caverns = fns.generate_caverns_hexagonal_grid(
+    zones_df=zones,
+    dat_extent=extent,
+    diameter=CAVERN_DIAMETER,
+    separation=SEPARATION,
+)
+
+caverns = fns.cavern_dataframe(
+    dat_zone=zds,
+    cavern_df=caverns,
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
+
+# label caverns by depth and heights
+caverns = fns.label_caverns(
+    cavern_df=caverns,
+    heights=[120],
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
 
 caverns, _ = fns.generate_caverns_with_constraints(
-    zones_gdf=zones,
-    zones_ds=zds,
-    dat_extent=extent,
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+    cavern_df=caverns,
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -102,28 +123,46 @@ caverns, _ = fns.generate_caverns_with_constraints(
     },
 )
 
-# label caverns by height and depth
-caverns = fns.label_caverns(
-    cavern_df=caverns,
-    heights=[155],
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+# ## Capacity
+
+caverns["cavern_total_volume"] = cap.cavern_volume(
+    height=caverns["cavern_height"], diameter=CAVERN_DIAMETER
+)
+caverns["cavern_volume"] = cap.corrected_cavern_volume(
+    v_cavern=caverns["cavern_total_volume"], f_if=0
 )
 
-# ## Capacity [GWh]
+caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
+    height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
+)
 
-# calculate volumes and capacities
-caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
+(
+    caverns["p_operating_min"],
+    caverns["p_operating_max"],
+) = cap.pressure_operating(
+    thickness_overburden=caverns["TopDepthSeabed"],
+    depth_water=-caverns["Bathymetry"],
+)
 
-# totals
-caverns[
-    [
-        "cavern_volume",
-        "working_mass",
-        "capacity",
-        "mass_operating_min",
-        "mass_operating_max",
-    ]
-].sum()
+caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
+    p_operating_min=caverns["p_operating_min"],
+    p_operating_max=caverns["p_operating_max"],
+    t_mid_point=caverns["t_mid_point"],
+)
+
+(
+    caverns["working_mass"],
+    caverns["mass_operating_min"],
+    caverns["mass_operating_max"],
+) = cap.mass_hydrogen_working(
+    rho_h2_min=caverns["rho_min"],
+    rho_h2_max=caverns["rho_max"],
+    v_cavern=caverns["cavern_volume"],
+)
+
+caverns["capacity"] = cap.energy_storage_capacity(
+    m_working=caverns["working_mass"]
+)
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
@@ -375,6 +414,14 @@ caverns[
     ]
 ].describe()
 
+caverns[
+    [
+        "LCOT_Codling",
+        "LCOT_Dublin",
+        "LCOT_North",
+    ]
+].describe().mean(axis=1)
+
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 sns.boxplot(
     caverns.filter(like="dist_").set_axis(list(data["Name"]), axis=1).melt(),
@@ -406,6 +453,11 @@ axes[1].legend(loc="lower right")
 axes[1].tick_params(axis="x", bottom=False)
 sns.despine(bottom=True)
 plt.tight_layout()
+plt.savefig(
+    os.path.join("graphics", f"fig_box_transmission_ntg.jpg"),
+    format="jpg",
+    dpi=600,
+)
 plt.show()
 
 # ## Maps
@@ -433,7 +485,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             zorder=2,
             marker=".",
             cmap="flare",
-            markersize=8,
+            markersize=20,
         )
         shape.plot(
             ax=ax1, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
@@ -494,6 +546,11 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
             title_fontsize=fontsize,
         )
     plt.tight_layout()
+    plt.savefig(
+        os.path.join("graphics", f"fig_map_transmission_ntg.jpg"),
+        format="jpg",
+        dpi=600,
+    )
     plt.show()
 
 
@@ -566,6 +623,11 @@ def plot_map_extent(cavern_df):
         )
     )
     plt.tight_layout()
+    plt.savefig(
+        os.path.join("graphics", f"fig_transmission_map_inset.jpg"),
+        format="jpg",
+        dpi=600,
+    )
     plt.show()
 
 

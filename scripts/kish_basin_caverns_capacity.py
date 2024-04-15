@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Cavern storage capacity
+# # Cavern storage capacity with net-to-gross
 
 import os
 
@@ -10,6 +10,7 @@ import contextily as cx
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
@@ -18,6 +19,7 @@ from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import capacity as cap
+from h2ss import compare
 from h2ss import data as rd
 from h2ss import functions as fns
 
@@ -73,24 +75,46 @@ _, cables_b = fns.constraint_subsea_cables(
     data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
+# ## HYSS case
+
+CAVERN_DIAMETER = 85
+SEPARATION = 4 * CAVERN_DIAMETER
+PILLAR_WIDTH = 3 * CAVERN_DIAMETER
+
 # distance from salt formation edge
-edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
+edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=PILLAR_WIDTH)
 
 # ## Zones of interest
 
-# height = 85 m, 500 m <= depth <= 2,000 m, diameter = 80 m,
-# separation = 320 m
 zones, zds = fns.zones_of_interest(
-    dat_xr=ds, constraints={"height": 85, "min_depth": 500, "max_depth": 2000}
+    dat_xr=ds,
+    constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
 # ## Generate caverns
 
-caverns, _ = fns.generate_caverns_with_constraints(
-    zones_gdf=zones,
-    zones_ds=zds,
+caverns = fns.generate_caverns_hexagonal_grid(
+    zones_df=zones,
     dat_extent=extent,
+    diameter=CAVERN_DIAMETER,
+    separation=SEPARATION,
+)
+
+caverns = fns.cavern_dataframe(
+    dat_zone=zds,
+    cavern_df=caverns,
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
+
+# label caverns by depth and heights
+caverns = fns.label_caverns(
+    cavern_df=caverns,
+    heights=[120],
+    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+)
+
+caverns, _ = fns.generate_caverns_with_constraints(
+    cavern_df=caverns,
     exclusions={
         "wells": wells_b,
         "wind_farms": wind_farms,
@@ -101,20 +125,15 @@ caverns, _ = fns.generate_caverns_with_constraints(
     },
 )
 
-# label caverns by height and depth
-caverns = fns.label_caverns(
-    cavern_df=caverns,
-    heights=[85, 155, 311],
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
-)
-
 # ## Capacity
 
-# ### Volume
+# ### Cavern volume
 
-caverns["cavern_volume"] = cap.cavern_volume(height=caverns["cavern_height"])
+caverns["cavern_total_volume"] = cap.cavern_volume(
+    height=caverns["cavern_height"], diameter=CAVERN_DIAMETER
+)
 caverns["cavern_volume"] = cap.corrected_cavern_volume(
-    v_cavern=caverns["cavern_volume"]
+    v_cavern=caverns["cavern_total_volume"], f_if=0
 )
 
 # ### Mid-point temperature
@@ -128,7 +147,10 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
 (
     caverns["p_operating_min"],
     caverns["p_operating_max"],
-) = cap.pressure_operating(thickness_overburden=caverns["TopDepthSeabed"])
+) = cap.pressure_operating(
+    thickness_overburden=caverns["TopDepthSeabed"],
+    depth_water=-caverns["Bathymetry"],
+)
 
 # ### Hydrogen gas density
 
@@ -164,11 +186,21 @@ caverns["working_mass_pct"] = caverns["working_mass"] / (
 )
 
 caverns.drop(
-    ["x", "y", "TopTWT", "BaseDepth", "TopDepth", "BaseDepthSeabed"], axis=1
+    columns=[
+        "x",
+        "y",
+        "BaseDepth",
+        "TopDepth",
+        "TopTWT",
+        "BaseDepthSeabed",
+        "cavern_height",
+        "cavern_total_volume",
+        "cavern_volume",
+    ]
 ).describe()
 
-# cavern volumes
-list(caverns["cavern_volume"].unique())
+# fixed values
+caverns[["cavern_height", "cavern_total_volume", "cavern_volume"]].iloc[0]
 
 # totals
 caverns[
@@ -182,73 +214,42 @@ caverns[
 ].sum()
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
-print(
-    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
-    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
-)
+compare.electricity_demand_ie(caverns_df=caverns)
 
 # total capacity at various depth/height combinations
-s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].sum()
+s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].sum()
 s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
 s.groupby("depth").sum()[["capacity"]]
 
-s.groupby("height").sum()[["capacity"]]
+s.groupby("halite").sum()[["capacity"]]
 
 # number of caverns
-s = caverns.groupby(["height", "depth"], sort=False)[["capacity"]].count()
+s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].count()
 s["%"] = s["capacity"] / len(caverns) * 100
 s
 
 s.groupby("depth").sum()[["capacity"]]
 
-s.groupby("height").sum()[["capacity"]]
-
-fig, axes = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
-sns.histplot(
-    caverns.rename(columns={"depth": "Cavern top depth [m]"}).sort_values(
-        "TopDepthSeabed"
-    ),
-    x="capacity",
-    hue="Cavern top depth [m]",
-    palette="rocket_r",
-    multiple="stack",
-    alpha=1,
-    ax=axes[0],
-)
-sns.histplot(
-    caverns.rename(columns={"height": "Cavern height [m]"}).sort_values(
-        "Thickness"
-    ),
-    x="capacity",
-    hue="Cavern height [m]",
-    palette="rocket_r",
-    multiple="stack",
-    alpha=1,
-    ax=axes[1],
-)
-axes[0].set_xlabel("Hydrogen storage capacity [GWh]")
-axes[1].set_xlabel("Hydrogen storage capacity [GWh]")
-axes[0].grid(which="major", axis="y")
-axes[1].grid(which="major", axis="y")
-axes[0].set_ylabel("Number of caverns")
-sns.despine()
-plt.tight_layout()
-plt.show()
+s.groupby("halite").sum()[["capacity"]]
 
 # copy dataframe
 caverns_pot_all = caverns.copy()
 
-# ## Maps
+# ## Map
 
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
 def plot_map_alt(
-    dat_xr, cavern_df, zones_gdf, classes, top_depth=True, fontsize=11.5
+    dat_xr,
+    cavern_df,
+    zones_gdf,
+    classes,
+    # quantity="capacity", quantity_label="Hydrogen storage \ncapacity [GWh]", top_depth=True,
+    fontsize=11.5,
 ):
     """Helper function to plot caverns within the zones of interest"""
     plt.figure(figsize=(20, 11.5))
@@ -337,66 +338,74 @@ def plot_map_alt(
                 & (cavern_df["capacity"] < classes[n + 1])
             ]
             label1 = f"{classes[n]}–{classes[n + 1]}"
-        if top_depth:
-            for df, markersize in zip(
-                [
-                    c[c["depth"] == "500 - 1,000"],
-                    c[c["depth"] == "1,000 - 1,500"],
-                    c[c["depth"] == "1,500 - 2,000"],
-                ],
-                [20, 50, 20],
-            ):
-                if len(df) > 0:
-                    df.centroid.plot(
-                        ax=axis1,
-                        zorder=3,
-                        linewidth=0,
-                        marker=".",
-                        markersize=markersize,
-                        color=sns.color_palette("flare", 256)[y],
-                    )
-        else:
-            gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-                ax=axis1,
-                scheme="UserDefined",
-                classification_kwds={"bins": classes[1:]},
-                column="capacity",
-                zorder=3,
-                marker=".",
-                cmap="flare",
-                markersize=20,
-            )
+        # if top_depth:
+        #     for df, markersize in zip(
+        #         [
+        #             c[c["depth"] == "500 - 1,000"],
+        #             c[c["depth"] == "1,000 - 1,500"],
+        #             c[c["depth"] == "1,500 - 2,000"],
+        #         ],
+        #         [20, 50, 20],
+        #     ):
+        #         if len(df) > 0:
+        #             df.centroid.plot(
+        #                 ax=axis1,
+        #                 zorder=3,
+        #                 linewidth=0,
+        #                 marker=".",
+        #                 markersize=markersize,
+        #                 color=sns.color_palette("flare", 256)[y],
+        #             )
+        # else:
+        gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
+            ax=axis1,
+            scheme="UserDefined",
+            classification_kwds={"bins": classes[1:]},
+            column="capacity",
+            zorder=3,
+            marker=".",
+            cmap="flare",
+            markersize=40,
+        )
         legend_handles1.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[y], label=label1
             )
         )
 
-    if top_depth:
-        legend_handles1.append(
-            mpatches.Patch(label="Cavern top depth [m]", visible=False)
-        )
-        for markersize, label1 in zip(
-            [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
-        ):
-            legend_handles1.append(
-                Line2D(
-                    [0],
-                    [0],
-                    marker=".",
-                    linewidth=0,
-                    label=label1,
-                    color="darkslategrey",
-                    markersize=markersize,
-                )
-            )
+    # if top_depth:
+    #     legend_handles1.append(
+    #         mpatches.Patch(label="Cavern top depth [m]", visible=False)
+    #     )
+    #     for markersize, label1 in zip(
+    #         [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
+    #     ):
+    #         legend_handles1.append(
+    #             Line2D(
+    #                 [0],
+    #                 [0],
+    #                 marker=".",
+    #                 linewidth=0,
+    #                 label=label1,
+    #                 color="darkslategrey",
+    #                 markersize=markersize,
+    #             )
+    #         )
 
     plt.xlim(shape.bounds["minx"][0] - 1000, shape.bounds["maxx"][0] + 1000)
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
 
+    basemap = cx.providers.CartoDB.VoyagerNoLabels
     cx.add_basemap(
-        axis1, crs=rd.CRS, source=cx.providers.CartoDB.VoyagerNoLabels, zoom=12
+        axis1, crs=rd.CRS, source=basemap, zoom=12, attribution=False
     )
+    axis1.text(
+        shape.bounds["minx"][0] - 800,
+        shape.bounds["miny"][0] - 800,
+        basemap["attribution"],
+        fontsize=10,
+    )
+
     axis1.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -424,235 +433,12 @@ def plot_map_alt(
     )
 
     plt.tight_layout()
+    plt.savefig(
+        os.path.join("graphics", f"fig_caverns_capacity_ntg.jpg"),
+        format="jpg",
+        dpi=600,
+    )
     plt.show()
 
 
-plot_map_alt(ds, caverns, zones, [40 * n for n in range(5)])
-
-# ## Restrict cavern height to 155 m, depth to 1,000-1,500 m
-
-# height = 155 m, 1,000 m <= depth <= 1,500 m, diameter = 80 m,
-# separation = 320 m
-zones, zds = fns.zones_of_interest(
-    dat_xr=ds,
-    constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
-)
-
-caverns, _ = fns.generate_caverns_with_constraints(
-    zones_gdf=zones,
-    zones_ds=zds,
-    dat_extent=extent,
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
-    exclusions={
-        "wells": wells_b,
-        "wind_farms": wind_farms,
-        "shipwrecks": shipwrecks_b,
-        "shipping": shipping_b,
-        "cables": cables_b,
-        "edge": edge_buffer,
-    },
-)
-
-# label caverns by height and depth
-caverns = fns.label_caverns(
-    cavern_df=caverns,
-    heights=[155],
-    depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
-)
-
-# calculate volumes and capacities
-caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
-
-# proportion of working gas to total gas
-caverns["working_mass_pct"] = caverns["working_mass"] / (
-    caverns["working_mass"] + caverns["mass_operating_min"]
-)
-
-caverns.drop(
-    [
-        "x",
-        "y",
-        "TopTWT",
-        "BaseDepth",
-        "TopDepth",
-        "BaseDepthSeabed",
-        "height",
-        "cavern_height",
-    ],
-    axis=1,
-).describe()
-
-# totals
-caverns[
-    [
-        "cavern_volume",
-        "working_mass",
-        "capacity",
-        "mass_operating_min",
-        "mass_operating_max",
-    ]
-].sum()
-
-# compare to Ireland's electricity demand in 2050 (Deane, 2021)
-print(
-    "Energy capacity as a percentage of Ireland's electricity demand in 2050:",
-    f"{(caverns['capacity'].sum() / 1000 / 122 * 100):.2f}–"
-    + f"{(caverns['capacity'].sum() / 1000 / 84 * 100):.2f}%",
-)
-
-plot_map_alt(ds, caverns, zones, [80 + n * 5 for n in range(6)], False)
-
-# ## Distribution
-
-
-def cavern_boxplot(cavern_df):
-    """Helper function for creating boxplots"""
-    _, axes1 = plt.subplots(1, 4, figsize=(11, 4.5))
-    sns.boxplot(
-        cavern_df,
-        y="cavern_depth",
-        color=sns.color_palette("rocket", 1)[0],
-        width=0.2,
-        ax=axes1[0],
-        legend=False,
-        linecolor="black",
-        linewidth=1.1,
-        gap=0.1,
-        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
-    )
-    axes1[0].set_ylabel("Top depth [m]")
-    axes1[0].get_yaxis().set_major_formatter(
-        ticker.FuncFormatter(lambda x, p: format(int(x), ","))
-    )
-    sns.boxplot(
-        (cavern_df[["p_operating_min", "p_operating_max"]] / 1e6)
-        .rename(
-            columns={
-                "p_operating_min": "min",
-                "p_operating_max": "max",
-            }
-        )
-        .melt(),
-        y="value",
-        hue="variable",
-        palette="rocket_r",
-        width=0.4,
-        ax=axes1[1],
-        linecolor="black",
-        linewidth=1.1,
-        gap=0.1,
-        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
-    )
-    axes1[1].set_ylabel("Operating pressure [MPa]")
-    axes1[1].legend()
-    sns.boxplot(
-        (cavern_df[["mass_operating_min", "working_mass"]] / 1e6)
-        .rename(
-            columns={
-                "mass_operating_min": "cushion",
-                "working_mass": "working",
-            }
-        )
-        .melt(),
-        y="value",
-        hue="variable",
-        palette="rocket_r",
-        width=0.4,
-        ax=axes1[2],
-        linecolor="black",
-        linewidth=1.1,
-        gap=0.1,
-        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
-    )
-    axes1[2].set_ylabel("Gas mass [kt]")
-    axes1[2].legend()
-    sns.boxplot(
-        cavern_df,
-        y="capacity",
-        color=sns.color_palette("rocket", 1)[0],
-        width=0.2,
-        ax=axes1[3],
-        legend=False,
-        linecolor="black",
-        linewidth=1.1,
-        gap=0.1,
-        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
-    )
-    axes1[3].set_ylabel("Energy storage capacity [GWh]")
-    for a in axes1.flat:
-        a.tick_params(axis="x", bottom=False)
-    sns.despine(bottom=True)
-    plt.tight_layout()
-    plt.show()
-
-
-cavern_boxplot(caverns_pot_all)
-
-cavern_boxplot(caverns)
-
-fig, axes = plt.subplots(3, 2, figsize=(12, 8))
-for variable, label, axis in zip(
-    [
-        "cavern_depth",
-        "working_mass",
-        "p_operating_min",
-        "mass_operating_min",
-        "p_operating_max",
-        "capacity",
-    ],
-    [
-        "Top depth [m]",
-        "Working gas mass [kt]",
-        "Minimum operating pressure [MPa]",
-        "Cushion gas mass [kt]",
-        "Maximum operating pressure [MPa]",
-        "Energy storage capacity [GWh]",
-    ],
-    axes.flat,
-):
-    if variable in ["cavern_depth", "capacity"]:
-        d1 = caverns_pot_all[[variable]]
-        d2 = caverns[[variable]]
-    else:
-        d1 = caverns_pot_all[[variable]] / 1e6
-        d2 = caverns[[variable]] / 1e6
-    sns.boxplot(
-        pd.concat(
-            [d1.set_axis(["all"], axis=1), d2.set_axis(["optimal"], axis=1)]
-        )
-        .melt()
-        .dropna(),
-        x="value",
-        hue="variable",
-        palette="flare_r",
-        linecolor="black",
-        linewidth=1.1,
-        gap=0.3,
-        width=0.55,
-        flierprops={"markeredgecolor": "grey", "alpha": 0.5},
-        ax=axis,
-        legend=False,
-    )
-    axis.set_xlabel(label)
-    axis.tick_params(axis="y", left=False)
-    if variable == "cavern_depth":
-        axis.get_xaxis().set_major_formatter(
-            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
-        )
-
-legend_handles = [
-    mpatches.Patch(
-        facecolor=sns.color_palette("flare_r", 2)[0],
-        label="Height: 85, 155, or 311 m\nTop depth: 500–2,000 m",
-        edgecolor="black",
-    ),
-    mpatches.Patch(
-        facecolor=sns.color_palette("flare_r", 2)[1],
-        label="Height: 155 m\nTop depth: 1,000–1,500 m",
-        edgecolor="black",
-    ),
-]
-plt.legend(loc="lower right", handles=legend_handles, fontsize=11.5)
-sns.despine()
-plt.tight_layout()
-plt.show()
+plot_map_alt(ds, caverns, zones, [0, 80, 100, 120, 140])
