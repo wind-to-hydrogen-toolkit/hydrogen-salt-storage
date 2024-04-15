@@ -6,23 +6,21 @@ References
     Energy Ireland. Available at:
     https://windenergyireland.com/images/files/our-climate-neutral-future-0by50-final-report.pdf
     (Accessed: 8 February 2024).
-.. [#Jannel22] Jannel, H. and Torquet, M. (2022). Conceptual design of salt
-    cavern and porous media underground storage site. Hystories deliverable
-    D7.1-1. Hystories. Available at:
-    https://hystories.eu/wp-content/uploads/2022/05/Hystories_D7.1-1-Conceptual-design-of-salt-cavern-and-porous-media-underground-storage-site.pdf
-    (Accessed: 9 October 2023).
 """
 
 import os
 import sys
+
 from h2ss import capacity as cap
 from h2ss import data as rd
 from h2ss import functions as fns
+
 # from h2ss import optimisation as opt
 
 
 class HiddenPrints:
     """Suppress print statements: https://stackoverflow.com/a/45669280"""
+
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
@@ -48,7 +46,7 @@ def electricity_demand_ie(caverns_df):
         "Energy capacity as a percentage of Ireland's electricity demand "
         "in 2050:",
         f"{(caverns_df['capacity'].sum() / 1000 / 122 * 100):.2f}–"
-        f"{(caverns_df['capacity'].sum() / 1000 / 84 * 100):.2f}%"
+        f"{(caverns_df['capacity'].sum() / 1000 / 84 * 100):.2f}%",
     )
 
 
@@ -89,7 +87,9 @@ def load_all_data():
     # shipwrecks
     _, exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
         data_path=os.path.join(
-            "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
+            "data",
+            "shipwrecks",
+            "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip",
         ),
         dat_extent=extent,
     )
@@ -102,14 +102,22 @@ def load_all_data():
     return ds, extent, exclusions
 
 
-def capacity_function(ds, extent, exclusions, cavern_diameter, min_cavern_height):
+def capacity_function(
+    ds, extent, exclusions, cavern_diameter, min_cavern_height
+):
     """Calculate the energy storage capacity for different cases."""
-
     # distance from salt formation edge
-    edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=cavern_diameter * 3)
+    edge_buffer = fns.constraint_halite_edge(
+        dat_xr=ds, buffer=cavern_diameter * 3
+    )
 
     zones, zds = fns.zones_of_interest(
-        dat_xr=ds, constraints={"net_height": min_cavern_height, "min_depth": 500, "max_depth": 2000},
+        dat_xr=ds,
+        constraints={
+            "net_height": min_cavern_height,
+            "min_depth": 500,
+            "max_depth": 2000,
+        },
     )
 
     caverns = fns.generate_caverns_hexagonal_grid(
@@ -159,7 +167,10 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, min_cavern_height
     (
         caverns["p_operating_min"],
         caverns["p_operating_max"],
-    ) = cap.pressure_operating(thickness_overburden=caverns["TopDepthSeabed"], depth_water=-caverns["Bathymetry"])
+    ) = cap.pressure_operating(
+        thickness_overburden=caverns["TopDepthSeabed"],
+        depth_water=-caverns["Bathymetry"],
+    )
 
     caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
         p_operating_min=caverns["p_operating_min"],

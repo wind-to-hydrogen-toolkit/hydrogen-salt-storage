@@ -255,7 +255,8 @@ def pressure_operating(
     [#Nayar16]_.
     """
     p_casing = (
-        rho_overburden * thickness_overburden + rho_salt * thickness_salt
+        rho_overburden * thickness_overburden
+        + rho_salt * thickness_salt
         + rho_water * depth_water
     ) * 9.81
     p_operating_min = minf * p_casing

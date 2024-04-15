@@ -53,7 +53,9 @@ NTG_INTERCEPT = 0.2616769604617021
 MAX_NTG = 0.75
 
 
-def net_to_gross(dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max_ntg=MAX_NTG):
+def net_to_gross(
+    dat_xr, slope=NTG_SLOPE, intercept=NTG_INTERCEPT, max_ntg=MAX_NTG
+):
     """Estimate the net-to-gross for a given halite thickness.
 
     Parameters
@@ -84,7 +86,7 @@ def zones_of_interest(
     constraints,
     roof_thickness=ROOF_THICKNESS,
     floor_thickness=FLOOR_THICKNESS,
-    max_ntg=MAX_NTG
+    max_ntg=MAX_NTG,
 ):
     """Generate zones of interest by applying thickness and depth constraints.
 
