@@ -83,17 +83,16 @@ def cavern_volumes(
     ]
 
 
-def capacity_function(cavern_diameter, min_cavern_height):
-    """
-    """
-
+def load_all_data():
     ds, extent = rd.kish_basin_data_depth_adjusted(
         dat_path=os.path.join("data", "kish-basin"),
         bathymetry_path=os.path.join("data", "bathymetry"),
     )
 
+    exclusions = {}
+
     # exploration wells
-    _, wells_b = fns.constraint_exploration_well(
+    _, exclusions["wells_b"] = fns.constraint_exploration_well(
         data_path=os.path.join(
             "data",
             "exploration-wells",
@@ -102,7 +101,7 @@ def capacity_function(cavern_diameter, min_cavern_height):
     )
 
     # wind farms
-    wind_farms = fns.constraint_wind_farm(
+    exclusions["wind_farms"] = fns.constraint_wind_farm(
         data_path=os.path.join(
             "data", "wind-farms", "wind-farms-foreshore-process.zip"
         ),
@@ -110,7 +109,7 @@ def capacity_function(cavern_diameter, min_cavern_height):
     )
 
     # frequent shipping routes
-    _, shipping_b = fns.constraint_shipping_routes(
+    _, exclusions["shipping_b"] = fns.constraint_shipping_routes(
         data_path=os.path.join(
             "data", "shipping", "shipping_frequently_used_routes.zip"
         ),
@@ -118,7 +117,7 @@ def capacity_function(cavern_diameter, min_cavern_height):
     )
 
     # shipwrecks
-    _, shipwrecks_b = fns.constraint_shipwrecks(
+    _, exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
         data_path=os.path.join(
             "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
         ),
@@ -126,9 +125,16 @@ def capacity_function(cavern_diameter, min_cavern_height):
     )
 
     # subsea cables
-    _, cables_b = fns.constraint_subsea_cables(
+    _, exclusions["cables_b"] = fns.constraint_subsea_cables(
         data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
     )
+
+    return ds, extent, exclusions
+
+
+def capacity_function(ds, extent, exclusions, cavern_diameter, min_cavern_height):
+    """
+    """
 
     # distance from salt formation edge
     edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=cavern_diameter * 3)
@@ -161,11 +167,11 @@ def capacity_function(cavern_diameter, min_cavern_height):
         caverns, _ = fns.generate_caverns_with_constraints(
             cavern_df=caverns,
             exclusions={
-                "wells": wells_b,
-                "wind_farms": wind_farms,
-                "shipwrecks": shipwrecks_b,
-                "shipping": shipping_b,
-                "cables": cables_b,
+                "wells": exclusions["wells_b"],
+                "wind_farms": exclusions["wind_farms"],
+                "shipwrecks": exclusions["shipwrecks_b"],
+                "shipping": exclusions["shipping_b"],
+                "cables": exclusions["cables_b"],
                 "edge": edge_buffer,
             },
         )
@@ -205,3 +211,9 @@ def capacity_function(cavern_diameter, min_cavern_height):
     caverns["capacity"] = cap.energy_storage_capacity(
         m_working=caverns["working_mass"]
     )
+
+    caverns["cavern_diameter"] = cavern_diameter
+
+    df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
+
+    return df
