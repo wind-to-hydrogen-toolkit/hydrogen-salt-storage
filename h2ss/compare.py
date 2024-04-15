@@ -157,7 +157,7 @@ def capacity_function(
         height=caverns["cavern_height"], diameter=cavern_diameter
     )
     caverns["cavern_volume"] = cap.corrected_cavern_volume(
-        v_cavern=caverns["cavern_total_volume"], f_if=0
+        v_cavern=caverns["cavern_total_volume"]
     )
 
     caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
