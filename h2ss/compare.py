@@ -23,7 +23,6 @@ from h2ss import functions as fns
 
 class HiddenPrints:
     """Suppress print statements: https://stackoverflow.com/a/45669280"""
-
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
@@ -53,37 +52,8 @@ def electricity_demand_ie(caverns_df):
     )
 
 
-def cavern_volumes(
-    cavern_df, volume_case=380000, minimum_fraction=0.85
-):
-    """Verify whether cavern volumes are within recommended ranges.
-
-    Parameters
-    ----------
-    cavern_df : geopandas.GeoDataFrame
-        Geodataframe of caverns within the zone of interest
-    volume_case : float
-        Cavern volume corresponding to a Hystories Project investment scenario
-    minimum_fraction : float
-        The fraction of ``volume_case`` that is allowed as the minimum
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        Dataframe of available caverns
-
-    Notes
-    -----
-    See [#Jannel22]_ for the Hystories Project investment scenarios. The
-    volume used is the free gas volume of a cavern. The volume should be no
-    less than 85% of the case's volume.
-    """
-    return cavern_df[
-        cavern_df["cavern_volume"] >= volume_case * minimum_fraction
-    ]
-
-
 def load_all_data():
+    """Load all input datasets."""
     ds, extent = rd.kish_basin_data_depth_adjusted(
         dat_path=os.path.join("data", "kish-basin"),
         bathymetry_path=os.path.join("data", "bathymetry"),
@@ -133,8 +103,7 @@ def load_all_data():
 
 
 def capacity_function(ds, extent, exclusions, cavern_diameter, min_cavern_height):
-    """
-    """
+    """Calculate the energy storage capacity for different cases."""
 
     # distance from salt formation edge
     edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=cavern_diameter * 3)
