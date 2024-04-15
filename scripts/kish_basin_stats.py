@@ -14,6 +14,7 @@ from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import data as rd
+from h2ss import functions as fns
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
@@ -27,6 +28,8 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
+
+ds = fns.net_to_gross(ds)
 
 ds
 
@@ -191,7 +194,8 @@ def plot_facet_maps_distr(
     """
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
-    levels = sorted(levels)
+    if levels:
+        levels = sorted(levels)
     legend_handles = []
 
     f = dat_xr[v].plot.contourf(
@@ -286,8 +290,23 @@ def plot_facet_maps_distr(
     #     fontsize=11.5,
     #     ncols=3
     # )
+    if v == "ThicknessNet":
+        plt.savefig(
+            os.path.join("graphics", f"fig_facet_thickness_ntg.jpg"),
+            format="jpg",
+            dpi=600,
+        )
     plt.show()
 
+
+plot_facet_maps_distr(
+    ds,
+    extent,
+    rd.CRS,
+    "ThicknessNet",
+    [120 + 90 + n * 200 for n in range(4)],
+    "Net thickness [m]",
+)
 
 plot_facet_maps_distr(
     ds,

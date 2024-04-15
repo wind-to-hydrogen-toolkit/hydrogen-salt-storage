@@ -3,7 +3,7 @@
 
 # # Shipwrecks
 #
-# <https://isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
+# <https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
 
 import os
 from zipfile import ZipFile

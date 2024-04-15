@@ -3,7 +3,7 @@
 
 # # Exploration wells
 #
-# - <https://www.isde.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
+# - <https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
 # - <https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore>
 
 import os

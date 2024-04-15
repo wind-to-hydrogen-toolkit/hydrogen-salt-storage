@@ -3,236 +3,205 @@
 
 # # Sensitivity analysis
 
+import glob
 import os
-import sys
+from itertools import product
 
-import contextily as cx
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from h2ss import capacity as cap
-from h2ss import data as rd
-from h2ss import functions as fns
+from h2ss import compare
 
-# basemap cache directory
-cx.set_cache_dir(os.path.join("data", "basemaps"))
-
-# ## Read data layers
-
-ds, extent = rd.kish_basin_data_depth_adjusted(
-    dat_path=os.path.join("data", "kish-basin"),
-    bathymetry_path=os.path.join("data", "bathymetry"),
-)
-
-# exploration wells
-_, wells_b = fns.constraint_exploration_well(
-    data_path=os.path.join(
-        "data",
-        "exploration-wells",
-        "Exploration_Wells_Irish_Offshore.shapezip.zip",
-    )
-)
-
-# wind farms
-wind_farms = fns.constraint_wind_farm(
-    data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
-    ),
-    dat_extent=extent,
-)
-
-# frequent shipping routes
-_, shipping_b = fns.constraint_shipping_routes(
-    data_path=os.path.join(
-        "data", "shipping", "shipping_frequently_used_routes.zip"
-    ),
-    dat_extent=extent,
-)
-
-# shipwrecks
-_, shipwrecks_b = fns.constraint_shipwrecks(
-    data_path=os.path.join(
-        "data", "shipwrecks", "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip"
-    ),
-    dat_extent=extent,
-)
-
-# subsea cables
-_, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
-)
-
-# distance from salt formation edge
-edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
-
-# ## Sensitivity
+cavern_diameter = np.arange(80, 101, step=1)
+cavern_height = np.arange(85, 312, step=1)
 
 
-def sensitivity_calc(
-    var_list,
-    quantity,
-    height_base,
-    min_depth_base,
-    max_depth_base,
-):
-    """Calculate sensitivity"""
-    capacity_list = []
-    for x in var_list:
-        if quantity == "height":
-            zones, zds = fns.zones_of_interest(
-                dat_xr=ds,
-                constraints={
-                    "height": x,
-                    "min_depth": min_depth_base,
-                    "max_depth": max_depth_base,
-                },
-            )
-            height_list = [
-                [85, 155, 311][
-                    np.searchsorted([85, 155, 311], [x], side="right")[0] - 1
-                ]
-            ]
-        elif quantity == "min_depth":
-            zones, zds = fns.zones_of_interest(
-                dat_xr=ds,
-                constraints={
-                    "height": height_base,
-                    "min_depth": x,
-                    "max_depth": max_depth_base,
-                },
-            )
-            height_list = [height_base]
-        elif quantity == "max_depth":
-            zones, zds = fns.zones_of_interest(
-                dat_xr=ds,
-                constraints={
-                    "height": height_base,
-                    "min_depth": min_depth_base,
-                    "max_depth": x,
-                },
-            )
-            height_list = [height_base]
-        elif quantity == "base":
-            zones, zds = fns.zones_of_interest(
-                dat_xr=ds,
-                constraints={
-                    "height": height_base,
-                    "min_depth": min_depth_base,
-                    "max_depth": max_depth_base,
-                },
-            )
-            height_list = [height_base]
-        caverns, _ = fns.generate_caverns_with_constraints(
-            zones_gdf=zones,
-            zones_ds=zds,
-            dat_extent=extent,
-            depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
-            exclusions={
-                "wells": wells_b,
-                "wind_farms": wind_farms,
-                "shipwrecks": shipwrecks_b,
-                "shipping": shipping_b,
-                "cables": cables_b,
-                "edge": edge_buffer,
-            },
+def generate_sensitivity_data(cavern_diameter, cavern_height):
+    """Generate data to perform sensitivity analysis"""
+    os.makedirs("data", "sensitivity", exist_ok=True)
+    ds, extent, exclusions = compare.load_all_data()
+    for d, h in product(cavern_diameter, cavern_height):
+        df = compare.capacity_function(ds, extent, exclusions, d, h)
+        df.to_csv(
+            os.path.join("data", "sensitivity", f"sensitivity_d{d}_h{h}.csv")
         )
-        caverns = fns.label_caverns(
-            cavern_df=caverns,
-            heights=height_list,
-            depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
+        print(f"sensitivity_d{d}_h{h}.csv done!")
+
+
+# generate_sensitivity_data(cavern_diameter, cavern_height)
+
+len(list(product(cavern_diameter, cavern_height)))
+
+len(glob.glob(os.path.join("data", "sensitivity", f"sensitivity_*.csv")))
+
+df = pd.concat(
+    (
+        pd.read_csv(f)
+        for f in glob.glob(
+            os.path.join("data", "sensitivity", f"sensitivity_*.csv")
         )
-        caverns = cap.calculate_capacity_dataframe(cavern_df=caverns)
-        capacity_list.append(caverns[["capacity"]].sum().iloc[0])
-    return capacity_list
+    ),
+    ignore_index=True,
+)
 
+df.drop(columns=["Unnamed: 0"], inplace=True)
 
-class HiddenPrints:
-    """Suppress print statements: https://stackoverflow.com/a/45669280"""
+df.describe()
 
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, "w")
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
-
-
-def sensitivity(height_base=155, min_depth_base=1000, max_depth_base=1500):
-    """Calculate sensitivity"""
-    sdf1 = {}
-
-    # base case
-    with HiddenPrints():
-        base_case = sensitivity_calc(
-            var_list=[height_base],
-            quantity="base",
-            height_base=height_base,
-            min_depth_base=min_depth_base,
-            max_depth_base=max_depth_base,
-        )[0]
-
-    # heights = [85 + 226 / 50 * n for n in range(51)]
-    depth_min = [500 + 10 * n for n in range(51)]
-    depth_max = [1500 + 10 * n for n in range(51)]
-
-    for x, y in zip([depth_max, depth_min], ["max_depth", "min_depth"]):
-        with HiddenPrints():
-            capacity_list = sensitivity_calc(
-                var_list=x,
-                quantity=y,
-                height_base=height_base,
-                min_depth_base=min_depth_base,
-                max_depth_base=max_depth_base,
-            )
-
-        sdf1[y] = pd.DataFrame({"capacity": capacity_list, y: x})
-
-        # percentage change
-        sdf1[y]["diff_capacity"] = (
-            (sdf1[y]["capacity"] - base_case) / base_case * 100
-        )
-
-    return sdf1
-
-
-sdf = sensitivity()
-
-for key in sdf.keys():
-    print(key)
-    print(sdf[key].describe())
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-for (n, key), c in zip(
-    enumerate(sdf.keys()), ["royalblue", "crimson", "seagreen"]
-):
-    sns.regplot(
-        sdf[key],
-        x=key,
-        y="capacity",
-        logx=True,
-        ax=axes[n],
-        marker=".",
-        color=c,
-    )
-plt.tight_layout()
+sns.scatterplot(
+    data=df,
+    hue="cavern_diameter",
+    y="capacity",
+    x="cavern_height",
+    linewidth=0,
+    alpha=0.75,
+    s=5,
+)
+sns.despine()
 plt.show()
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
-for (n, key), c in zip(
-    enumerate(sdf.keys()), ["royalblue", "crimson", "seagreen"]
-):
-    sns.regplot(
-        sdf[key],
-        x=key,
-        y="diff_capacity",
-        logx=True,
-        ax=axes[n],
-        marker=".",
-        color=c,
-    )
-# plt.ylim(-150, 150)
-plt.tight_layout()
+# ## Cavern height - mean capacity
+
+data = df.groupby(["cavern_height"]).sum()[["capacity"]].reset_index()
+sns.lineplot(data=data, x="cavern_height", y="capacity")
+sns.despine()
+plt.show()
+
+# ## Cavern height - total capacity
+
+data = df.groupby(["cavern_height"]).mean()[["capacity"]].reset_index()
+sns.lineplot(data=data, x="cavern_height", y="capacity")
+sns.despine()
+plt.show()
+
+# ## Cavern diameter - mean capacity
+
+data = df.groupby(["cavern_diameter"]).sum()[["capacity"]].reset_index()
+sns.lineplot(data=data, x="cavern_diameter", y="capacity")
+sns.despine()
+plt.show()
+
+# ## Cavern diameter - total capacity
+
+data = df.groupby(["cavern_diameter"]).mean()[["capacity"]].reset_index()
+sns.lineplot(data=data, x="cavern_diameter", y="capacity")
+sns.despine()
+plt.show()
+
+# ## Base case
+
+base = df[
+    (df["cavern_diameter"] == 85) & (df["cavern_height"] == 120)
+].reset_index(drop=True)
+
+base.describe()[["capacity"]]
+
+base_mean = base[["capacity"]].mean().values[0]
+
+base_sum = base[["capacity"]].sum().values[0]
+
+print(f"{base_sum:.4f}")
+
+# ## Base diameter, varying height, mean capacity
+
+dd = df[(df["cavern_diameter"] == 85)].reset_index(drop=True)
+
+dd_diff = (
+    pd.DataFrame(dd.groupby("cavern_height").mean()["capacity"] - base_mean)
+    / base_mean
+    * 100
+)
+
+plt.figure(figsize=(8, 5))
+ax = sns.scatterplot(
+    data=dd_diff,
+    hue="cavern_height",
+    y="capacity",
+    x="cavern_height",
+    palette="icefire_r",
+    legend=False,
+    linewidth=0,
+)
+ax.axhline(0, color="darkslategrey", linewidth=1)
+ax.axvline(120, color="darkslategrey", linewidth=1)
+ax.set_xlabel("Cavern height [m]")
+ax.set_ylabel("Difference in mean\nhydrogen storage capacity [%]")
+sns.despine()
+plt.show()
+
+# ## Base diameter, varying height, total capacity
+
+dd_diff = (
+    pd.DataFrame(dd.groupby("cavern_height").sum()["capacity"] - base_sum)
+    / base_sum
+    * 100
+)
+
+plt.figure(figsize=(8, 5))
+ax = sns.scatterplot(
+    data=dd_diff,
+    hue="cavern_height",
+    y="capacity",
+    x="cavern_height",
+    palette="icefire",
+    legend=False,
+    linewidth=0,
+)
+ax.axhline(0, color="darkslategrey", linewidth=1)
+ax.axvline(120, color="darkslategrey", linewidth=1)
+ax.set_xlabel("Cavern height [m]")
+ax.set_ylabel("Difference in total\nhydrogen storage capacity [%]")
+sns.despine()
+plt.show()
+
+# ## Base height, varying diameter, mean capacity
+
+dh = df[(df["cavern_height"] == 120)].reset_index(drop=True)
+
+dh_diff = (
+    pd.DataFrame(dh.groupby("cavern_diameter").mean()["capacity"] - base_mean)
+    / base_mean
+    * 100
+)
+
+plt.figure(figsize=(8, 5))
+ax = sns.barplot(
+    data=dh_diff,
+    hue="cavern_diameter",
+    y="capacity",
+    x="cavern_diameter",
+    palette="icefire_r",
+    legend=False,
+)
+ax.axhline(0, color="darkslategrey", linewidth=1)
+ax.axvline("85", color="darkslategrey", linewidth=1)
+ax.set_xlabel("Cavern diameter [m]")
+ax.set_ylabel("Difference in mean\nhydrogen storage capacity [%]")
+sns.despine()
+plt.show()
+
+# ## Base height, varying diameter, total capacity
+
+dh_diff = (
+    pd.DataFrame(dh.groupby("cavern_diameter").sum()["capacity"] - base_sum)
+    / base_sum
+    * 100
+)
+
+plt.figure(figsize=(8, 5))
+ax = sns.barplot(
+    data=dh_diff,
+    hue="cavern_diameter",
+    y="capacity",
+    x="cavern_diameter",
+    palette="icefire",
+    legend=False,
+)
+ax.axhline(0, color="darkslategrey", linewidth=1)
+ax.axvline("85", color="darkslategrey", linewidth=1)
+ax.set_xlabel("Cavern diameter [m]")
+ax.set_ylabel("Difference in total\nhydrogen storage capacity [%]")
+sns.despine()
 plt.show()
