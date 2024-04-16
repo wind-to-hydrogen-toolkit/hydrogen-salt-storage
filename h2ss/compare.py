@@ -103,7 +103,7 @@ def load_all_data():
 
 
 def capacity_function(
-    ds, extent, exclusions, cavern_diameter, min_cavern_height
+    ds, extent, exclusions, cavern_diameter, cavern_height
 ):
     """Calculate the energy storage capacity for different cases."""
     # distance from salt formation edge
@@ -114,7 +114,7 @@ def capacity_function(
     zones, zds = fns.zones_of_interest(
         dat_xr=ds,
         constraints={
-            "net_height": min_cavern_height,
+            "net_height": cavern_height,
             "min_depth": 500,
             "max_depth": 2000,
         },
@@ -136,7 +136,7 @@ def capacity_function(
     # label caverns by depth and heights
     caverns = fns.label_caverns(
         cavern_df=caverns,
-        heights=[min_cavern_height],
+        heights=[cavern_height],
         depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
     )
 
