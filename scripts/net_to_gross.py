@@ -86,11 +86,7 @@ data.describe()
 
 def net_to_gross(gross):
     y = m * gross + b
-    if y < 0:
-        y = max(0, y)
-    elif y > 0.75:
-        y = min(0.75, y)
-    return y
+    return min(y, 0.75)
 
 
 ntg = []
@@ -115,7 +111,8 @@ ax = sns.scatterplot(
     y="NTG",
     hue="halite",
     zorder=3,
-    palette="rocket",
+    palette="Blues_r",
+    edgecolor="darkslategrey",
     s=75,
 )
 df.plot(
@@ -134,9 +131,10 @@ sns.despine()
 ax.set(xlim=(0, 700), ylim=(0, 0.8))
 ax.xaxis.grid(True, linewidth=0.25)
 ax.yaxis.grid(True, linewidth=0.25)
-plt.legend(title=None)
+plt.legend(title=None, loc="lower right")
+plt.tight_layout()
 plt.savefig(
-    os.path.join("graphics", f"fig_net_to_gross.jpg"),
+    os.path.join("graphics", "fig_net_to_gross.jpg"),
     format="jpg",
     dpi=600,
 )

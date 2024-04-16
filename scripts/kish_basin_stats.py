@@ -292,7 +292,7 @@ def plot_facet_maps_distr(
     # )
     if v == "ThicknessNet":
         plt.savefig(
-            os.path.join("graphics", f"fig_facet_thickness_ntg.jpg"),
+            os.path.join("graphics", "fig_facet_thickness_ntg.jpg"),
             format="jpg",
             dpi=600,
         )
@@ -304,7 +304,7 @@ plot_facet_maps_distr(
     extent,
     rd.CRS,
     "ThicknessNet",
-    [120 + 90 + n * 200 for n in range(4)],
+    [85 + 35 * n + 90 for n in range(7)],
     "Net thickness [m]",
 )
 

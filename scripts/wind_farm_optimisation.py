@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Wind farm optimisation with net-to-gross
+# # Wind farm optimisation
 
 import os
 
@@ -73,14 +73,8 @@ _, cables_b = fns.constraint_subsea_cables(
     data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
 
-# ## HYSS case
-
-CAVERN_DIAMETER = 85
-SEPARATION = 4 * CAVERN_DIAMETER
-PILLAR_WIDTH = 3 * CAVERN_DIAMETER
-
 # distance from salt formation edge
-edge_buffer = fns.constraint_halite_edge(dat_xr=ds, buffer=PILLAR_WIDTH)
+edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 # ## Zones of interest
 
@@ -94,8 +88,6 @@ zones, zds = fns.zones_of_interest(
 caverns = fns.generate_caverns_hexagonal_grid(
     zones_df=zones,
     dat_extent=extent,
-    diameter=CAVERN_DIAMETER,
-    separation=SEPARATION,
 )
 
 caverns = fns.cavern_dataframe(
@@ -126,10 +118,10 @@ caverns, _ = fns.generate_caverns_with_constraints(
 # ## Capacity
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
-    height=caverns["cavern_height"], diameter=CAVERN_DIAMETER
+    height=caverns["cavern_height"]
 )
 caverns["cavern_volume"] = cap.corrected_cavern_volume(
-    v_cavern=caverns["cavern_total_volume"], f_if=0
+    v_cavern=caverns["cavern_total_volume"]
 )
 
 caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
@@ -202,24 +194,33 @@ ref_data.head()
 ax = ref_data.plot(
     x="wind_speed",
     y="power_curve",
-    ylabel="Power [MW]",
     linewidth=3,
-    color=sns.color_palette("flare", 256)[127],
-    figsize=(12, 6),
+    color="tab:blue",
+    figsize=(10, 5.5),
     legend=False,
 )
 ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
 ax.set_ylabel("Power [MW]")
 plt.yticks([3 * n for n in range(6)])
 sns.despine()
+plt.tight_layout()
+plt.savefig(
+    os.path.join("graphics", "fig_powercurve.jpg"),
+    format="jpg",
+    dpi=600,
+)
+plt.show()
 
-ax = ref_data.drop(columns=["power_curve"]).plot(
+plt.figure(figsize=(10, 5.5))
+ax = sns.lineplot(
+    data=ref_data.drop(columns=["power_curve"]).melt(id_vars="wind_speed"),
     x="wind_speed",
-    cmap="flare_r",
-    figsize=(12, 6),
+    y="value",
+    hue="variable",
     linestyle="dashed",
-    linewidth=2,
+    linewidth=2.25,
     alpha=0.85,
+    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
 )
 ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
 ax.set_ylabel(
@@ -227,6 +228,14 @@ ax.set_ylabel(
     "[s m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]"
 )
 sns.despine()
+ax.legend(title=None)
+plt.tight_layout()
+plt.savefig(
+    os.path.join("graphics", "fig_weibull.jpg"),
+    format="jpg",
+    dpi=600,
+)
+plt.show()
 
 # ## Annual energy production [MWh]
 
@@ -427,7 +436,7 @@ sns.boxplot(
     caverns.filter(like="dist_").set_axis(list(data["Name"]), axis=1).melt(),
     y="value",
     hue="variable",
-    palette="rocket_r",
+    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
     width=0.35,
     ax=axes[0],
     legend=False,
@@ -441,7 +450,7 @@ sns.boxplot(
     caverns.filter(like="LCOT_").set_axis(list(data["Name"]), axis=1).melt(),
     y="value",
     hue="variable",
-    palette="rocket_r",
+    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
     width=0.35,
     ax=axes[1],
     linecolor="black",
@@ -454,7 +463,7 @@ axes[1].tick_params(axis="x", bottom=False)
 sns.despine(bottom=True)
 plt.tight_layout()
 plt.savefig(
-    os.path.join("graphics", f"fig_box_transmission_ntg.jpg"),
+    os.path.join("graphics", "fig_box_transmission_ntg.jpg"),
     format="jpg",
     dpi=600,
 )
@@ -465,7 +474,13 @@ plt.show()
 shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 
-def plot_map_facet(cavern_df, classes, fontsize=11.5):
+def plot_map_facet(
+    cavern_df,
+    classes,
+    filename="fig_map_transmission_ntg.jpg",
+    fontsize=11.5,
+    legend_loc=1,
+):
     """Helper function for plotting LCOT facet maps"""
     fig1 = plt.figure(figsize=(11, 11.75))
     xmin_, ymin_, xmax_, ymax_ = cavern_df.total_bounds
@@ -474,6 +489,19 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
     ]
     legend_handles = []
     classes = sorted(classes)
+
+    for n1, c in enumerate(colours):
+        if n1 == 0:
+            label = f"< {classes[1:][n1]}"
+        elif n1 == len(colours) - 1:
+            label = f"≥ {classes[1:][-2]}"
+        else:
+            label = f"{classes[1:][n1 - 1]:.2f}–{classes[1:][n1]:.2f}"
+        legend_handles.append(
+            mpatches.Patch(
+                facecolor=sns.color_palette("flare", 256)[c], label=label
+            )
+        )
 
     for a, wf1 in enumerate(list(wind_farms["Name_"])):
         ax1 = fig1.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
@@ -511,7 +539,7 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
                 ylabel_style={"fontsize": fontsize, "rotation": 90},
                 yformatter=LatitudeFormatter(auto_hide=False, dms=True),
             )
-        if a == 2:
+        if a == legend_loc:
             ax1.add_artist(
                 ScaleBar(
                     1,
@@ -521,33 +549,21 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
                     font_properties={"size": fontsize},
                 )
             )
+            plt.legend(
+                loc="lower right",
+                bbox_to_anchor=(1, 0.075),
+                handles=legend_handles,
+                title="Pipeline LCOT [€ kg⁻¹]",
+                fontsize=fontsize,
+                title_fontsize=fontsize,
+            )
         plt.xlim(xmin_ - 1000, xmax_ + 1000)
         plt.ylim(ymin_ - 1000, ymax_ + 1000)
         ax1.set_title(list(data["Name"])[a])
 
-    for n1, c in enumerate(colours):
-        if n1 == 0:
-            label = f"< {classes[1:][n1]}"
-        elif n1 == len(colours) - 1:
-            label = f"≥ {classes[1:][-2]}"
-        else:
-            label = f"{classes[1:][n1 - 1]:.2f}–{classes[1:][n1]:.2f}"
-        legend_handles.append(
-            mpatches.Patch(
-                facecolor=sns.color_palette("flare", 256)[c], label=label
-            )
-        )
-        plt.legend(
-            loc="lower right",
-            bbox_to_anchor=(1, 0.075),
-            handles=legend_handles,
-            title="Pipeline LCOT [€ kg⁻¹]",
-            fontsize=fontsize,
-            title_fontsize=fontsize,
-        )
     plt.tight_layout()
     plt.savefig(
-        os.path.join("graphics", f"fig_map_transmission_ntg.jpg"),
+        os.path.join("graphics", filename),
         format="jpg",
         dpi=600,
     )
@@ -555,6 +571,13 @@ def plot_map_facet(cavern_df, classes, fontsize=11.5):
 
 
 plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
+
+plot_map_facet(
+    caverns,
+    [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16],
+    legend_loc=2,
+    filename="fig_map_transmission_alt.jpg",
+)
 
 
 def plot_map_extent(cavern_df):
@@ -624,7 +647,7 @@ def plot_map_extent(cavern_df):
     )
     plt.tight_layout()
     plt.savefig(
-        os.path.join("graphics", f"fig_transmission_map_inset.jpg"),
+        os.path.join("graphics", "fig_transmission_map_inset.jpg"),
         format="jpg",
         dpi=600,
     )
