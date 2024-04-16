@@ -7,4 +7,4 @@ Cavern generation and capacity calculation
 
    kish_basin_caverns
    kish_basin_caverns_capacity
-   kish_basin_caverns_heights
+   kish_basin_caverns_height
