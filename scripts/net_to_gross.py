@@ -111,8 +111,7 @@ ax = sns.scatterplot(
     y="NTG",
     hue="halite",
     zorder=3,
-    palette="Blues_r",
-    edgecolor="darkslategrey",
+    palette="mako",
     s=75,
 )
 df.plot(
@@ -120,9 +119,9 @@ df.plot(
     y="NTG",
     zorder=1,
     color="slategrey",
+    linestyle="dashed",
     label=f"$y = \min({m:.5f}x {b:+.5f}, 0.75)$\n$R^2 = {r:.5f}$",
     linewidth=2,
-    alpha=0.7,
     ax=ax,
 )
 ax.set_xlabel("Gross halite thickness [m]")

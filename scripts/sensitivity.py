@@ -3,7 +3,6 @@
 
 # # Sensitivity analysis
 
-import glob
 import os
 from itertools import product
 
@@ -14,35 +13,36 @@ import seaborn as sns
 
 from h2ss import compare
 
-cavern_diameter = np.arange(80, 101, step=1)
-cavern_height = np.arange(85, 312, step=1)
+cavern_diameter = np.arange(45, 106, step=5)
+cavern_height = np.arange(80, 321, step=20)
 
 
 def generate_sensitivity_data(cavern_diameter, cavern_height):
     """Generate data to perform sensitivity analysis"""
-    os.makedirs("data", "sensitivity", exist_ok=True)
+    os.makedirs(os.path.join("data", "sensitivity"), exist_ok=True)
     ds, extent, exclusions = compare.load_all_data()
     for d, h in product(cavern_diameter, cavern_height):
-        df = compare.capacity_function(ds, extent, exclusions, d, h)
-        df.to_csv(
-            os.path.join("data", "sensitivity", f"sensitivity_d{d}_h{h}.csv")
+        filename = os.path.join(
+            "data", "sensitivity", f"sensitivity_d{d}_h{h}.csv"
         )
-        print(f"sensitivity_d{d}_h{h}.csv done!")
+        if not os.path.isfile(filename):
+            df = compare.capacity_function(ds, extent, exclusions, d, h)
+            df.to_csv(filename)
+            print(f"{filename} done!")
+        else:
+            print(f"{filename} exists!")
 
 
 # generate_sensitivity_data(cavern_diameter, cavern_height)
 
-len(list(product(cavern_diameter, cavern_height)))
-
-len(glob.glob(os.path.join("data", "sensitivity", f"sensitivity_*.csv")))
+filelist = []
+for d, h in product(cavern_diameter, cavern_height):
+    filelist.append(
+        os.path.join("data", "sensitivity", f"sensitivity_d{d}_h{h}.csv")
+    )
 
 df = pd.concat(
-    (
-        pd.read_csv(f)
-        for f in glob.glob(
-            os.path.join("data", "sensitivity", f"sensitivity_*.csv")
-        )
-    ),
+    (pd.read_csv(f) for f in filelist),
     ignore_index=True,
 )
 
@@ -51,6 +51,9 @@ df.drop(columns=["Unnamed: 0"], inplace=True)
 df["cavern_height"] = df["cavern_height"].astype(int)
 
 df.describe()
+
+# cavern height-to-diameter-ratio
+pd.Series((df["cavern_height"] / df["cavern_diameter"]).unique()).describe()
 
 ax = sns.scatterplot(
     data=df,
@@ -63,6 +66,8 @@ ax = sns.scatterplot(
 )
 sns.despine()
 plt.show()
+
+len(df["cavern_diameter"].unique()) == len(df["cavern_height"].unique())
 
 # ## Mean capacity
 
@@ -132,37 +137,16 @@ dd_mean = (
 ).reset_index()
 
 plt.figure(figsize=(8, 5))
-ax = sns.scatterplot(
+ax = sns.barplot(
     data=dd_mean,
     hue="cavern_height",
     y="capacity",
     x="cavern_height",
     palette="icefire_r",
     legend=False,
-    linewidth=0,
 )
 ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline(120, color="darkslategrey", linewidth=1)
-ax.set_xlabel("Cavern height [m]")
-ax.set_ylabel("Difference in mean storage capacity [%]")
-sns.despine()
-plt.show()
-
-dd_mean1 = dd_mean[
-    dd_mean["cavern_height"].isin([90 + 10 * n for n in range(21)])
-]
-
-plt.figure(figsize=(8, 5))
-ax = sns.barplot(
-    data=dd_mean1,
-    hue="cavern_height",
-    y="capacity",
-    x="cavern_height",
-    palette="icefire_r",
-    legend=False,
-)
-ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline("120", color="darkslategrey", linewidth=1)
+ax.axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax.set_xlabel("Cavern height [m]")
 ax.set_ylabel("Difference in mean storage capacity [%]")
 sns.despine()
@@ -175,37 +159,16 @@ dd_sum = (
 ).reset_index()
 
 plt.figure(figsize=(8, 5))
-ax = sns.scatterplot(
+ax = sns.barplot(
     data=dd_sum,
     hue="cavern_height",
     y="capacity",
     x="cavern_height",
     palette="icefire",
     legend=False,
-    linewidth=0,
 )
 ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline(120, color="darkslategrey", linewidth=1)
-ax.set_xlabel("Cavern height [m]")
-ax.set_ylabel("Difference in total storage capacity [%]")
-sns.despine()
-plt.show()
-
-dd_sum1 = dd_sum[
-    dd_sum["cavern_height"].isin([90 + 10 * n for n in range(21)])
-]
-
-plt.figure(figsize=(8, 5))
-ax = sns.barplot(
-    data=dd_sum1,
-    hue="cavern_height",
-    y="capacity",
-    x="cavern_height",
-    palette="icefire",
-    legend=False,
-)
-ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline("120", color="darkslategrey", linewidth=1)
+ax.axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax.set_xlabel("Cavern height [m]")
 ax.set_ylabel("Difference in total storage capacity [%]")
 sns.despine()
@@ -231,7 +194,7 @@ ax = sns.barplot(
     legend=False,
 )
 ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline("85", color="darkslategrey", linewidth=1)
+ax.axvline("85", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax.set_xlabel("Cavern diameter [m]")
 ax.set_ylabel("Difference in mean storage capacity [%]")
 sns.despine()
@@ -253,7 +216,7 @@ ax = sns.barplot(
     legend=False,
 )
 ax.axhline(0, color="darkslategrey", linewidth=1)
-ax.axvline("85", color="darkslategrey", linewidth=1)
+ax.axvline("85", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax.set_xlabel("Cavern diameter [m]")
 ax.set_ylabel("Difference in total storage capacity [%]")
 sns.despine()
@@ -265,44 +228,6 @@ dh_sum["type"] = "Total for the Kish Basin"
 dh_mean["type"] = "Mean for a single cavern"
 dd_sum["type"] = "Total for the Kish Basin"
 dd_mean["type"] = "Mean for a single cavern"
-dd_sum1["type"] = "Total for the Kish Basin"
-dd_mean1["type"] = "Mean for a single cavern"
-
-f, ax = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
-sns.scatterplot(
-    data=pd.concat([dh_sum, dh_mean]),
-    y="capacity",
-    x="cavern_diameter",
-    hue="type",
-    linewidth=0,
-    alpha=0.75,
-    palette=sns.color_palette(["tab:blue", "tab:red"]),
-    ax=ax[0],
-)
-sns.scatterplot(
-    data=pd.concat([dd_sum, dd_mean]),
-    y="capacity",
-    x="cavern_height",
-    hue="type",
-    linewidth=0,
-    alpha=0.75,
-    palette=sns.color_palette(["tab:blue", "tab:red"]),
-    ax=ax[1],
-    legend=False,
-)
-for a in ax.flat:
-    a.axhline(0, color="darkslategrey", linewidth=1)
-    a.xaxis.grid(True, linewidth=0.25)
-    a.yaxis.grid(True, linewidth=0.25)
-ax[0].axvline(85, color="darkslategrey", linewidth=1)
-ax[1].axvline(120, color="darkslategrey", linewidth=1)
-ax[0].set_xlabel("Cavern diameter [m]")
-ax[1].set_xlabel("Cavern height [m]")
-ax[0].set_ylabel("Difference in storage capacity [%]")
-ax[0].legend(title=None)
-sns.despine()
-plt.tight_layout()
-plt.show()
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 sns.barplot(
@@ -314,7 +239,7 @@ sns.barplot(
     ax=ax[0],
 )
 sns.barplot(
-    data=pd.concat([dd_sum1, dd_mean1]),
+    data=pd.concat([dd_sum, dd_mean]),
     hue="type",
     y="capacity",
     x="cavern_height",
@@ -325,14 +250,15 @@ sns.barplot(
 
 for a in ax.flat:
     a.axhline(0, color="darkslategrey", linewidth=1)
-    a.tick_params(axis="x", labelsize=11)
-ax[0].tick_params(axis="y", labelsize=11)
-ax[0].axvline("85", color="darkslategrey", linewidth=1)
-ax[1].axvline("120", color="darkslategrey", linewidth=1)
+    a.yaxis.grid(True, linewidth=0.25)
+    a.set(ylim=(-100, 200))
+ax[0].axvline("85", color="darkslategrey", linewidth=1, linestyle="dashed")
+ax[1].axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax[0].set_xlabel("Cavern diameter [m]")
 ax[1].set_xlabel("Cavern height [m]")
 ax[0].set_ylabel("Difference in storage capacity [%]")
-ax[0].legend(title=None)
+ax[0].legend(title=None, fontsize=12)
+ax[1].tick_params(axis="y", left=False)
 
 sns.despine()
 plt.tight_layout()

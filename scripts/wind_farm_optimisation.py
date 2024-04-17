@@ -203,6 +203,8 @@ ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
 ax.set_ylabel("Power [MW]")
 plt.yticks([3 * n for n in range(6)])
 sns.despine()
+ax.xaxis.grid(True, linewidth=0.25)
+ax.yaxis.grid(True, linewidth=0.25)
 plt.tight_layout()
 plt.savefig(
     os.path.join("graphics", "fig_powercurve.jpg"),
@@ -227,8 +229,10 @@ ax.set_ylabel(
     "Weibull probability distribution function "
     "[s m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]"
 )
+ax.xaxis.grid(True, linewidth=0.25)
+ax.yaxis.grid(True, linewidth=0.25)
 sns.despine()
-ax.legend(title=None)
+ax.legend(title=None, fontsize=10.5)
 plt.tight_layout()
 plt.savefig(
     os.path.join("graphics", "fig_weibull.jpg"),
@@ -460,6 +464,8 @@ sns.boxplot(
 axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
 axes[1].legend(loc="lower right")
 axes[1].tick_params(axis="x", bottom=False)
+axes[1].yaxis.grid(True, linewidth=0.25)
+axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 plt.savefig(
@@ -479,7 +485,6 @@ def plot_map_facet(
     classes,
     filename="fig_map_transmission_ntg.jpg",
     fontsize=11.5,
-    legend_loc=1,
 ):
     """Helper function for plotting LCOT facet maps"""
     fig1 = plt.figure(figsize=(11, 11.75))
@@ -539,7 +544,7 @@ def plot_map_facet(
                 ylabel_style={"fontsize": fontsize, "rotation": 90},
                 yformatter=LatitudeFormatter(auto_hide=False, dms=True),
             )
-        if a == legend_loc:
+        if a == 2:
             ax1.add_artist(
                 ScaleBar(
                     1,
@@ -571,13 +576,6 @@ def plot_map_facet(
 
 
 plot_map_facet(caverns, [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16])
-
-plot_map_facet(
-    caverns,
-    [0] + list(np.arange(0.04, 0.121, step=0.02)) + [0.16],
-    legend_loc=2,
-    filename="fig_map_transmission_alt.jpg",
-)
 
 
 def plot_map_extent(cavern_df):

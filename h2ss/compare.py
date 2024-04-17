@@ -102,9 +102,7 @@ def load_all_data():
     return ds, extent, exclusions
 
 
-def capacity_function(
-    ds, extent, exclusions, cavern_diameter, cavern_height
-):
+def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
     """Calculate the energy storage capacity for different cases."""
     # distance from salt formation edge
     edge_buffer = fns.constraint_halite_edge(

@@ -186,9 +186,17 @@ def plot_map(dat_xr, fontsize=11.5):
         )
 
     # add basemap and map elements
+    basemap = cx.providers.CartoDB.Voyager
     cx.add_basemap(
-        axis, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=11
+        axis, crs=rd.CRS, source=basemap, zoom=11, attribution=False
     )
+    axis.text(
+        shape.bounds["minx"][0] - 9800,
+        shape.bounds["miny"][0] - 1300,
+        basemap["attribution"],
+        fontsize=9.5,
+    )
+
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
