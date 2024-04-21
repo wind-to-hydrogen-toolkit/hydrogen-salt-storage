@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Wind farm optimisation
+# # Wind farm optimisation - 2 GW of dedicated offshore wind for hydrogen production
 
 import os
 
@@ -190,62 +190,19 @@ for n in data["Name"]:
 
 ref_data = pd.concat(ref_data.values(), axis=1).T.drop_duplicates().T
 
-ref_data.head()
-
-ax = ref_data.plot(
-    x="wind_speed",
-    y="power_curve",
-    linewidth=3,
-    color="tab:blue",
-    figsize=(10, 5.5),
-    legend=False,
-)
-ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
-ax.set_ylabel("Power [MW]")
-plt.yticks([3 * n for n in range(6)])
-sns.despine()
-ax.xaxis.grid(True, linewidth=0.25)
-ax.yaxis.grid(True, linewidth=0.25)
-plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_powercurve.jpg"),
-    format="jpg",
-    dpi=600,
-)
-plt.show()
-
-plt.figure(figsize=(10, 5.5))
-ax = sns.lineplot(
-    data=ref_data.drop(columns=["power_curve"]).melt(id_vars="wind_speed"),
-    x="wind_speed",
-    y="value",
-    hue="variable",
-    linestyle="dashed",
-    linewidth=2.25,
-    alpha=0.85,
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-)
-ax.set_xlabel("Wind speed [m s\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]")
-ax.set_ylabel(
-    "Weibull probability distribution function "
-    "[s m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT ONE}]"
-)
-ax.xaxis.grid(True, linewidth=0.25)
-ax.yaxis.grid(True, linewidth=0.25)
-sns.despine()
-ax.legend(title=None, fontsize=10.5)
-plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_weibull.jpg"),
-    format="jpg",
-    dpi=600,
-)
-plt.show()
-
 # ## Annual energy production [MWh]
 
+# 2 GW of offshore wind for green hydrogen production by 2030
+# in addition to 5 GW offshore wind target in CLimate Action Plan 2023
+# pg. 134
+# assume this 2 GW is distributed evenly to the total capacity
+print(
+    f"{2000 / 7000 * 100:.2f}% of total offshore wind farm capacity dedicated",
+    f"to for H\N{SUBSCRIPT TWO} production",
+)
+
 # max wind farm capacity
-data["cap"] = [1300, 824, 500]
+data["cap"] = [int(x * 2000 / 7000) for x in [1300, 824, 500]]
 
 # number of 15 MW turbines, rounded down to the nearest integer
 data["n_turbines"] = opt.number_of_turbines(owf_cap=data["cap"])
@@ -469,11 +426,11 @@ axes[1].yaxis.grid(True, linewidth=0.25)
 axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_box_transmission_ntg.jpg"),
-    format="jpg",
-    dpi=600,
-)
+# plt.savefig(
+#     os.path.join("graphics", "fig_box_transmission_ntg.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()
 
 # ## Maps
@@ -586,80 +543,3 @@ classes = mc.Quantiles(
 )
 
 plot_map_facet(caverns, list(classes.bins))
-
-
-def plot_map_extent(cavern_df):
-    """Helper function for plotting extent map"""
-    xmin_, _, xmax_, _ = extent.total_bounds
-    _, ymin_, _, ymax_ = wind_farms.total_bounds
-    plt.figure(figsize=(6, 6))
-    ax2 = plt.axes(projection=ccrs.epsg(rd.CRS))
-    shape.plot(
-        ax=ax2, color="white", alpha=0.5, edgecolor="slategrey", zorder=1
-    )
-    gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-        ax=ax2, marker=".", markersize=2.5, color="firebrick"
-    )
-    gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).dissolve().buffer(
-        1000
-    ).envelope.boundary.plot(ax=ax2, color="darkslategrey")
-    wind_farms.plot(
-        ax=ax2, facecolor="none", hatch="///", edgecolor="royalblue"
-    )
-    plt.xlim(xmin_ - 19000, xmax_ + 1500)
-    plt.ylim(ymin_ - 3000, ymax_ + 3000)
-    injection_point.plot(ax=ax2, marker="*", color="darkslategrey")
-    basemap = cx.providers.CartoDB.VoyagerNoLabels
-    cx.add_basemap(
-        ax2,
-        crs=rd.CRS,
-        source=cx.providers.CartoDB.VoyagerNoLabels,
-        attribution=False,
-    )
-    ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
-    map_labels = zip(
-        zip(wind_farms.centroid.x, wind_farms.centroid.y), data["Name"]
-    )
-    for xy, lab in map_labels:
-        ax2.annotate(
-            text=lab,
-            xy=xy,
-            path_effects=[
-                patheffects.withStroke(linewidth=2.5, foreground="white")
-            ],
-            fontsize=13,
-            va="center",
-            fontweight="semibold",
-        )
-    ax2.annotate(
-        text="DUBLIN\nPORT",
-        xy=(
-            injection_point.centroid.x[0] - 1500,
-            injection_point.centroid.y[0],
-        ),
-        path_effects=[patheffects.withStroke(linewidth=2, foreground="white")],
-        fontsize=13,
-        va="center",
-        ha="right",
-        font="Montserrat",
-        fontweight="semibold",
-    )
-    ax2.add_artist(
-        ScaleBar(
-            1,
-            box_alpha=0,
-            location="lower right",
-            color="darkslategrey",
-            font_properties={"size": 11.5},
-        )
-    )
-    plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", "fig_transmission_map_inset.jpg"),
-        format="jpg",
-        dpi=600,
-    )
-    plt.show()
-
-
-plot_map_extent(caverns)

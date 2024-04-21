@@ -8,6 +8,7 @@ import os
 import cartopy.crs as ccrs
 import contextily as cx
 import geopandas as gpd
+import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -321,17 +322,17 @@ def plot_map_alt(
     colours = [int(n * 255 / (len(classes) - 1)) for n in range(len(classes))]
     for n, y in enumerate(colours):
         if n == 0:
-            c = cavern_df[cavern_df["capacity"] < classes[1]]
-            label1 = f"< {classes[1]}"
-        elif n == len(classes) - 1:
-            c = cavern_df[cavern_df["capacity"] >= classes[n]]
-            label1 = f"≥ {classes[n]}"
+            # c = cavern_df[cavern_df["capacity"] < classes[0]]
+            label1 = f"< {classes[0]:.0f}"
+        elif n == len(colours) - 1:
+            # c = cavern_df[cavern_df["capacity"] >= classes[-2]]
+            label1 = f"≥ {classes[-2]:.0f}"
         else:
-            c = cavern_df[
-                (cavern_df["capacity"] >= classes[n])
-                & (cavern_df["capacity"] < classes[n + 1])
-            ]
-            label1 = f"{classes[n]}–{classes[n + 1]}"
+            # c = cavern_df[
+            #     (cavern_df["capacity"] >= classes[n - 1])
+            #     & (cavern_df["capacity"] < classes[n])
+            # ]
+            label1 = f"{classes[n - 1]:.0f}–{classes[n]:.0f}"
         # if top_depth:
         #     for df, markersize in zip(
         #         [
@@ -354,7 +355,7 @@ def plot_map_alt(
         gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
             ax=axis1,
             scheme="UserDefined",
-            classification_kwds={"bins": classes[1:]},
+            classification_kwds={"bins": classes},
             column="capacity",
             zorder=3,
             marker=".",
@@ -427,12 +428,14 @@ def plot_map_alt(
     )
 
     plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
-        format="jpg",
-        dpi=600,
-    )
+    # plt.savefig(
+    #     os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
+    #     format="jpg",
+    #     dpi=600,
+    # )
     plt.show()
 
 
-plot_map_alt(ds, caverns, zones, [0, 80, 100, 120, 140])
+classes = mc.Quantiles(caverns["capacity"], k=6)
+
+plot_map_alt(ds, caverns, zones, list(classes.bins))
