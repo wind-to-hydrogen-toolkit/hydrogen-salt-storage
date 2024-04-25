@@ -7,7 +7,7 @@ Datasets used in this project. These datasets are not to be used for navigation 
    :header: Dataset, Source, Metadata, Format, Version
    :delim: |
 
-   Wind Farms (Foreshore Process) | Department of Housing, Local Government and Heritage | [#datagovie1]_ [#housinggovie1]_ | Shapefile | 2023-09-11
+   Marine Area Consent Wind | Department of Housing, Local Government and Heritage | [#datagovie1]_ [#housinggovie1]_ | Shapefile | 2021-04-28
    Exploration Wells in the Irish Offshore | Petroleum Affairs Division / Department of the Environment, Climate and Communications | [#marine1]_ [#datagovie2]_ | Shapefile | 2021-02-01
    Shipwrecks in Irish Waters | INFOMAR / Geological Survey Ireland / Marine Institute / National Monuments Service / Department of Housing, Local Government and Heritage | [#marine2]_ | Shapefile | 2023-10-24
    Frequently Used Routes (300 gross tonnes and above) | Department of Housing, Local Government and Heritage / EMODnet | [#datagovie3]_ [#housinggovie2]_ | Shapefile | 2022-07-19
@@ -18,8 +18,8 @@ Datasets used in this project. These datasets are not to be used for navigation 
    EMODnet Digital Bathymetry - DTM | EMODnet | [#emodnet1]_ [#emodnet2]_ [#emodnet3]_ | netCDF | 2022
 
 .. rubric:: Footnotes
-.. [#datagovie1] https://data.gov.ie/dataset/wind-farms-foreshore-process
-.. [#housinggovie1] https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process/about
+.. [#datagovie1] https://data.gov.ie/dataset/marine-area-consent-wind
+.. [#housinggovie1] https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::marine-area-consent-wind/about
 .. [#marine1] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171
 .. [#datagovie2] https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore
 .. [#marine2] https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131
