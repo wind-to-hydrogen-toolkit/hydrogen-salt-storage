@@ -69,4 +69,11 @@ html_theme_options = {
         }
     ],
     "navbar_align": "right",
+    "secondary_sidebar_items": {
+        "datasets": [],
+    },
+}
+
+html_sidebars = {
+  "datasets": [],
 }
