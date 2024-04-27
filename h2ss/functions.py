@@ -548,14 +548,14 @@ def constraint_wind_farm(data_path, dat_extent):
     energy test site areas in the draft OREDP II p. 109 [#DECC23]_.
     """
     wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-    # keep only features near Kish Basin
-    wind_farms = (
-        wind_farms.to_crs(rd.CRS)
-        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
-        .reset_index()
-        .sort_values("Name")
-    )
-    wind_farms.drop(columns=["index_right"], inplace=True)
+    wind_farms = wind_farms.to_crs(rd.CRS)
+    # keep only wind farms near the Kish Basin
+    wind_farms.drop(index=[0, 1, 7], inplace=True)
+    # merge wind farm polygons
+    wind_farms.at[2, "name"] = "Dublin Array"
+    wind_farms.at[3, "name"] = "Dublin Array"
+    wind_farms = wind_farms.dissolve(by="name")
+    wind_farms.reset_index(inplace=True)
     return wind_farms
 
 
@@ -791,9 +791,6 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
             dat_extent=dat_extent,
         )
 
-        # for combining Codling wind farm polygons
-        wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
-
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
             weibull_df[w]
@@ -805,25 +802,22 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         weibull_df[w].rename(columns={"Value": w}, inplace=True)
 
         # average c and k over wind farms
-        weibull_df[w] = wind_farms.dissolve(by="Name_").merge(
+        weibull_df[w] = wind_farms.merge(
             weibull_df[w].dissolve(
-                by="Name_", aggfunc={w: ["min", "max", "mean"]}
+                by="name", aggfunc={w: ["min", "max", "mean"]}
             ),
-            on="Name_",
+            on="name",
         )
 
         # keep only relevant columns
         weibull_df[w] = weibull_df[w][
-            ["Name", (w, "min"), (w, "max"), (w, "mean")]
+            ["name", (w, "min"), (w, "max"), (w, "mean")]
         ]
 
         # reset index
         weibull_df[w] = weibull_df[w].reset_index(drop=True)
 
     # merge
-    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
-
-    # remove abbreviation from name
-    weibull_df.at[2, "Name"] = weibull_df.at[2, "Name"].split(" (")[0]
+    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="name")
 
     return weibull_df
