@@ -33,8 +33,6 @@ References
     (Accessed: 10 November 2023).
 """
 
-import os
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd

@@ -412,7 +412,8 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
         print("-" * 78)
     # total number of caverns
     print(
-        f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}",
+        "Total number of caverns required: "
+        f"{sum(caverns_low)}–{sum(caverns_high)}"
     )
     print("-" * 78)
     # number of caverns as a percentage of the total available caverns
