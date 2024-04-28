@@ -55,10 +55,10 @@ def electricity_demand_ie(data):
     [#Pashchenko24]_.
     """
     print(
-        "Energy capacity as a percentage of Ireland's electricity demand "
-        "in 2050 (84–122 TWh electricity):",
+        "Energy capacity as a percentage of Ireland's electricity demand\n"
+        "in 2050 (84–122 TWh electricity): "
         f"{(data.sum() * .6 / 1000 / 122 * 100):.2f}–"
-        f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%",
+        f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%"
     )
 
 
@@ -75,16 +75,16 @@ def hydrogen_demand_ie(data):
     [#DECC23]_
     """
     print(
-        "Energy capacity as a percentage of Ireland's domestic hydrogen "
-        "demand in 2050 (4.6–39 TWh hydrogen):",
+        "Energy capacity as a percentage of Ireland's domestic hydrogen\n"
+        "demand in 2050 (4.6–39 TWh hydrogen): "
         f"{(data.sum() / 1000 / 39 * 100):.2f}–"
-        f"{(data.sum() / 1000 / 4.6 * 100):.2f}%",
+        f"{(data.sum() / 1000 / 4.6 * 100):.2f}%"
     )
     print(
-        "Energy capacity as a percentage of Ireland's domestic and "
-        "non-domestic hydrogen demand in 2050 (19.8–74.6 TWh hydrogen):",
+        "Energy capacity as a percentage of Ireland's domestic and\n"
+        "non-domestic hydrogen demand in 2050 (19.8–74.6 TWh hydrogen): "
         f"{(data.sum() / 1000 / 74.6 * 100):.2f}–"
-        f"{(data.sum() / 1000 / 19.8 * 100):.2f}%",
+        f"{(data.sum() / 1000 / 19.8 * 100):.2f}%"
     )
 
 
@@ -95,7 +95,11 @@ def distance_from_pipeline(cavern_df, pipeline_data_path):
     distances = []
     for i in range(len(cavern_df)):
         distances.append(cavern_df.iloc[[i]].distance(pipelines["geometry"], align=False).values[0])
-    print("Distance to nearest pipeline from caverns:", f"{np.min(distances) / 1000:.2f}–{np.max(distances) / 1000:.2f} km (mean: {np.mean(distances) / 1000:.2f} km)")
+    print(
+        "Distance to nearest pipeline from caverns: "
+        f"{np.min(distances) / 1000:.2f}–{np.max(distances) / 1000:.2f} km "
+        f"(mean: {np.mean(distances) / 1000:.2f} km)"
+    )
 
 
 def load_all_data():
