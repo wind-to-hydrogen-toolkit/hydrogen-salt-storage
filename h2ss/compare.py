@@ -6,10 +6,16 @@ References
     Energy Ireland. Available at:
     https://windenergyireland.com/images/files/our-climate-neutral-future-0by50-final-report.pdf
     (Accessed: 8 February 2024).
+.. [#Pashchenko24] Pashchenko, D. (2024) ‘Green hydrogen as a power plant fuel:
+    What is energy efficiency from production to utilization?’, Renewable
+    Energy, 223, p. 120033. Available at:
+    https://doi.org/10.1016/j.renene.2024.120033.
 """
 
 import os
 import sys
+import geopandas as gpd
+import numpy as np
 
 from h2ss import capacity as cap
 from h2ss import data as rd
@@ -30,7 +36,7 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
-def electricity_demand_ie(caverns_df):
+def electricity_demand_ie(data):
     """Compare the total capacity to Ireland's electricity demand in 2050.
 
     Parameters
@@ -41,13 +47,25 @@ def electricity_demand_ie(caverns_df):
     Notes
     -----
     Figures from [#Deane21]_.
+    Assume that the conversion of hydrogen to electricity is 60% efficient
+    [#Pashchenko24]_.
     """
     print(
         "Energy capacity as a percentage of Ireland's electricity demand "
         "in 2050:",
-        f"{(caverns_df['capacity'].sum() / 1000 / 122 * 100):.2f}–"
-        f"{(caverns_df['capacity'].sum() / 1000 / 84 * 100):.2f}%",
+        f"{(data.sum() * .6 / 1000 / 122 * 100):.2f}–"
+        f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%",
     )
+
+
+def distance_from_pipeline(cavern_df, pipeline_data_path):
+    """Calculate the distance of the caverns from the nearest pipeline."""
+    pipelines = rd.read_shapefile_from_zip(data_path=pipeline_data_path)
+    pipelines = pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=cavern_df.buffer(25000))).dissolve()
+    distances = []
+    for i in range(len(cavern_df)):
+        distances.append(cavern_df.iloc[[i]].distance(pipelines["geometry"], align=False).values[0])
+    print(f"Mean: {np.mean(distances):,.2f} m, Max: {np.max(distances):,.2f} m, Min: {np.min(distances):,.2f} m")
 
 
 def load_all_data():
@@ -71,7 +89,7 @@ def load_all_data():
     # wind farms
     exclusions["wind_farms"] = fns.constraint_wind_farm(
         data_path=os.path.join(
-            "data", "wind-farms", "wind-farms-foreshore-process.zip"
+            "data", "wind-farms", "marine-area-consent-wind.zip"
         ),
         dat_extent=extent,
     )

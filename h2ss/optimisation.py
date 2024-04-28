@@ -53,6 +53,9 @@ from functools import partial
 import numpy as np
 import pandas as pd
 from scipy import integrate
+import geopandas as gpd
+from shapely.geometry import Point
+from h2ss import data as rd
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -145,6 +148,28 @@ def weibull_probability_distribution(v, k, c):
     return k / c * np.power((v / c), (k - 1)) * np.exp(-np.power((v / c), k))
 
 
+def weibull_distribution(weibull_wf_data):
+    """Generate a power curve and Weibull distribution."""
+    powercurve_weibull_data = {}
+    for n in weibull_wf_data["name"]:
+        powercurve_weibull_data[n] = {}
+        powercurve_weibull_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3000)]
+        powercurve_weibull_data[n]["power_curve"] = []
+        powercurve_weibull_data[n][n] = []
+        for v in powercurve_weibull_data[n]["wind_speed"]:
+            powercurve_weibull_data[n]["power_curve"].append(ref_power_curve(v=v))
+            powercurve_weibull_data[n][n].append(
+                weibull_probability_distribution(
+                    v=v,
+                    k=weibull_wf_data[weibull_wf_data["name"] == n][("k", "mean")].iloc[0],
+                    c=weibull_wf_data[weibull_wf_data["name"] == n][("c", "mean")].iloc[0],
+                )
+            )
+        powercurve_weibull_data[n] = pd.DataFrame(powercurve_weibull_data[n])
+    powercurve_weibull_data = pd.concat(powercurve_weibull_data.values(), axis=1).T.drop_duplicates().T
+    return powercurve_weibull_data
+
+
 def weibull_power_curve(v, k, c):
     """Weibull probability distribution function multiplied by the power curve.
 
@@ -204,7 +229,7 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
     return (owf_cap / wt_power).astype(int)
 
 
-def annual_energy_production(n_turbines, k, c, w_loss=0.1):
+def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
     """Annual energy production of the wind farm.
 
     Parameters
@@ -253,6 +278,22 @@ def annual_energy_production(n_turbines, k, c, w_loss=0.1):
     return aep, integration[0], integration[1]
 
 
+def annual_energy_production(weibull_wf_data):
+    """Annual energy production of the wind farms.
+    """
+    aep = []
+    for n in weibull_wf_data["name"]:
+        aep.append(annual_energy_production_function(
+            n_turbines=weibull_wf_data[weibull_wf_data["name"] == n]["n_turbines"].iloc[0],
+            k=weibull_wf_data[weibull_wf_data["name"] == n][("k", "mean")].iloc[0],
+            c=weibull_wf_data[weibull_wf_data["name"] == n][("c", "mean")].iloc[0],
+        ))
+    aep = pd.DataFrame(aep)
+    aep.columns = ["AEP", "integral", "abserr"]
+    weibull_wf_data = pd.concat([weibull_wf_data, aep], axis=1)
+    return weibull_wf_data
+
+
 def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     """Annual hydrogen production from the wind farm's energy.
 
@@ -291,6 +332,106 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     electricity consumed by other parts of the hydrogen plant [MWh kg⁻¹].
     """
     return aep / (e_elec / eta_conv + e_pcl)
+
+
+def calculate_number_of_caverns(cavern_df, weibull_wf_data):
+    working_mass_cumsum_1 = (
+        cavern_df.sort_values("working_mass", ascending=False)
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    working_mass_cumsum_2 = (
+        cavern_df.sort_values("working_mass")
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    caverns_low = []
+    caverns_high = []
+    cap_max = []
+    for x in range(len(weibull_wf_data)):
+        print(weibull_wf_data["name"].iloc[x])
+        print(f"Working mass [kg]: {(weibull_wf_data['AHP'].iloc[x]):.6E}")
+        caverns_low.append(
+            working_mass_cumsum_1.loc[
+                working_mass_cumsum_1["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        caverns_high.append(
+            working_mass_cumsum_2.loc[
+                working_mass_cumsum_2["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        print(f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}")
+        cap_max.append(
+            max(
+                working_mass_cumsum_1.loc[
+                    working_mass_cumsum_1["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+                working_mass_cumsum_2.loc[
+                    working_mass_cumsum_2["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+            )
+        )
+        print(f"Capacity (approx.) [GWh]: {(cap_max[x]):,.2f}")
+        print("-" * 78)
+    # total number of caverns
+    print(
+        f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}",
+    )
+    print("-" * 78)
+    # number of caverns as a percentage of the total available caverns
+    print(
+        "Number of caverns required as a percentage of all available caverns:",
+        f"{(sum(caverns_low) / len(cavern_df) * 100):.2f}–"
+        + f"{(sum(caverns_high) / len(cavern_df) * 100):.2f}%",
+    )
+    print("-" * 78)
+    # total capacity
+    print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
+
+
+def transmission_distance(cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)):
+    lond, lonm, latd, latm = injection_point_coords
+    injection_point = gpd.GeoSeries(
+        [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
+    )
+    injection_point = injection_point.to_crs(rd.CRS)
+    distance_ip = []
+    for j in range(len(cavern_df)):
+        distance_ip.append(
+            injection_point.distance(
+                cavern_df.iloc[[j]]["geometry"], align=False
+            ).values[0]
+            / 1000
+        )
+    cavern_df["distance_ip"] = distance_ip
+    distance_wf = {}
+    for i in range(len(wf_data)):
+        distance_wf[wf_data["name"][i]] = []
+        for j in range(len(cavern_df)):
+            distance_wf[wf_data["name"][i]].append(
+                (
+                    wf_data.iloc[[i]]
+                    .distance(cavern_df.iloc[[j]]["geometry"], align=False)
+                    .values[0]
+                    / 1000
+                    + cavern_df.iloc[[j]]["distance_ip"].values[0]
+                )
+            )
+        cavern_df[f"dist_{wf_data['name'][i].replace(' ', '_')}"] = distance_wf[
+            wf_data["name"][i]
+        ]
+    return cavern_df, injection_point
 
 
 def electrolyser_capacity(
@@ -398,9 +539,9 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
 
-def lcot_pipeline(
+def lcot_pipeline_function(
     capex,
-    transmission_distance,
+    d_transmission,
     ahp,
     opex_ratio=0.02,
     discount_rate=0.08,
@@ -412,7 +553,7 @@ def lcot_pipeline(
     ----------
     capex : float
         Capital expenditure (CAPEX) of the pipeline [€ km⁻¹]
-    transmission_distance : float
+    d_transmission : float
         Pipeline transmission distance [km]
     ahp : float
         Annual hydrogen production [kg]
@@ -458,7 +599,17 @@ def lcot_pipeline(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
     opex = capex * opex_ratio
-    return (capex * transmission_distance + opex * f) / (ahp * f)
+    return (capex * d_transmission + opex * f) / (ahp * f)
+
+
+def lcot_pipeline(wf_data, weibull_wf_data, cavern_df):
+    for wf in list(wf_data["name"]):
+        cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = lcot_pipeline_function(
+            capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)]["CAPEX"].values[0],
+            d_transmission=cavern_df[f"dist_{wf.replace(' ', '_')}"],
+            ahp=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)]["AHP"].values[0],
+        )
+    return cavern_df
 
 
 def rotor_area(diameter=REF_DIAMETER):
