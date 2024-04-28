@@ -2,6 +2,9 @@
 
 ## [2024.04.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.04.1)
 
+[Various enhancements](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/10) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.04.0...2024.04.1).
+
 - update task and script for converting notebooks
 - update documentation link - hosted on GitLab pages
 - remove sidebar from datasets page in docs
@@ -25,3 +28,64 @@
 - remove old statistical plots of Kish basin data
 - update Kish basin halite net thickness facet maps
 - format notebooks and scripts
+
+## [2024.04.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.04.0)
+
+[Improvements to cavern calculations using net-to-gross](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/9) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.03.0...2024.04.0).
+
+## [2024.03.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.03.0)
+
+[Update docs](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/8) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.02.1...2024.03.0).
+
+## [2024.02.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.02.1)
+
+[Update plots](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/7) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.02.0...2024.02.1).
+
+## [2024.02.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.02.0)
+
+[Improved analysis and notebooks](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/6) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.6...2024.02.0).
+
+## [2024.01.6](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.6)
+
+[Update CAPEX/OPEX/electrolyser capacity calculations](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/5) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.5...2024.01.6).
+
+## [2024.01.5](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.5)
+
+[Finalise optimisation + update docs / plots](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/4) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.4...2024.01.5).
+
+## [2024.01.4](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.4)
+
+[Update package and docs](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/3) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.3...2024.01.4).
+
+## [2024.01.3](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.3)
+
+[Update configurations / metadata / docs](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/2) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.2...2024.01.3).
+
+## [2024.01.2](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.2)
+
+[Merge notebooks to main](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/1) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.1...2024.01.2).
+
+## [2024.01.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.1)
+
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.0...2024.01.1).
+
+## [2024.01.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.0)
+
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2023.12.1...2024.01.0).
+
+## [2023.12.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2022.12.1)
+
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2023.12.0...2023.12.1).
+
+## [2023.12.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2022.12.0)
+
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/commits/2023.12.0).
