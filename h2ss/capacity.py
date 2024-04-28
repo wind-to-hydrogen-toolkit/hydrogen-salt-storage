@@ -396,7 +396,7 @@ def calculate_capacity_dataframe(cavern_df):
     (
         cavern_df["p_operating_min"],
         cavern_df["p_operating_max"],
-    ) = pressure_operating(thickness_overburden=cavern_df["TopDepthSeabed"])
+    ) = pressure_operating(thickness_overburden=cavern_df["TopDepthSeabed"], depth_water=-cavern_df["Bathymetry"])
 
     cavern_df["rho_min"], cavern_df["rho_max"] = density_hydrogen_gas(
         p_operating_min=cavern_df["p_operating_min"],

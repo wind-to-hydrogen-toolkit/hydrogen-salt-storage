@@ -525,7 +525,7 @@ def constraint_exploration_well(data_path, buffer=500):
     return wells, wells_b
 
 
-def constraint_wind_farm(data_path, dat_extent):
+def constraint_wind_farm(data_path):
     """Read data for wind farms.
 
     Parameters
@@ -784,10 +784,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         )
 
         # read wind farm data
-        wind_farms = constraint_wind_farm(
-            data_path=data_path_wind_farms,
-            dat_extent=dat_extent,
-        )
+        wind_farms = constraint_wind_farm(data_path=data_path_wind_farms)
 
         # assign capacities
         wind_farms.sort_values(by=["name"], inplace=True)
