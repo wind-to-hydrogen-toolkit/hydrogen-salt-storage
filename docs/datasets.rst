@@ -4,7 +4,7 @@ Datasets
 Datasets used in this project. These datasets are not to be used for navigation or for any other purpose relating to safety at sea.
 
 .. csv-table::
-   :header: Dataset, Source, Metadata, Format, Version
+   :header: Dataset | Source | Metadata | Format | Version
    :delim: |
 
    Marine Area Consent Wind | Department of Housing, Local Government and Heritage | [#datagovie1]_ [#housinggovie1]_ | Shapefile | 2021-04-28
