@@ -10,6 +10,10 @@ References
     What is energy efficiency from production to utilization?’, Renewable
     Energy, 223, p. 120033. Available at:
     https://doi.org/10.1016/j.renene.2024.120033.
+.. [#DECC23] Department of the Environment, Climate and Communications (2023)
+    National Hydrogen Strategy. Government of Ireland. Available at:
+    https://www.gov.ie/en/publication/624ab-national-hydrogen-strategy/
+    (Accessed: 25 July 2023).
 """
 
 import os
@@ -37,12 +41,12 @@ class HiddenPrints:
 
 
 def electricity_demand_ie(data):
-    """Compare the total capacity to Ireland's electricity demand in 2050.
+    """Compare the capacity to Ireland's electricity demand in 2050.
 
     Parameters
     ----------
-    cavern_df : geopandas.GeoDataFrame
-        Geodataframe of caverns within the zone of interest
+    data : pandas.Series
+        Pandas series or dataframe column of capacities
 
     Notes
     -----
@@ -52,9 +56,35 @@ def electricity_demand_ie(data):
     """
     print(
         "Energy capacity as a percentage of Ireland's electricity demand "
-        "in 2050:",
+        "in 2050 (84–122 TWh electricity):",
         f"{(data.sum() * .6 / 1000 / 122 * 100):.2f}–"
         f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%",
+    )
+
+
+def hydrogen_demand_ie(data):
+    """Compare the capacity to Ireland's hydrogen demand in 2050.
+
+    Parameters
+    ----------
+    data : pandas.Series
+        Pandas series or dataframe column of capacities
+
+    Notes
+    -----
+    [#DECC23]_
+    """
+    print(
+        "Energy capacity as a percentage of Ireland's domestic hydrogen "
+        "demand in 2050 (4.6–39 TWh hydrogen):",
+        f"{(data.sum() / 1000 / 39 * 100):.2f}–"
+        f"{(data.sum() / 1000 / 4.6 * 100):.2f}%",
+    )
+    print(
+        "Energy capacity as a percentage of Ireland's domestic and "
+        "non-domestic hydrogen demand in 2050 (19.8–74.6 TWh hydrogen):",
+        f"{(data.sum() / 1000 / 74.6 * 100):.2f}–"
+        f"{(data.sum() / 1000 / 19.8 * 100):.2f}%",
     )
 
 
