@@ -76,16 +76,20 @@
 
 ## [2024.01.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.1)
 
+Update optimisation / docs / tests and fixes.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.01.0...2024.01.1).
 
 ## [2024.01.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.01.0)
 
+Initial docs / tests.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2023.12.1...2024.01.0).
 
 ## [2023.12.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2022.12.1)
 
+Add optimisation functions.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2023.12.0...2023.12.1).
 
 ## [2023.12.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2022.12.0)
 
+Initial version with capacity calculations.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/commits/2023.12.0).
