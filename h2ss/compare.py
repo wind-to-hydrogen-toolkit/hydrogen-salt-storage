@@ -65,7 +65,7 @@ def distance_from_pipeline(cavern_df, pipeline_data_path):
     distances = []
     for i in range(len(cavern_df)):
         distances.append(cavern_df.iloc[[i]].distance(pipelines["geometry"], align=False).values[0])
-    print(f"Mean: {np.mean(distances):,.2f} m, Max: {np.max(distances):,.2f} m, Min: {np.min(distances):,.2f} m")
+    print("Distance to nearest pipeline from caverns:", f"{np.min(distances) / 1000:.2f}–{np.max(distances) / 1000:.2f} km (mean: {np.mean(distances) / 1000:.2f} km)")
 
 
 def load_all_data():
