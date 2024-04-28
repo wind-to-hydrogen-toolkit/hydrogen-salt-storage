@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Offshore wind farms
+# # Offshore wind farms and pipelines
 #
 # - <https://data.gov.ie/dataset/marine-area-consent-wind>
 # - <https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::marine-area-consent-wind>
+# - <https://data.gov.ie/dataset/offshore-gas-pipelines>
+# - <https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::offshore-gas-pipelines>
 
 import os
 from zipfile import ZipFile
@@ -44,7 +46,7 @@ rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
+wind_farms = rd.read_shapefile_from_zip(data_path=DATA_FILE)
 
 wind_farms.crs
 
@@ -236,6 +238,59 @@ for i in range(len(wind_farms_)):
     print(
         wind_farms_.iloc[[i]]["name"].values[0],
         "is",
-        f"{wind_farms_.iloc[[i]].distance(shape['geometry'], align=False).values[0]:.2f}",
+        f"{wind_farms_.iloc[[i]].distance(shape['geometry'], align=False).values[0]:,.2f}",
         "m away from Kish Bank",
     )
+
+# ## Distance from pipelines
+
+DATA_DIR = os.path.join("data", "pipelines")
+
+URL = (
+    "https://opendata.arcgis.com/api/v3/datasets/"
+    "dc6e3849b9fc43bb93078c5d0093bf6a_1/downloads/data?"
+    "format=shp&spatialRefId=4326&where=1%3D1"
+)
+
+FILE_NAME = "pipelines.zip"
+
+DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
+
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
+
+ZipFile(DATA_FILE).namelist()
+
+pipelines = rd.read_shapefile_from_zip(data_path=DATA_FILE)
+
+pipelines.head()
+
+pipelines.crs
+
+ax = (
+    pipelines.to_crs(rd.CRS)
+    .overlay(gpd.GeoDataFrame(geometry=shape.buffer(50000)))
+    .plot(color="crimson")
+)
+shape.buffer(1000).buffer(-1000).boundary.plot(
+    ax=ax, color="black", linewidth=1
+)
+wind_farms_.plot(ax=ax, alpha=0.5, column="name")
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=rd.CRS)
+
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
+
+for i in range(len(wind_farms_)):
+    print(
+        wind_farms_.iloc[[i]]["name"].values[0],
+        "is",
+        f"{wind_farms_.iloc[[i]].distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
+        "m away from the nearest pipeline",
+    )
+
+print(
+    "Kish Basin is",
+    f"{shape.distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
+    "m away from the nearest pipeline",
+)

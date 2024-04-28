@@ -49,7 +49,7 @@ wells, wells_b = fns.constraint_exploration_well(
 # test site areas in draft OREDP II p. 109
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )

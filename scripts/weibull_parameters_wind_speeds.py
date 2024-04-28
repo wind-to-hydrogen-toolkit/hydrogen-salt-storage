@@ -91,13 +91,10 @@ plt.show()
 # wind farms in the area
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )
-
-# combine Codling wind farm polygons
-wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
 
 # shape of the halite
 shape = rd.halite_shape(dat_xr=ds)
@@ -139,7 +136,7 @@ def plot_map(df, label):
     )
 
     # wind farms
-    colours = ["lime", "lime", "darkslategrey", "deepskyblue"]
+    colours = ["lime", "darkslategrey", "deepskyblue"]
     for index, colour in zip(range(len(wind_farms)), colours):
         wind_farms.iloc[[index]].plot(
             ax=ax1,
@@ -153,10 +150,10 @@ def plot_map(df, label):
         mpatches.Patch(
             facecolor="none",
             hatch="////",
-            edgecolor=colours[1:][x],
-            label=list(wind_farms.dissolve("Name_")["Name"])[x],
+            edgecolor=colours[x],
+            label=list(wind_farms["name"])[x],
         )
-        for x in range(len(wind_farms.dissolve("Name_")))
+        for x in range(len(wind_farms))
     ]
 
     legend_handles.append(
@@ -205,15 +202,15 @@ weibull_c = weibull_c.overlay(wind_farms, how="intersection")
 weibull_k = weibull_k.overlay(wind_farms, how="intersection")
 
 # compute c and k over wind farms
-weibull_c = wind_farms.dissolve(by="Name_").merge(
-    weibull_c.dissolve(by="Name_", aggfunc={"Value": ["min", "max", "mean"]}),
-    on="Name_",
+weibull_c = wind_farms.merge(
+    weibull_c.dissolve(by="name", aggfunc={"Value": ["min", "max", "mean"]}),
+    on="name",
 )
-weibull_k = wind_farms.dissolve(by="Name_").merge(
-    weibull_k.dissolve(by="Name_", aggfunc={"Value": ["min", "max", "mean"]}),
-    on="Name_",
+weibull_k = wind_farms.merge(
+    weibull_k.dissolve(by="name", aggfunc={"Value": ["min", "max", "mean"]}),
+    on="name",
 )
 
-weibull_c[["Name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]
+weibull_c[["name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]
 
-weibull_k[["Name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]
+weibull_k[["name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]

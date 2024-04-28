@@ -50,7 +50,7 @@ _, wells_b = fns.constraint_exploration_well(
 # wind farms
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )
@@ -75,8 +75,6 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 _, cables_b = fns.constraint_subsea_cables(
     data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
 )
-
-# ## HYSS case
 
 # distance from salt formation edge
 edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
@@ -118,6 +116,10 @@ caverns, _ = fns.generate_caverns_with_constraints(
         "cables": cables_b,
         "edge": edge_buffer,
     },
+)
+
+compare.distance_from_pipeline(
+    caverns, os.path.join("data", "pipelines", "pipelines.zip")
 )
 
 # ## Capacity
@@ -209,7 +211,7 @@ caverns[
 ].sum()
 
 # compare to Ireland's electricity demand in 2050 (Deane, 2021)
-compare.electricity_demand_ie(caverns_df=caverns)
+compare.electricity_demand_ie(data=caverns["capacity"])
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].sum()
@@ -228,9 +230,6 @@ s
 s.groupby("depth").sum()[["capacity"]]
 
 s.groupby("halite").sum()[["capacity"]]
-
-# copy dataframe
-caverns_pot_all = caverns.copy()
 
 # ## Map
 
@@ -428,11 +427,11 @@ def plot_map_alt(
     )
 
     plt.tight_layout()
-    # plt.savefig(
-    #     os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
-    #     format="jpg",
-    #     dpi=600,
-    # )
+    plt.savefig(
+        os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
+        format="jpg",
+        dpi=600,
+    )
     plt.show()
 
 

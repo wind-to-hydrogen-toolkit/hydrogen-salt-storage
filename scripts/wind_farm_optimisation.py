@@ -20,6 +20,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from shapely.geometry import Point
 
 from h2ss import capacity as cap
+from h2ss import compare
 from h2ss import data as rd
 from h2ss import functions as fns
 from h2ss import optimisation as opt
@@ -48,7 +49,7 @@ _, wells_b = fns.constraint_exploration_well(
 # wind farms
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )
@@ -160,39 +161,21 @@ caverns["capacity"] = cap.energy_storage_capacity(
 # ## Power curve [MW] and Weibull wind speed distribution
 
 # extract data for wind farms at 150 m
-data = fns.read_weibull_data(
+weibull_wf_df = fns.read_weibull_data(
     data_path_weibull=os.path.join(
         "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
     ),
     data_path_wind_farms=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )
 
-# generate Weibull distribution
-ref_data = {}
-for n in data["Name"]:
-    ref_data[n] = {}
-    ref_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3000)]
-    ref_data[n]["power_curve"] = []
-    ref_data[n][n] = []
-    for v in ref_data[n]["wind_speed"]:
-        ref_data[n]["power_curve"].append(opt.ref_power_curve(v=v))
-        ref_data[n][n].append(
-            opt.weibull_probability_distribution(
-                v=v,
-                k=data[data["Name"] == n][("k", "mean")].iloc[0],
-                c=data[data["Name"] == n][("c", "mean")].iloc[0],
-            )
-        )
-    ref_data[n] = pd.DataFrame(ref_data[n])
+weibull_powercurve = opt.weibull_distribution(weibull_wf_data=weibull_wf_df)
 
-ref_data = pd.concat(ref_data.values(), axis=1).T.drop_duplicates().T
+weibull_powercurve.head()
 
-ref_data.head()
-
-ax = ref_data.plot(
+ax = weibull_powercurve.plot(
     x="wind_speed",
     y="power_curve",
     linewidth=3,
@@ -216,7 +199,9 @@ plt.show()
 
 plt.figure(figsize=(10, 5.5))
 ax = sns.lineplot(
-    data=ref_data.drop(columns=["power_curve"]).melt(id_vars="wind_speed"),
+    data=weibull_powercurve.drop(columns=["power_curve"]).melt(
+        id_vars="wind_speed"
+    ),
     x="wind_speed",
     y="value",
     hue="variable",
@@ -242,176 +227,69 @@ plt.savefig(
 )
 plt.show()
 
-# ## Annual energy production [MWh]
-
-# max wind farm capacity
-data["cap"] = [1300, 824, 500]
+# ## Number of reference wind turbines
 
 # number of 15 MW turbines, rounded down to the nearest integer
-data["n_turbines"] = opt.number_of_turbines(owf_cap=data["cap"])
+weibull_wf_df["n_turbines"] = opt.number_of_turbines(
+    owf_cap=weibull_wf_df["cap"]
+)
 
-aep = []
-for n in data["Name"]:
-    aepwt = opt.annual_energy_production(
-        n_turbines=data[data["Name"] == n]["n_turbines"].iloc[0],
-        k=data[data["Name"] == n][("k", "mean")].iloc[0],
-        c=data[data["Name"] == n][("c", "mean")].iloc[0],
-    )
-    aep.append(aepwt)
+# ## Annual energy production [MWh]
 
-aep = pd.DataFrame(aep)
-aep.columns = ["AEP", "integral", "abserr"]
-
-data = pd.concat([data, aep], axis=1)
+weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
 
 # ## Annual hydrogen production [kg]
 
-data["AHP"] = opt.annual_hydrogen_production(aep=data["AEP"])
+weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
 
 # ## AHP as a proportion of the total working mass
 
-data["AHP_frac"] = data["AHP"] / caverns[["working_mass"]].sum().iloc[0]
+weibull_wf_df["AHP_frac"] = (
+    weibull_wf_df["AHP"] / caverns[["working_mass"]].sum().iloc[0]
+)
 
 # ## AHP converted to storage demand [GWh]
 
-data["demand"] = cap.energy_storage_capacity(m_working=data["AHP"])
+weibull_wf_df["demand"] = cap.energy_storage_capacity(
+    m_working=weibull_wf_df["AHP"]
+)
 
 # ## Number of caverns required based on cumulative working mass and AHP
 
-working_mass_cumsum_1 = (
-    caverns.sort_values("working_mass", ascending=False)
-    .reset_index()[["working_mass", "capacity"]]
-    .cumsum()
+opt.calculate_number_of_caverns(
+    cavern_df=caverns, weibull_wf_data=weibull_wf_df
 )
-
-working_mass_cumsum_2 = (
-    caverns.sort_values("working_mass")
-    .reset_index()[["working_mass", "capacity"]]
-    .cumsum()
-)
-
-caverns_low = []
-caverns_high = []
-cap_max = []
-for x in range(len(data)):
-    print(data["Name"].iloc[x])
-    print(f"Working mass [kg]: {(data['AHP'].iloc[x]):.6E}")
-    caverns_low.append(
-        working_mass_cumsum_1.loc[
-            working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
-        ]
-        .head(1)
-        .index[0]
-        + 1
-    )
-    caverns_high.append(
-        working_mass_cumsum_2.loc[
-            working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
-        ]
-        .head(1)
-        .index[0]
-        + 1
-    )
-    print(f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}")
-    cap_max.append(
-        max(
-            working_mass_cumsum_1.loc[
-                working_mass_cumsum_1["working_mass"] >= data["AHP"].iloc[x]
-            ]
-            .head(1)["capacity"]
-            .values[0],
-            working_mass_cumsum_2.loc[
-                working_mass_cumsum_2["working_mass"] >= data["AHP"].iloc[x]
-            ]
-            .head(1)["capacity"]
-            .values[0],
-        )
-    )
-    print(f"Capacity (approx.) [GWh]: {(cap_max[x]):.2f}")
-    print("-" * 50)
-
-# total number of caverns
-print(
-    f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}"
-)
-
-# number of caverns as a percentage of the total available caverns
-print(
-    "Number of caverns required as a percentage of all available caverns:",
-    f"{(sum(caverns_low) / len(caverns) * 100):.2f}–"
-    + f"{(sum(caverns_high) / len(caverns) * 100):.2f}%",
-)
-
-# total capacity
-print(f"Total maximum cavern capacity (approx.): {sum(cap_max):.2f} GWh")
 
 # ## Transmission distance [km]
 
-wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
-wind_farms = wind_farms.dissolve("Name_").reset_index()
-
-# Dublin Port coordinates (Dinh et al. - injection point)
-injection_point = gpd.GeoSeries(
-    [Point(-(6 + 12 / 60), 53 + 21 / 60)], crs=4326
+caverns, injection_point = opt.transmission_distance(
+    cavern_df=caverns, wf_data=wind_farms
 )
-injection_point = injection_point.to_crs(rd.CRS)
 
-distance_ip = []
-for j in range(len(caverns)):
-    distance_ip.append(
-        injection_point.distance(
-            caverns.iloc[[j]]["geometry"], align=False
-        ).values[0]
-        / 1000
-    )
-caverns["distance_ip"] = distance_ip
+# ## Electrolyser capacity [MW]
 
-distance_wf = {}
-for i in range(len(wind_farms)):
-    distance_wf[wind_farms["Name_"][i]] = []
-    for j in range(len(caverns)):
-        distance_wf[wind_farms["Name_"][i]].append(
-            (
-                wind_farms.iloc[[i]]
-                .distance(caverns.iloc[[j]]["geometry"], align=False)
-                .values[0]
-                / 1000
-                + caverns.iloc[[j]]["distance_ip"].values[0]
-            )
-        )
-    caverns[f"dist_{wind_farms['Name_'][i]}"] = distance_wf[
-        wind_farms["Name_"][i]
-    ]
+weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
+    n_turbines=weibull_wf_df["n_turbines"]
+)
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
-# calculate electrolyser capacity
-data["E_cap"] = opt.electrolyser_capacity(n_turbines=data["n_turbines"])
+weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 
-data["CAPEX"] = opt.capex_pipeline(e_cap=data["E_cap"])
-
-data
+weibull_wf_df
 
 # totals
-data[
+weibull_wf_df[
     ["cap", "n_turbines", "AEP", "AHP", "AHP_frac", "demand", "E_cap", "CAPEX"]
 ].sum()
 
-# compare to Ireland's electricity demand in 2050 (Deane, 2021)
-print(
-    "Storage demand as a percentage of Ireland's electricity demand in 2050:",
-    f"{(sum(data['demand']) / 1000 / 122 * 100):.2f}–"
-    + f"{(sum(data['demand']) / 1000 / 84 * 100):.2f}%",
-)
+compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-for wf in list(wind_farms["Name_"]):
-    caverns[f"LCOT_{wf}"] = opt.lcot_pipeline(
-        capex=data[data["Name"].str.contains(wf)]["CAPEX"].values[0],
-        transmission_distance=caverns[f"dist_{wf}"],
-        ahp=data[data["Name"].str.contains(wf)]["AHP"].values[0],
-    )
+caverns = opt.lcot_pipeline(
+    wf_data=wind_farms, weibull_wf_data=weibull_wf_df, cavern_df=caverns
+)
 
 caverns[
     [
@@ -419,26 +297,18 @@ caverns[
         "working_mass",
         "capacity",
         "distance_ip",
-        "dist_Codling",
-        "dist_Dublin",
-        "dist_North",
-        "LCOT_Codling",
-        "LCOT_Dublin",
-        "LCOT_North",
     ]
+    + list(caverns.filter(like="dist_"))
+    + list(caverns.filter(like="LCOT_"))
 ].describe()
 
-caverns[
-    [
-        "LCOT_Codling",
-        "LCOT_Dublin",
-        "LCOT_North",
-    ]
-].describe().mean(axis=1)
+caverns[list(caverns.filter(like="LCOT_"))].describe().mean(axis=1)
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 sns.boxplot(
-    caverns.filter(like="dist_").set_axis(list(data["Name"]), axis=1).melt(),
+    caverns.filter(like="dist_")
+    .set_axis(list(wind_farms["name"]), axis=1)
+    .melt(),
     y="value",
     hue="variable",
     palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
@@ -452,7 +322,9 @@ sns.boxplot(
 axes[0].set_ylabel("Transmission distance [km]")
 axes[0].tick_params(axis="x", bottom=False)
 sns.boxplot(
-    caverns.filter(like="LCOT_").set_axis(list(data["Name"]), axis=1).melt(),
+    caverns.filter(like="LCOT_")
+    .set_axis(list(wind_farms["name"]), axis=1)
+    .melt(),
     y="value",
     hue="variable",
     palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
@@ -507,13 +379,13 @@ def plot_map_facet(
             )
         )
 
-    for a, wf1 in enumerate(list(wind_farms["Name_"])):
+    for a, wf1 in enumerate(list(wind_farms["name"])):
         ax1 = fig1.add_subplot(2, 2, a + 1, projection=ccrs.epsg(rd.CRS))
         gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
             ax=ax1,
             scheme="UserDefined",
             classification_kwds={"bins": classes},
-            column=f"LCOT_{wf1}",
+            column=f"LCOT_{wf1.replace(' ', '_')}",
             zorder=2,
             marker=".",
             cmap="flare",
@@ -563,27 +435,14 @@ def plot_map_facet(
             )
         plt.xlim(xmin_ - 1000, xmax_ + 1000)
         plt.ylim(ymin_ - 1000, ymax_ + 1000)
-        ax1.set_title(list(data["Name"])[a])
+        ax1.set_title(list(wind_farms["name"])[a])
 
     plt.tight_layout()
-    # plt.savefig(
-    #     os.path.join("graphics", filename),
-    #     format="jpg",
-    #     dpi=600,
-    # )
+    plt.savefig(os.path.join("graphics", filename), format="jpg", dpi=600)
     plt.show()
 
 
-classes = mc.Quantiles(
-    caverns[
-        [
-            "LCOT_Codling",
-            "LCOT_Dublin",
-            "LCOT_North",
-        ]
-    ],
-    k=6,
-)
+classes = mc.Quantiles(caverns[list(caverns.filter(like="LCOT_"))], k=6)
 
 plot_map_facet(caverns, list(classes.bins))
 
@@ -618,7 +477,7 @@ def plot_map_extent(cavern_df):
     )
     ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
     map_labels = zip(
-        zip(wind_farms.centroid.x, wind_farms.centroid.y), data["Name"]
+        zip(wind_farms.centroid.x, wind_farms.centroid.y), wind_farms["name"]
     )
     for xy, lab in map_labels:
         ax2.annotate(

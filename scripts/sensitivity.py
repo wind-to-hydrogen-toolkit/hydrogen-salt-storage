@@ -256,7 +256,7 @@ ax[1].axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax[0].set_xlabel("Cavern diameter [m]")
 ax[1].set_xlabel("Cavern height [m]")
 ax[0].set_ylabel("Difference [%]")
-ax[0].legend(title=None, fontsize=11)
+ax[1].legend(title=None, fontsize=11)
 ax[1].tick_params(axis="y", left=False)
 
 sns.despine()

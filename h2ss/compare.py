@@ -18,6 +18,7 @@ References
 
 import os
 import sys
+
 import geopandas as gpd
 import numpy as np
 
@@ -91,10 +92,18 @@ def hydrogen_demand_ie(data):
 def distance_from_pipeline(cavern_df, pipeline_data_path):
     """Calculate the distance of the caverns from the nearest pipeline."""
     pipelines = rd.read_shapefile_from_zip(data_path=pipeline_data_path)
-    pipelines = pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=cavern_df.buffer(25000))).dissolve()
+    pipelines = (
+        pipelines.to_crs(rd.CRS)
+        .overlay(gpd.GeoDataFrame(geometry=cavern_df.buffer(25000)))
+        .dissolve()
+    )
     distances = []
     for i in range(len(cavern_df)):
-        distances.append(cavern_df.iloc[[i]].distance(pipelines["geometry"], align=False).values[0])
+        distances.append(
+            cavern_df.iloc[[i]]
+            .distance(pipelines["geometry"], align=False)
+            .values[0]
+        )
     print(
         "Distance to nearest pipeline from caverns: "
         f"{np.min(distances) / 1000:.2f}–{np.max(distances) / 1000:.2f} km "

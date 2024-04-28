@@ -50,11 +50,12 @@ References
 
 from functools import partial
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 from scipy import integrate
-import geopandas as gpd
 from shapely.geometry import Point
+
 from h2ss import data as rd
 
 # NREL 15 MW reference turbine specifications
@@ -153,20 +154,32 @@ def weibull_distribution(weibull_wf_data):
     powercurve_weibull_data = {}
     for n in weibull_wf_data["name"]:
         powercurve_weibull_data[n] = {}
-        powercurve_weibull_data[n]["wind_speed"] = [0 + 0.01 * n for n in range(3000)]
+        powercurve_weibull_data[n]["wind_speed"] = [
+            0 + 0.01 * n for n in range(3000)
+        ]
         powercurve_weibull_data[n]["power_curve"] = []
         powercurve_weibull_data[n][n] = []
         for v in powercurve_weibull_data[n]["wind_speed"]:
-            powercurve_weibull_data[n]["power_curve"].append(ref_power_curve(v=v))
+            powercurve_weibull_data[n]["power_curve"].append(
+                ref_power_curve(v=v)
+            )
             powercurve_weibull_data[n][n].append(
                 weibull_probability_distribution(
                     v=v,
-                    k=weibull_wf_data[weibull_wf_data["name"] == n][("k", "mean")].iloc[0],
-                    c=weibull_wf_data[weibull_wf_data["name"] == n][("c", "mean")].iloc[0],
+                    k=weibull_wf_data[weibull_wf_data["name"] == n][
+                        ("k", "mean")
+                    ].iloc[0],
+                    c=weibull_wf_data[weibull_wf_data["name"] == n][
+                        ("c", "mean")
+                    ].iloc[0],
                 )
             )
         powercurve_weibull_data[n] = pd.DataFrame(powercurve_weibull_data[n])
-    powercurve_weibull_data = pd.concat(powercurve_weibull_data.values(), axis=1).T.drop_duplicates().T
+    powercurve_weibull_data = (
+        pd.concat(powercurve_weibull_data.values(), axis=1)
+        .T.drop_duplicates()
+        .T
+    )
     return powercurve_weibull_data
 
 
@@ -279,15 +292,22 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
 
 
 def annual_energy_production(weibull_wf_data):
-    """Annual energy production of the wind farms.
-    """
+    """Annual energy production of the wind farms."""
     aep = []
     for n in weibull_wf_data["name"]:
-        aep.append(annual_energy_production_function(
-            n_turbines=weibull_wf_data[weibull_wf_data["name"] == n]["n_turbines"].iloc[0],
-            k=weibull_wf_data[weibull_wf_data["name"] == n][("k", "mean")].iloc[0],
-            c=weibull_wf_data[weibull_wf_data["name"] == n][("c", "mean")].iloc[0],
-        ))
+        aep.append(
+            annual_energy_production_function(
+                n_turbines=weibull_wf_data[weibull_wf_data["name"] == n][
+                    "n_turbines"
+                ].iloc[0],
+                k=weibull_wf_data[weibull_wf_data["name"] == n][
+                    ("k", "mean")
+                ].iloc[0],
+                c=weibull_wf_data[weibull_wf_data["name"] == n][
+                    ("c", "mean")
+                ].iloc[0],
+            )
+        )
     aep = pd.DataFrame(aep)
     aep.columns = ["AEP", "integral", "abserr"]
     weibull_wf_data = pd.concat([weibull_wf_data, aep], axis=1)
@@ -353,7 +373,8 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
         print(f"Working mass [kg]: {(weibull_wf_data['AHP'].iloc[x]):.6E}")
         caverns_low.append(
             working_mass_cumsum_1.loc[
-                working_mass_cumsum_1["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                working_mass_cumsum_1["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
             ]
             .head(1)
             .index[0]
@@ -361,22 +382,27 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
         )
         caverns_high.append(
             working_mass_cumsum_2.loc[
-                working_mass_cumsum_2["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                working_mass_cumsum_2["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
             ]
             .head(1)
             .index[0]
             + 1
         )
-        print(f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}")
+        print(
+            f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}"
+        )
         cap_max.append(
             max(
                 working_mass_cumsum_1.loc[
-                    working_mass_cumsum_1["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                    working_mass_cumsum_1["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
                 ]
                 .head(1)["capacity"]
                 .values[0],
                 working_mass_cumsum_2.loc[
-                    working_mass_cumsum_2["working_mass"] >= weibull_wf_data["AHP"].iloc[x]
+                    working_mass_cumsum_2["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
                 ]
                 .head(1)["capacity"]
                 .values[0],
@@ -400,7 +426,9 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
     print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
 
 
-def transmission_distance(cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)):
+def transmission_distance(
+    cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)
+):
     lond, lonm, latd, latm = injection_point_coords
     injection_point = gpd.GeoSeries(
         [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
@@ -428,9 +456,9 @@ def transmission_distance(cavern_df, wf_data, injection_point_coords=(-6, -12, 5
                     + cavern_df.iloc[[j]]["distance_ip"].values[0]
                 )
             )
-        cavern_df[f"dist_{wf_data['name'][i].replace(' ', '_')}"] = distance_wf[
-            wf_data["name"][i]
-        ]
+        cavern_df[f"dist_{wf_data['name'][i].replace(' ', '_')}"] = (
+            distance_wf[wf_data["name"][i]]
+        )
     return cavern_df, injection_point
 
 
@@ -605,9 +633,13 @@ def lcot_pipeline_function(
 def lcot_pipeline(wf_data, weibull_wf_data, cavern_df):
     for wf in list(wf_data["name"]):
         cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = lcot_pipeline_function(
-            capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)]["CAPEX"].values[0],
+            capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
+                "CAPEX"
+            ].values[0],
             d_transmission=cavern_df[f"dist_{wf.replace(' ', '_')}"],
-            ahp=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)]["AHP"].values[0],
+            ahp=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
+                "AHP"
+            ].values[0],
         )
     return cavern_df
 
