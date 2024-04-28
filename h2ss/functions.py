@@ -45,7 +45,7 @@ from h2ss import data as rd
 
 ROOF_THICKNESS = 80
 FLOOR_THICKNESS = 10
-CAVERN_DIAMETER = 80
+CAVERN_DIAMETER = 85
 CAVERN_SEPARATION = CAVERN_DIAMETER * 4
 PILLAR_WIDTH = CAVERN_DIAMETER * 3
 NTG_SLOPE = 0.0009251759226446605
@@ -521,7 +521,7 @@ def constraint_exploration_well(data_path, buffer=500):
     -----
     500 m buffer - suggested in the draft OREDP II p. 108 [#DECC23]_.
     """
-    wells = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
+    wells = rd.read_shapefile_from_zip(data_path=data_path)
     wells = wells[wells["AREA"].str.contains("Kish")].to_crs(rd.CRS)
     wells_b = gpd.GeoDataFrame(geometry=wells.buffer(buffer))
     return wells, wells_b
@@ -547,15 +547,15 @@ def constraint_wind_farm(data_path, dat_extent):
     The shapes are used as is without a buffer - suggested for renewable
     energy test site areas in the draft OREDP II p. 109 [#DECC23]_.
     """
-    wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
-    # keep only features near Kish Basin
-    wind_farms = (
-        wind_farms.to_crs(rd.CRS)
-        .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
-        .reset_index()
-        .sort_values("Name")
-    )
-    wind_farms.drop(columns=["index_right"], inplace=True)
+    wind_farms = rd.read_shapefile_from_zip(data_path=data_path)
+    wind_farms = wind_farms.to_crs(rd.CRS)
+    # keep only wind farms near the Kish Basin
+    wind_farms.drop(index=[0, 1, 7], inplace=True)
+    # merge wind farm polygons
+    wind_farms.at[2, "name"] = "Dublin Array"
+    wind_farms.at[3, "name"] = "Dublin Array"
+    wind_farms = wind_farms.dissolve(by="name")
+    wind_farms.reset_index(inplace=True)
     return wind_farms
 
 
@@ -581,7 +581,7 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
     1 NM (nautical mile) buffer - suggested in the draft OREDP II p. 108
     [#DECC23]_. 1 NM is equivalent to 1,852 m [#NIST16]_.
     """
-    shipping = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
+    shipping = rd.read_shapefile_from_zip(data_path=data_path)
     # keep only features near Kish Basin
     shipping = (
         shipping.to_crs(rd.CRS)
@@ -614,7 +614,7 @@ def constraint_shipwrecks(data_path, dat_extent, buffer=100):
     -----
     Archaeological Exclusion Zones recommendation - 100 m buffer [#RE21]_.
     """
-    shipwrecks = rd.read_shapefile_from_zip(data_path=os.path.join(data_path))
+    shipwrecks = rd.read_shapefile_from_zip(data_path=data_path)
     # keep only features near Kish Basin
     shipwrecks = (
         shipwrecks.to_crs(rd.CRS)
@@ -645,7 +645,7 @@ def constraint_subsea_cables(data_path, buffer=750):
     -----
     750 m buffer - suggested in the draft OREDP II p. 109-111 [#DECC23]_.
     """
-    cables = gpd.read_file(os.path.join(data_path))
+    cables = gpd.read_file(data_path)
     cables = cables.to_crs(rd.CRS)
     # remove point features
     cables = cables.drop(range(3)).reset_index(drop=True)
@@ -791,8 +791,9 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
             dat_extent=dat_extent,
         )
 
-        # for combining Codling wind farm polygons
-        wind_farms["Name_"] = wind_farms["Name"].str.split(expand=True)[0]
+        # assign capacities
+        wind_farms.sort_values(by=["name"], inplace=True)
+        wind_farms["cap"] = [1300, 824, 500]
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (
@@ -805,25 +806,22 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         weibull_df[w].rename(columns={"Value": w}, inplace=True)
 
         # average c and k over wind farms
-        weibull_df[w] = wind_farms.dissolve(by="Name_").merge(
+        weibull_df[w] = wind_farms.merge(
             weibull_df[w].dissolve(
-                by="Name_", aggfunc={w: ["min", "max", "mean"]}
+                by="name", aggfunc={w: ["min", "max", "mean"]}
             ),
-            on="Name_",
+            on="name",
         )
 
         # keep only relevant columns
         weibull_df[w] = weibull_df[w][
-            ["Name", (w, "min"), (w, "max"), (w, "mean")]
+            ["name", "cap", (w, "min"), (w, "max"), (w, "mean")]
         ]
 
         # reset index
         weibull_df[w] = weibull_df[w].reset_index(drop=True)
 
     # merge
-    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on="Name")
-
-    # remove abbreviation from name
-    weibull_df.at[2, "Name"] = weibull_df.at[2, "Name"].split(" (")[0]
+    weibull_df = pd.merge(weibull_df["c"], weibull_df["k"], on=["name", "cap"])
 
     return weibull_df

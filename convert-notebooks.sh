@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# activate Python environment
-source .venv/bin/activate
-
 # convert Jupyter Notebooks to Python scripts
 jupyter nbconvert --to script docs/notebooks/*.ipynb
 

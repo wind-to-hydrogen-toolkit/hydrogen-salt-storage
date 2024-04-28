@@ -13,6 +13,15 @@ References
     capacity to support a hydrogen economy? Estimating the salt cavern storage
     potential of bedded halite formations’, Journal of Energy Storage, 53, p.
     105109. https://doi.org/10.1016/j.est.2022.105109.
+.. [#Caglayan20] Caglayan, D. G., Weber, N., Heinrichs, H. U., Linßen, J.,
+    Robinius, M., Kukla, P. A., and Stolten, D. (2020). ‘Technical potential
+    of salt caverns for hydrogen storage in Europe’, International Journal of
+    Hydrogen Energy, 45(11), pp. 6793–6805.
+    https://doi.org/10.1016/j.ijhydene.2019.12.161.
+.. [#Allsop23] Allsop, C. et al. (2023) ‘Utilizing publicly available datasets
+    for identifying offshore salt strata and developing salt caverns for
+    hydrogen storage’, Geological Society, London, Special Publications,
+    528(1), pp. 139–169. Available at: https://doi.org/10.1144/SP528-2022-82.
 .. [#English23] English, J. M., English, K. L., Dunphy, R. B., Blake, S.,
     Walsh, J., Raine, R., Vafeas, N. A., and Salgado, P. R. (2023). ‘An
     Overview of Deep Geothermal Energy and Its Potential on the Island of
@@ -25,11 +34,6 @@ References
     A review and new correlations that include pressure dependence’,
     Desalination, 390, pp. 1–24. Available at:
     https://doi.org/10.1016/j.desal.2016.02.024.
-.. [#Caglayan20] Caglayan, D. G., Weber, N., Heinrichs, H. U., Linßen, J.,
-    Robinius, M., Kukla, P. A., and Stolten, D. (2020). ‘Technical potential
-    of salt caverns for hydrogen storage in Europe’, International Journal of
-    Hydrogen Energy, 45(11), pp. 6793–6805.
-    https://doi.org/10.1016/j.ijhydene.2019.12.161.
 .. [#Bell14] Bell, I. H., Wronski, J., Quoilin, S., and Lemort, V. (2014).
     ‘Pure and Pseudo-pure Fluid Thermophysical Property Evaluation and the
     Open-Source Thermophysical Property Library CoolProp’, Industrial &
@@ -48,7 +52,7 @@ import pandas as pd
 from pyfluids import Fluid, FluidsList, Input
 
 
-def cavern_volume(height, diameter=80, theta=20):
+def cavern_volume(height, diameter=85, theta=20):
     """Calculate the cavern volume.
 
     Parameters
@@ -96,24 +100,15 @@ def cavern_volume(height, diameter=80, theta=20):
     return v_cavern
 
 
-def corrected_cavern_volume(
-    v_cavern, f_scf=0.7, f_if=0.25, f_insf=0.865, f_bf=1.46
-):
+def corrected_cavern_volume(v_cavern, scf=0.7):
     """Apply correction factors to the cavern volume.
 
     Parameters
     ----------
     v_cavern : float
         Ideal cavern volume [m³]
-    f_scf : float
+    scf : float
         Shape correction factor
-    f_if : float
-        Insoluble fraction
-    f_insf : float
-        Correction for the fraction of insoluble material that remains in the
-        cavern after mechanical sweeping
-    f_bf : float
-        Bulking factor
 
     Returns
     -------
@@ -122,29 +117,17 @@ def corrected_cavern_volume(
 
     Notes
     -----
-    The corrected cavern volume, :math:`V_{cavern}` [m³] is approximated by
-    applying several correction factors to the bulk cavern volume,
-    :math:`V_{bulk}` [m³] as detailed in [#Williams22]_, Eqn. (1).
+    The corrected cavern volume, :math:`V_{cavern}` [m³] is defined as
 
     .. math::
-        V_{cavern} = V_{bulk} \\times SCF \\times (1 - IF \\times INSF
-        \\times BF)
-    .. math::
-        V_{cavern} = V_{bulk} \\times 0.7 \\times (1 - 0.25 \\times 0.865
-        \\times 1.46)
-    .. math::
-        V_{cavern} \\approx 0.48 \\, V_{bulk}
+        V_{cavern} = V_{bulk} \\times SCF
 
-    where :math:`SCF` is the shape correction factor (deviation of the
-    cavern's shape due to geological differences), :math:`IF` is the
-    insoluble fraction (insoluble material within the salt), :math:`INSF`
-    is the correction for the fraction of insoluble material that remains in
-    the cavern after mechanical sweeping that forms the sump of the cavern,
-    and :math:`BF` is the bulking factor (uneven stacking of the insoluble
-    material that forms the cavern sump).
+    where :math:`V_{bulk}` [m³] is the bulk cavern volume and :math:`SCF` is
+    the shape correction factor (deviation of the cavern's shape due to
+    geological differences). A :math:`SCF` of 0.7 is used as the default, as
+    defined in [#Jannel22]_, [#Williams22]_, [#Caglayan20]_, and [#Allsop23]_.
     """
-    correction_factors = f_scf * (1 - f_if * f_insf * f_bf)
-    return v_cavern * correction_factors
+    return v_cavern * scf
 
 
 def temperature_cavern_mid_point(height, depth_top, t_0=10, delta_t=37.5):

@@ -30,7 +30,7 @@ rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-wells = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
+wells = rd.read_shapefile_from_zip(data_path=DATA_FILE)
 
 wells.shape
 

@@ -83,96 +83,17 @@ plot_facet_maps(ds, extent, rd.CRS)
 
 # ## Stats
 
-
-def make_stats_plots(dat_xr):
-    """
-    Statistical plots for the halite Xarray dataset
-
-    Parameters
-    ----------
-    dat_xr : Xarray dataset of the halite data
-
-    Returns
-    -------
-    - The dataset converted into a dataframe
-    """
-
-    # convert to dataframe
-    dat_df = dat_xr.to_dataframe()[list(dat_xr.data_vars)]
-
-    # pairwise comparison of variables
-    sns.pairplot(
-        dat_df.reset_index(),
-        palette="flare",
-        hue="halite",
-        plot_kws={"alpha": 0.5},
-        vars=["Thickness", "TopDepthSeabed", "BaseDepthSeabed"],
-    )
-    plt.show()
-
-    # histograms
-    _, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
-    sns.histplot(
-        dat_df.reset_index(),
-        x="Thickness",
-        hue="halite",
-        ax=axes[0],
-        palette="rocket_r",
-        multiple="fill",
-        bins=100,
-        legend=False,
-    )
-    sns.histplot(
-        dat_df.reset_index(),
-        x="TopDepthSeabed",
-        hue="halite",
-        ax=axes[1],
-        palette="rocket_r",
-        multiple="fill",
-        bins=100,
-    )
-    plt.tight_layout()
-    plt.show()
-
-    # box plots
-    _, axes = plt.subplots(1, 3, figsize=(8, 4.5))
-    sns.boxplot(
-        dat_df.reset_index(),
-        y="Thickness",
-        hue="halite",
-        palette="flare",
-        ax=axes[0],
-    )
-    sns.boxplot(
-        dat_df.reset_index(),
-        y="TopDepthSeabed",
-        hue="halite",
-        palette="flare",
-        ax=axes[1],
-        legend=False,
-    )
-    sns.boxplot(
-        dat_df.reset_index(),
-        y="BaseDepthSeabed",
-        hue="halite",
-        palette="flare",
-        ax=axes[2],
-        legend=False,
-    )
-    plt.tight_layout()
-    plt.show()
-
-    return dat_df
-
-
-df = make_stats_plots(ds)
+df = ds.to_dataframe()[list(ds.data_vars)]
 
 df.describe()
+
+# max total thickness
+ds.sum(dim="halite").to_dataframe()[["Thickness", "ThicknessNet"]].max()
 
 # surface area
 shape = rd.halite_shape(dat_xr=ds)
 
-f"Surface area: {shape.area[0]:.2E} m\N{SUPERSCRIPT TWO}"
+print(f"Surface area: {shape.area[0]:.4E} m\N{SUPERSCRIPT TWO}")
 
 
 def plot_facet_maps_distr(
@@ -290,12 +211,12 @@ def plot_facet_maps_distr(
     #     fontsize=11.5,
     #     ncols=3
     # )
-    if v == "ThicknessNet":
-        plt.savefig(
-            os.path.join("graphics", f"fig_facet_thickness_ntg.jpg"),
-            format="jpg",
-            dpi=600,
-        )
+    # if v == "ThicknessNet":
+    #     plt.savefig(
+    #         os.path.join("graphics", "fig_facet_thickness_ntg.jpg"),
+    #         format="jpg",
+    #         dpi=600,
+    #     )
     plt.show()
 
 
@@ -304,7 +225,7 @@ plot_facet_maps_distr(
     extent,
     rd.CRS,
     "ThicknessNet",
-    [120 + 90 + n * 200 for n in range(4)],
+    [85 + 35 * n + 90 for n in range(7)],
     "Net thickness [m]",
 )
 
@@ -315,15 +236,6 @@ plot_facet_maps_distr(
     "TopDepthSeabed",
     [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
     "Top depth [m]",
-)
-
-plot_facet_maps_distr(
-    ds,
-    extent,
-    rd.CRS,
-    "Thickness",
-    [85 + 90, 155 + 90, 311 + 90],
-    "Thickness [m]",
 )
 
 # compare depths

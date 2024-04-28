@@ -49,7 +49,7 @@ wells, wells_b = fns.constraint_exploration_well(
 # test site areas in draft OREDP II p. 109
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
-        "data", "wind-farms", "wind-farms-foreshore-process.zip"
+        "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
     dat_extent=extent,
 )
@@ -123,7 +123,7 @@ def plot_map(dat_xr, fontsize=11.5):
     shape.plot(ax=axis, zorder=1, linewidth=0, facecolor="white", alpha=0.35)
     shape.plot(
         ax=axis,
-        edgecolor=sns.color_palette("flare", 4)[-2],
+        edgecolor="darkslategrey",
         color="none",
         linewidth=2,
         zorder=3,
@@ -133,28 +133,35 @@ def plot_map(dat_xr, fontsize=11.5):
             facecolor="none",
             linewidth=2,
             label="Kish Basin boundary",
-            edgecolor=sns.color_palette("flare", 4)[-2],
+            edgecolor="darkslategrey",
         )
     )
 
     # add constraint layers
-    for df, color, label in zip(
+    for df, hatch, label in zip(
         [buffer.overlay(wind_farms, how="difference"), wind_farms],
-        ["slategrey", sns.color_palette("GnBu", 10)[-1]],
+        ["//", "xx"],
         ["Exclusion buffer", "Wind farm"],
     ):
         df.plot(
-            ax=axis, facecolor="none", hatch="//", edgecolor=color, zorder=1
+            ax=axis,
+            facecolor="none",
+            hatch=hatch,
+            edgecolor="slategrey",
+            zorder=1,
         )
         legend_handles.append(
             mpatches.Patch(
-                facecolor="none", hatch="//", edgecolor=color, label=label
+                facecolor="none",
+                hatch=hatch,
+                edgecolor="slategrey",
+                label=label,
             )
         )
 
     for df, color, linewidth, label in zip(
         [cables, shipping],
-        [sns.color_palette("GnBu", 10)[-4], sns.color_palette("flare", 4)[0]],
+        ["tab:blue", "tab:red"],
         [2, 3],
         ["Subsea cable", "Shipping route"],
     ):
@@ -179,9 +186,17 @@ def plot_map(dat_xr, fontsize=11.5):
         )
 
     # add basemap and map elements
+    basemap = cx.providers.CartoDB.Voyager
     cx.add_basemap(
-        axis, crs=rd.CRS, source=cx.providers.CartoDB.Voyager, zoom=11
+        axis, crs=rd.CRS, source=basemap, zoom=11, attribution=False
     )
+    axis.text(
+        shape.bounds["minx"][0] - 9800,
+        shape.bounds["miny"][0] - 1300,
+        basemap["attribution"],
+        fontsize=9.5,
+    )
+
     axis.gridlines(
         draw_labels={"bottom": "x", "left": "y"},
         alpha=0.25,
@@ -207,8 +222,12 @@ def plot_map(dat_xr, fontsize=11.5):
         fontsize=fontsize,
     )
     plt.title(None)
-
     plt.tight_layout()
+    plt.savefig(
+        os.path.join("graphics", "fig_constraints.jpg"),
+        format="jpg",
+        dpi=600,
+    )
     plt.show()
 
 

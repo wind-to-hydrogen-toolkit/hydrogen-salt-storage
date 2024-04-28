@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Offshore wind farms
+# # Offshore wind farms and pipelines
 #
-# - <https://data.gov.ie/dataset/wind-farms-foreshore-process>
-# - <https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::wind-farms-foreshore-process>
+# - <https://data.gov.ie/dataset/marine-area-consent-wind>
+# - <https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::marine-area-consent-wind>
+# - <https://data.gov.ie/dataset/offshore-gas-pipelines>
+# - <https://data-housinggovie.opendata.arcgis.com/datasets/housinggovie::offshore-gas-pipelines>
 
 import os
 from zipfile import ZipFile
@@ -24,11 +26,11 @@ DATA_DIR = os.path.join("data", "wind-farms")
 
 URL = (
     "https://opendata.arcgis.com/api/v3/datasets/"
-    "803a4ecc22aa4cc09111072a0bbc4fac_2/downloads/"
+    "803a4ecc22aa4cc09111072a0bbc4fac_3/downloads/"
     "data?format=shp&spatialRefId=4326&where=1%3D1"
 )
 
-FILE_NAME = "wind-farms-foreshore-process.zip"
+FILE_NAME = "marine-area-consent-wind.zip"
 
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
@@ -44,7 +46,7 @@ rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()
 
-wind_farms = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
+wind_farms = rd.read_shapefile_from_zip(data_path=DATA_FILE)
 
 wind_farms.crs
 
@@ -52,13 +54,10 @@ wind_farms.shape
 
 wind_farms.columns
 
-wind_farms[["Name", "Type", "MDM_Catego"]]
-
-# minor name fix
-wind_farms.at[1, "Name"] = "Kilmichael Point"
+wind_farms
 
 ax = wind_farms.to_crs(3857).plot(
-    column="Name",
+    column="name",
     cmap="tab20",
     alpha=0.5,
     figsize=(10, 10),
@@ -71,7 +70,33 @@ plt.xlim(-1.2e6, -0.3e6)
 plt.ylim(6.65e6, 7.475e6)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 
-plt.title("Wind Farms (Foreshore Process)")
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
+
+# keep only wind farms near the Kish Basin
+wind_farms.drop(index=[0, 1, 7], inplace=True)
+
+# merge wind farm polygons
+wind_farms.at[2, "name"] = "Dublin Array"
+wind_farms.at[3, "name"] = "Dublin Array"
+wind_farms = wind_farms.dissolve(by="name")
+wind_farms.reset_index(inplace=True)
+
+wind_farms
+
+ax = wind_farms.to_crs(3857).plot(
+    column="name",
+    alpha=0.5,
+    figsize=(10, 10),
+    legend=True,
+    legend_kwds={"loc": "upper right"},
+    linewidth=0.5,
+    edgecolor="darkslategrey",
+)
+plt.xlim(-0.72e6, -0.62e6)
+plt.ylim(6.975e6, 7.15e6)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
 
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.tight_layout()
@@ -87,48 +112,6 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # shape of the halite
 shape = rd.halite_shape(dat_xr=ds)
-
-# wind farms in the Irish Sea
-wind_farms_ = wind_farms.sjoin(
-    gpd.GeoDataFrame(geometry=extent.buffer(50000)).to_crs(wind_farms.crs)
-)
-
-ax = wind_farms_.to_crs(3857).plot(
-    column="Name",
-    alpha=0.5,
-    figsize=(9, 9),
-    cmap="tab20",
-    linewidth=0.5,
-    edgecolor="darkslategrey",
-    legend=True,
-)
-plt.xlim(-7.5e5, -5.25e5)
-extent.to_crs(3857).boundary.plot(ax=ax, alpha=0)
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
-
-plt.title("Wind Farms in the Irish Sea")
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.tight_layout()
-plt.show()
-
-# wind farms near Kish Basin
-wind_farms_ = (
-    wind_farms.sjoin(
-        gpd.GeoDataFrame(geometry=extent.buffer(3000)).to_crs(wind_farms.crs)
-    )
-    .reset_index()
-    .sort_values("Name")
-)
-
-# combine Codling wind farm polygons
-wind_farms_["Name_"] = wind_farms_["Name"].str.split(expand=True)[0]
-
-wind_farms_ = wind_farms_.dissolve(by="Name_")
-
-# remove abbreviation from name
-wind_farms_.at["North", "Name"] = wind_farms_.at["North", "Name"].split(" (")[
-    0
-]
 
 plt.figure(figsize=(11, 11))
 ax = plt.axes(projection=ccrs.epsg(rd.CRS))
@@ -151,8 +134,8 @@ plt.xlim(xmin - 8550, xmax + 1000)
 # wind farms
 colours = ["firebrick", "black", "royalblue"]
 legend_handles = []
-for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+for index, colour in zip(range(len(wind_farms)), colours):
+    wind_farms.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
         ax=ax, hatch="///", facecolor="none", linewidth=2, edgecolor=colour
     )
     legend_handles.append(
@@ -160,7 +143,7 @@ for index, colour in zip(range(len(wind_farms_)), colours):
             facecolor="none",
             hatch="///",
             edgecolor=colour,
-            label=wind_farms_.iloc[[index]]["Name"].values[0],
+            label=wind_farms.iloc[[index]]["name"].values[0],
         )
     )
 
@@ -186,6 +169,12 @@ ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
 
 plt.title(None)
 plt.tight_layout()
+
+# plt.savefig(
+#     os.path.join("graphics", "fig_offshore_wind_farms.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()
 
 plt.figure(figsize=(9, 9))
@@ -202,8 +191,8 @@ plt.ylim(ymin - 10500, ymax + 10500)
 # wind farms
 colours = ["firebrick", "seagreen", "royalblue"]
 legend_handles = []
-for index, colour in zip(range(len(wind_farms_)), colours):
-    wind_farms_.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+for index, colour in zip(range(len(wind_farms)), colours):
+    wind_farms.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
         ax=ax, hatch="///", facecolor="none", linewidth=2, edgecolor=colour
     )
     legend_handles.append(
@@ -211,7 +200,7 @@ for index, colour in zip(range(len(wind_farms_)), colours):
             facecolor="none",
             hatch="///",
             edgecolor=colour,
-            label=wind_farms_.iloc[[index]]["Name"].values[0],
+            label=wind_farms.iloc[[index]]["name"].values[0],
         )
     )
 
@@ -243,14 +232,65 @@ plt.tight_layout()
 plt.show()
 
 # distance from Kish Bank
-wind_farms_ = wind_farms_.dissolve("Name_").reset_index().to_crs(rd.CRS)
+wind_farms_ = wind_farms.to_crs(rd.CRS)
 
 for i in range(len(wind_farms_)):
     print(
-        wind_farms_.iloc[[i]]["Name"].values[0],
+        wind_farms_.iloc[[i]]["name"].values[0],
         "is",
-        wind_farms_.iloc[[i]]
-        .distance(shape["geometry"], align=False)
-        .values[0],
+        f"{wind_farms_.iloc[[i]].distance(shape['geometry'], align=False).values[0]:,.2f}",
         "m away from Kish Bank",
     )
+
+# ## Distance from pipelines
+
+DATA_DIR = os.path.join("data", "pipelines")
+
+URL = (
+    "https://opendata.arcgis.com/api/v3/datasets/"
+    "dc6e3849b9fc43bb93078c5d0093bf6a_1/downloads/data?"
+    "format=shp&spatialRefId=4326&where=1%3D1"
+)
+
+FILE_NAME = "pipelines.zip"
+
+DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
+
+rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
+
+ZipFile(DATA_FILE).namelist()
+
+pipelines = rd.read_shapefile_from_zip(data_path=DATA_FILE)
+
+pipelines.head()
+
+pipelines.crs
+
+ax = (
+    pipelines.to_crs(rd.CRS)
+    .overlay(gpd.GeoDataFrame(geometry=shape.buffer(50000)))
+    .plot(color="crimson")
+)
+shape.buffer(1000).buffer(-1000).boundary.plot(
+    ax=ax, color="black", linewidth=1
+)
+wind_farms_.plot(ax=ax, alpha=0.5, column="name")
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, crs=rd.CRS)
+
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.tight_layout()
+plt.show()
+
+for i in range(len(wind_farms_)):
+    print(
+        wind_farms_.iloc[[i]]["name"].values[0],
+        "is",
+        f"{wind_farms_.iloc[[i]].distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
+        "m away from the nearest pipeline",
+    )
+
+print(
+    "Kish Basin is",
+    f"{shape.distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
+    "m away from the nearest pipeline",
+)

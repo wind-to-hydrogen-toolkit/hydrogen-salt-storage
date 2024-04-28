@@ -3,7 +3,7 @@
 Optimising green hydrogen storage in man-made submarine salt caverns
 
 https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
-https://hydrogen-salt-storage.readthedocs.io
+https://wind-to-hydrogen-toolkit.gitlab.io/hydrogen-salt-storage
 """
 
 __author__ = """Nithiya Streethran"""

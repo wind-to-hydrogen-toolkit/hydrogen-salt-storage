@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Cavern storage capacity
+# # Cavern storage capacity for variable heights
 
 import os
 
 import cartopy.crs as ccrs
 import contextily as cx
 import geopandas as gpd
-import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -83,7 +82,7 @@ edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 zones, zds = fns.zones_of_interest(
     dat_xr=ds,
-    constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
+    constraints={"net_height": 85, "min_depth": 500, "max_depth": 2000},
 )
 
 # ## Generate caverns
@@ -102,7 +101,7 @@ caverns = fns.cavern_dataframe(
 # label caverns by depth and heights
 caverns = fns.label_caverns(
     cavern_df=caverns,
-    heights=[120],
+    heights=[85, 155, 311],
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
 )
 
@@ -190,14 +189,8 @@ caverns.drop(
         "TopDepth",
         "TopTWT",
         "BaseDepthSeabed",
-        "cavern_height",
-        "cavern_total_volume",
-        "cavern_volume",
     ]
 ).describe()
-
-# fixed values
-caverns[["cavern_height", "cavern_total_volume", "cavern_volume"]].iloc[0]
 
 # totals
 caverns[
@@ -214,20 +207,28 @@ caverns[
 compare.electricity_demand_ie(data=caverns["capacity"])
 
 # total capacity at various depth/height combinations
-s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].sum()
+s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
+    ["capacity"]
+].sum()
 s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
 s.groupby("depth").sum()[["capacity"]]
 
+s.groupby("cavern_height").sum()[["capacity"]]
+
 s.groupby("halite").sum()[["capacity"]]
 
 # number of caverns
-s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].count()
+s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
+    ["capacity"]
+].count()
 s["%"] = s["capacity"] / len(caverns) * 100
 s
 
 s.groupby("depth").sum()[["capacity"]]
+
+s.groupby("cavern_height").sum()[["capacity"]]
 
 s.groupby("halite").sum()[["capacity"]]
 
@@ -237,19 +238,12 @@ s.groupby("halite").sum()[["capacity"]]
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-def plot_map_alt(
-    dat_xr,
-    cavern_df,
-    zones_gdf,
-    classes,
-    # quantity="capacity", quantity_label="Hydrogen storage \ncapacity [GWh]", top_depth=True,
-    fontsize=11.5,
-):
+def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
     """Helper function to plot caverns within the zones of interest"""
     plt.figure(figsize=(20, 11.5))
     axis1 = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles1 = []
-    classes = sorted(classes)
+    classes = sorted(list(int(x) for x in caverns["cavern_height"].unique()))
 
     # halite boundary - use buffering to smooth the outline
     shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
@@ -313,78 +307,66 @@ def plot_map_alt(
     )
 
     legend_handles1.append(
-        mpatches.Patch(
-            label="Hydrogen storage \ncapacity [GWh]", visible=False
-        )
+        mpatches.Patch(label="Cavern height [m]", visible=False)
     )
 
     colours = [int(n * 255 / (len(classes) - 1)) for n in range(len(classes))]
     for n, y in enumerate(colours):
-        if n == 0:
-            # c = cavern_df[cavern_df["capacity"] < classes[0]]
-            label1 = f"< {classes[0]:.0f}"
-        elif n == len(colours) - 1:
-            # c = cavern_df[cavern_df["capacity"] >= classes[-2]]
-            label1 = f"≥ {classes[-2]:.0f}"
+        c = cavern_df[cavern_df["cavern_height"] == classes[n]]
+        label1 = f"{classes[n]}"
+        if top_depth:
+            for df, markersize in zip(
+                [
+                    c[c["depth"] == "500 - 1,000"],
+                    c[c["depth"] == "1,000 - 1,500"],
+                    c[c["depth"] == "1,500 - 2,000"],
+                ],
+                [30, 60, 30],
+            ):
+                if len(df) > 0:
+                    df.centroid.plot(
+                        ax=axis1,
+                        zorder=3,
+                        linewidth=0,
+                        marker=".",
+                        markersize=markersize,
+                        color=sns.color_palette("flare", 256)[y],
+                    )
         else:
-            # c = cavern_df[
-            #     (cavern_df["capacity"] >= classes[n - 1])
-            #     & (cavern_df["capacity"] < classes[n])
-            # ]
-            label1 = f"{classes[n - 1]:.0f}–{classes[n]:.0f}"
-        # if top_depth:
-        #     for df, markersize in zip(
-        #         [
-        #             c[c["depth"] == "500 - 1,000"],
-        #             c[c["depth"] == "1,000 - 1,500"],
-        #             c[c["depth"] == "1,500 - 2,000"],
-        #         ],
-        #         [20, 50, 20],
-        #     ):
-        #         if len(df) > 0:
-        #             df.centroid.plot(
-        #                 ax=axis1,
-        #                 zorder=3,
-        #                 linewidth=0,
-        #                 marker=".",
-        #                 markersize=markersize,
-        #                 color=sns.color_palette("flare", 256)[y],
-        #             )
-        # else:
-        gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
-            ax=axis1,
-            scheme="UserDefined",
-            classification_kwds={"bins": classes},
-            column="capacity",
-            zorder=3,
-            marker=".",
-            cmap="flare",
-            markersize=40,
-        )
+            gpd.GeoDataFrame(cavern_df, geometry=cavern_df.centroid).plot(
+                ax=axis1,
+                scheme="UserDefined",
+                classification_kwds={"bins": classes[1:]},
+                column="cavern_height",
+                zorder=3,
+                marker=".",
+                cmap="flare",
+                markersize=40,
+            )
         legend_handles1.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[y], label=label1
             )
         )
 
-    # if top_depth:
-    #     legend_handles1.append(
-    #         mpatches.Patch(label="Cavern top depth [m]", visible=False)
-    #     )
-    #     for markersize, label1 in zip(
-    #         [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
-    #     ):
-    #         legend_handles1.append(
-    #             Line2D(
-    #                 [0],
-    #                 [0],
-    #                 marker=".",
-    #                 linewidth=0,
-    #                 label=label1,
-    #                 color="darkslategrey",
-    #                 markersize=markersize,
-    #             )
-    #         )
+    if top_depth:
+        legend_handles1.append(
+            mpatches.Patch(label="Cavern top depth [m]", visible=False)
+        )
+        for markersize, label1 in zip(
+            [6, 3], ["1,000–1,500", "500–1,000 or \n1,500–2,000"]
+        ):
+            legend_handles1.append(
+                Line2D(
+                    [0],
+                    [0],
+                    marker=".",
+                    linewidth=0,
+                    label=label1,
+                    color="darkslategrey",
+                    markersize=markersize,
+                )
+            )
 
     plt.xlim(shape.bounds["minx"][0] - 1000, shape.bounds["maxx"][0] + 1000)
     plt.ylim(shape.bounds["miny"][0] - 1000, shape.bounds["maxy"][0] + 1000)
@@ -428,13 +410,11 @@ def plot_map_alt(
 
     plt.tight_layout()
     plt.savefig(
-        os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
+        os.path.join("graphics", "fig_caverns_capacity_ntg_height.jpg"),
         format="jpg",
         dpi=600,
     )
     plt.show()
 
 
-classes = mc.Quantiles(caverns["capacity"], k=6)
-
-plot_map_alt(ds, caverns, zones, list(classes.bins))
+plot_map_alt(ds, caverns, zones)

@@ -12,7 +12,7 @@ authors:
     affiliation: University College Cork
 repository-code: >-
   https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
-url: 'https://hydrogen-salt-storage.readthedocs.io'
+url: 'https://wind-to-hydrogen-toolkit.gitlab.io/hydrogen-salt-storage'
 abstract: >-
   Optimising production and long-term bulk storage of
   hydrogen from offshore wind in salt caverns in the Irish
