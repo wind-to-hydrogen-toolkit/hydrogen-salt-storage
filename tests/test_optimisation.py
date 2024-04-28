@@ -67,8 +67,8 @@ def integrate_lambda(k, c):
     )
 
 
-def test_annual_energy_production():
-    """Test ``h2ss.optimisation.annual_energy_production``"""
+def test_annual_energy_production_function():
+    """Test ``h2ss.optimisation.annual_energy_production_function``"""
     n_turbines = [50, 65, 80, 95]
     k_vals = [1.4, 1.7, 1.9, 2.0, 2.15]
     c_vals = [5.1, 9.2, 11, 10.4, 8]
@@ -79,7 +79,7 @@ def test_annual_energy_production():
     aep_func = []
     for n, k, c in zip(n_turbines, k_vals, c_vals):
         aep_func.append(
-            opt.annual_energy_production(n_turbines=n, k=k, c=c)[0]
+            opt.annual_energy_production_function(n_turbines=n, k=k, c=c)[0]
         )
         integration = integrate.quad(
             integrate_lambda(k=k, c=c),
@@ -132,8 +132,8 @@ def test_capex_pipeline():
     assert opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate) == capex
 
 
-def test_lcot_pipeline():
-    """Test ``h2ss.optimisation.lcot_pipeline``"""
+def test_lcot_pipeline_function():
+    """Test ``h2ss.optimisation.lcot_pipeline_function``"""
     capex = 1000
     transmission_distance = 100
     ahp = 500
@@ -151,9 +151,9 @@ def test_lcot_pipeline():
         ahp / np.power((1 + discount_rate), year)
         for year in range(lifetime + 1)
     )
-    lcot_func = opt.lcot_pipeline(
+    lcot_func = opt.lcot_pipeline_function(
         capex=capex,
-        transmission_distance=transmission_distance,
+        d_transmission=transmission_distance,
         ahp=ahp,
         opex_ratio=opex_ratio,
         discount_rate=discount_rate,
