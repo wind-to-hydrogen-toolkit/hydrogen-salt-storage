@@ -631,8 +631,8 @@ def lcot_pipeline_function(
     return (capex * d_transmission + opex * f) / (ahp * f)
 
 
-def lcot_pipeline(wf_data, weibull_wf_data, cavern_df):
-    for wf in list(wf_data["name"]):
+def lcot_pipeline(weibull_wf_data, cavern_df):
+    for wf in list(weibull_wf_data["name"]):
         cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = lcot_pipeline_function(
             capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
                 "CAPEX"

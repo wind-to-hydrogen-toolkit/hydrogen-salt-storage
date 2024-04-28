@@ -4,6 +4,8 @@
 
 import numpy as np
 from scipy import integrate
+import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from h2ss import optimisation as opt
 
@@ -160,3 +162,23 @@ def test_lcot_pipeline_function():
         lifetime=lifetime,
     )
     assert lcot_func == lcot
+
+
+def test_lcot_pipeline():
+    """Test ``h2ss.optimisation.lcot_pipeline``"""
+    weibull_wf_data = pd.DataFrame({"name": ["Dublin Array", "Codling", "NISA"], "CAPEX": [1000, 2000, 3000], "AHP": [8000, 9000, 10000]})
+    cavern_df = pd.DataFrame({"dist_Dublin_Array": [x + 2 for x in range(20)], "dist_Codling": [x + 3 for x in range(20)], "dist_NISA": [x + 4 for x in range(20)]})
+
+    for wf in list(weibull_wf_data["name"]):
+        cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = opt.lcot_pipeline_function(
+            capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
+                "CAPEX"
+            ].values[0],
+            d_transmission=cavern_df[f"dist_{wf.replace(' ', '_')}"],
+            ahp=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
+                "AHP"
+            ].values[0],
+        )
+
+    cavern_df_func = opt.lcot_pipeline(weibull_wf_data=weibull_wf_data, cavern_df=cavern_df)
+    assert_frame_equal(cavern_df_func, cavern_df)
