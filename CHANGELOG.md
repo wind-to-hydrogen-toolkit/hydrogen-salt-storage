@@ -1,6 +1,6 @@
 # Changelog
 
-## 2024-04-28
+## [2024.04.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.04.1)
 
 - update task and script for converting notebooks
 - update documentation link - hosted on GitLab pages
