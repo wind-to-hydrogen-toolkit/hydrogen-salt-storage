@@ -6,8 +6,12 @@ import numpy as np
 from scipy import integrate
 import pandas as pd
 from pandas.testing import assert_frame_equal
+from geopandas.testing import assert_geodataframe_equal, assert_geoseries_equal
+import geopandas as gpd
+from shapely.geometry import Point, Polygon
 
 from h2ss import optimisation as opt
+from h2ss import data as rd
 
 
 def test_ref_power_curve():
@@ -105,6 +109,45 @@ def test_annual_hydrogen_production():
     ) == aep / (e_elec / eta_conv + e_pcl)
 
 
+def test_transmission_distance():
+    """Test ``h2ss.optimisation.transmission_distance``"""
+    wf_data = gpd.GeoDataFrame({"name": ["Dublin Array", "Codling", "NISA"], "geometry": [Polygon([(104.0, -27.0), (104.0, -26.9), (104.1, -26.9), (104.1, -27.0), (104.0, -27.0)]), Polygon([(105.0, -26.0), (105.0, -25.9), (105.1, -25.9), (105.1, -26.0), (105.0, -26.0)]), Polygon([(103.0, -28.0), (103.0, -27.9), (103.1, -27.9), (103.1, -28.0), (103.0, -28.0)])]}, crs=4326).to_crs(rd.CRS)
+    cavern_df = gpd.GeoDataFrame({"geometry": [Point([111.0, -29.0]), Point([111.1, -29.1]), Point([111.2, -29.2]), Point([111.3, -29.3]), Point([111.4, -29.4])]}, crs=4326).to_crs(rd.CRS)
+    injection_point_coords = (114, 10, -28, -1)
+    lond, lonm, latd, latm = injection_point_coords
+    injection_point = gpd.GeoSeries(
+        [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
+    ).to_crs(rd.CRS)
+    distance_ip = []
+    for j in range(len(cavern_df)):
+        distance_ip.append(
+            injection_point.distance(
+                cavern_df.iloc[[j]]["geometry"], align=False
+            ).values[0]
+            / 1000
+        )
+    cavern_df["distance_ip"] = distance_ip
+    distance_wf = {}
+    for i in range(len(wf_data)):
+        distance_wf[wf_data["name"][i]] = []
+        for j in range(len(cavern_df)):
+            distance_wf[wf_data["name"][i]].append(
+                (
+                    wf_data.iloc[[i]]
+                    .distance(cavern_df.iloc[[j]]["geometry"], align=False)
+                    .values[0]
+                    / 1000
+                    + cavern_df.iloc[[j]]["distance_ip"].values[0]
+                )
+            )
+        cavern_df[f"dist_{wf_data['name'][i].replace(' ', '_')}"] = (
+            distance_wf[wf_data["name"][i]]
+        )
+    cavern_df_func, injection_point_func = opt.transmission_distance(cavern_df=cavern_df, wf_data=wf_data, injection_point_coords=injection_point_coords)
+    assert_geodataframe_equal(cavern_df_func, cavern_df)
+    assert_geoseries_equal(injection_point_func, injection_point)
+
+
 def test_electrolyser_capacity():
     """Test ``h2ss.optimisation.electrolyser_capacity``"""
     n_turbines_list = [25, 50, 75, 100, 125]
@@ -169,15 +212,11 @@ def test_lcot_pipeline():
     weibull_wf_data = pd.DataFrame({"name": ["Dublin Array", "Codling", "NISA"], "CAPEX": [1000, 2000, 3000], "AHP": [8000, 9000, 10000]})
     cavern_df = pd.DataFrame({"dist_Dublin_Array": [x + 2 for x in range(20)], "dist_Codling": [x + 3 for x in range(20)], "dist_NISA": [x + 4 for x in range(20)]})
 
-    for wf in list(weibull_wf_data["name"]):
+    for wf, capex, ahp in zip(list(weibull_wf_data["name"]), list(weibull_wf_data["CAPEX"]), list(weibull_wf_data["AHP"])):
         cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = opt.lcot_pipeline_function(
-            capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
-                "CAPEX"
-            ].values[0],
+            capex=capex,
             d_transmission=cavern_df[f"dist_{wf.replace(' ', '_')}"],
-            ahp=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
-                "AHP"
-            ].values[0],
+            ahp=ahp,
         )
 
     cavern_df_func = opt.lcot_pipeline(weibull_wf_data=weibull_wf_data, cavern_df=cavern_df)
