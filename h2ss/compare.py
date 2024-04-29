@@ -111,6 +111,79 @@ def distance_from_pipeline(cavern_df, pipeline_data_path):
     )
 
 
+def calculate_number_of_caverns(cavern_df, weibull_wf_data):
+    working_mass_cumsum_1 = (
+        cavern_df.sort_values("working_mass", ascending=False)
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    working_mass_cumsum_2 = (
+        cavern_df.sort_values("working_mass")
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    caverns_low = []
+    caverns_high = []
+    cap_max = []
+    for x in range(len(weibull_wf_data)):
+        print(weibull_wf_data["name"].iloc[x])
+        print(f"Working mass [kg]: {(weibull_wf_data['AHP'].iloc[x]):.6E}")
+        caverns_low.append(
+            working_mass_cumsum_1.loc[
+                working_mass_cumsum_1["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        caverns_high.append(
+            working_mass_cumsum_2.loc[
+                working_mass_cumsum_2["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        print(
+            f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}"
+        )
+        cap_max.append(
+            max(
+                working_mass_cumsum_1.loc[
+                    working_mass_cumsum_1["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+                working_mass_cumsum_2.loc[
+                    working_mass_cumsum_2["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+            )
+        )
+        print(f"Capacity (approx.) [GWh]: {(cap_max[x]):,.2f}")
+        print("-" * 78)
+    # total number of caverns
+    print(
+        "Total number of caverns required: "
+        f"{sum(caverns_low)}–{sum(caverns_high)}"
+    )
+    print("-" * 78)
+    # number of caverns as a percentage of the total available caverns
+    print(
+        "Number of caverns required as a percentage of all available caverns:"
+        f"\n{(sum(caverns_low) / len(cavern_df) * 100):.2f}–"
+        f"{(sum(caverns_high) / len(cavern_df) * 100):.2f}%"
+    )
+    print("-" * 78)
+    # total capacity
+    print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
+
+
 def load_all_data():
     """Load all input datasets."""
     ds, extent = rd.kish_basin_data_depth_adjusted(
