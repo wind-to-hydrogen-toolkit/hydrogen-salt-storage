@@ -57,6 +57,7 @@ from scipy import integrate
 from shapely.geometry import Point
 
 from h2ss import data as rd
+from h2ss import capacity as cap
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -445,7 +446,7 @@ def electrolyser_capacity(
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
+def capex_pipeline(e_cap, p_rate=0.0055, rho=cap.HYDROGEN_DENSITY, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
