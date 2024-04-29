@@ -119,30 +119,15 @@ def test_transmission_distance():
         [Point(lond + lonm / 60, latd + latm / 60), Point(lond + lonm / 60, latd + latm / 60)], crs=4326
     ).to_crs(rd.CRS).drop_duplicates()
     distance_ip = []
-    for j in range(len(cavern_df)):
-        distance_ip.append(
-            injection_point.distance(
-                cavern_df.iloc[[j]]["geometry"], align=False
-            ).values[0]
-            / 1000
-        )
+    for j in list(cavern_df["geometry"]):
+        distance_ip.append(injection_point.distance(j, align=False) / 1000)
     cavern_df["distance_ip"] = distance_ip
     distance_wf = {}
-    for i in range(len(wf_data)):
-        distance_wf[wf_data["name"][i]] = []
-        for j in range(len(cavern_df)):
-            distance_wf[wf_data["name"][i]].append(
-                (
-                    wf_data.iloc[[i]]
-                    .distance(cavern_df.iloc[[j]]["geometry"], align=False)
-                    .values[0]
-                    / 1000
-                    + cavern_df.iloc[[j]]["distance_ip"].values[0]
-                )
-            )
-        cavern_df[f"dist_{wf_data['name'][i].replace(' ', '_')}"] = (
-            distance_wf[wf_data["name"][i]]
-        )
+    for i, g in zip(list(wf_data["name"]), list(wf_data["geometry"])):
+        distance_wf[i] = []
+        for j, k in zip(list(cavern_df["geometry"]), list(cavern_df["distance_ip"])):
+            distance_wf[i].append(g.distance(j) / 1000 + k)
+        cavern_df[f"dist_{i.replace(' ', '_')}"] = distance_wf[i]
     cavern_df_func, injection_point_func = opt.transmission_distance(cavern_df=cavern_df, wf_data=wf_data, injection_point_coords=injection_point_coords)
     assert_geodataframe_equal(cavern_df_func, cavern_df)
     assert_geoseries_equal(injection_point_func, injection_point)
