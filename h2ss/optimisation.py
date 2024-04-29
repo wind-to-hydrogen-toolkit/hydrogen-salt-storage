@@ -431,10 +431,16 @@ def transmission_distance(
     cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)
 ):
     lond, lonm, latd, latm = injection_point_coords
+    # create injection point
+    # hacky way to prevent:
+    # "DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is
+    # deprecated, and will error in future. Ensure you extract a single
+    # element from your array before performing this operation. (Deprecated
+    # NumPy 1.25.)"
+    # during the transformation from a single-row series
     injection_point = gpd.GeoSeries(
-        [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
-    )
-    injection_point = injection_point.to_crs(rd.CRS)
+        [Point(lond + lonm / 60, latd + latm / 60), Point(lond + lonm / 60, latd + latm / 60)], crs=4326
+    ).to_crs(rd.CRS).drop_duplicates()
     distance_ip = []
     for j in range(len(cavern_df)):
         distance_ip.append(

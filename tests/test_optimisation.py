@@ -111,13 +111,13 @@ def test_annual_hydrogen_production():
 
 def test_transmission_distance():
     """Test ``h2ss.optimisation.transmission_distance``"""
-    wf_data = gpd.GeoDataFrame({"name": ["Dublin Array", "Codling", "NISA"], "geometry": [Polygon([(104.0, -27.0), (104.0, -26.9), (104.1, -26.9), (104.1, -27.0), (104.0, -27.0)]), Polygon([(105.0, -26.0), (105.0, -25.9), (105.1, -25.9), (105.1, -26.0), (105.0, -26.0)]), Polygon([(103.0, -28.0), (103.0, -27.9), (103.1, -27.9), (103.1, -28.0), (103.0, -28.0)])]}, crs=4326).to_crs(rd.CRS)
-    cavern_df = gpd.GeoDataFrame({"geometry": [Point([111.0, -29.0]), Point([111.1, -29.1]), Point([111.2, -29.2]), Point([111.3, -29.3]), Point([111.4, -29.4])]}, crs=4326).to_crs(rd.CRS)
-    injection_point_coords = (114, 10, -28, -1)
+    wf_data = gpd.GeoDataFrame({"name": ["Dublin Array", "Codling"], "geometry": [Polygon([(10.0, 64.0), (10.0, 63.9), (10.1, 63.9), (10.1, 64.0), (10.0, 64.0)]), Polygon([(10.2, 64.2), (10.2, 63.8), (10.2, 63.8), (10.2, 64.2), (10.2, 64.2)])]}, crs=4326).to_crs(rd.CRS)
+    cavern_df = gpd.GeoDataFrame({"geometry": [Point([11.0, 65.0]), Point([11.1, 65.1]), Point([11.2, 65.2]), Point([11.3, 65.3]), Point([11.4, 65.4])]}, crs=4326).to_crs(rd.CRS)
+    injection_point_coords = (12, 10, 66, 30)
     lond, lonm, latd, latm = injection_point_coords
     injection_point = gpd.GeoSeries(
-        [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
-    ).to_crs(rd.CRS)
+        [Point(lond + lonm / 60, latd + latm / 60), Point(lond + lonm / 60, latd + latm / 60)], crs=4326
+    ).to_crs(rd.CRS).drop_duplicates()
     distance_ip = []
     for j in range(len(cavern_df)):
         distance_ip.append(
