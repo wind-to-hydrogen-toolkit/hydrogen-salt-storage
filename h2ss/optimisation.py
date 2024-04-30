@@ -399,7 +399,7 @@ def transmission_distance(
 
     Notes
     -----
-    A hacky way was used to prevent
+    A hacky workaround was used to prevent
     "DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is
     deprecated, and will error in future. Ensure you extract a single
     element from your array before performing this operation. (Deprecated

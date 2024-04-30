@@ -193,10 +193,10 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
 
     Notes
     -----
-    A hacky way was used to prevent multiple grid mappings in the resulting
-    Xarray dataset by first assigning a variable of the desired mapping and
-    then multiplying it by zero prior to involving variables which originally
-    had a different mapping.
+    A hacky workaround was used to prevent multiple grid mappings in the
+    resulting Xarray dataset by first assigning a variable of the desired
+    mapping and then multiplying it by zero prior to involving variables which
+    originally had a different mapping.
     """
     bath = xr.open_dataset(
         os.path.join(bathymetry_path, "D4_2022.nc"), decode_coords="all"

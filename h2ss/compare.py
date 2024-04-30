@@ -31,6 +31,7 @@ from h2ss import functions as fns
 
 class HiddenPrints:
     """Suppress print statements: https://stackoverflow.com/a/45669280"""
+
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
