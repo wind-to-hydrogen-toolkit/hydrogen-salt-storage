@@ -496,7 +496,7 @@ def electrolyser_capacity(
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=20, u=15):
+def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=25, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -554,6 +554,10 @@ def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=20, u=15):
     rho = Fluid(FluidsList.Hydrogen).with_state(
             Input.pressure(pressure), Input.temperature(temperature + 273.15)
         ).density
+    print(
+        f"Density of hydrogen in the pipelines: {rho:.3f} "
+        f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
+    )
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
