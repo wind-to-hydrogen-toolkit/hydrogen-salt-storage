@@ -16,12 +16,18 @@ from zipfile import BadZipFile, ZipFile
 import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
+import numpy as np
 import rasterio as rio
 import seaborn as sns
 import xarray as xr
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import data as rd
+
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
 
 # base data download directory
 DATA_DIR = os.path.join("data", "bathymetry")
@@ -136,21 +142,25 @@ plot_bath_map(data_["elevation"], levels=14, vmax=0, vmin=-130)
 ds = ds.assign(TopDepthSeabed=ds["TopDepth"] + data_["elevation"])
 ds = ds.assign(BaseDepthSeabed=ds["BaseDepth"] + data_["elevation"])
 
-ds["TopDepthSeabed"].attrs = ds["TopDepth"].attrs
-ds["BaseDepthSeabed"].attrs = ds["BaseDepth"].attrs
+# ds["TopDepthSeabed"].attrs = ds["TopDepth"].attrs
+# ds["BaseDepthSeabed"].attrs = ds["BaseDepth"].attrs
 
 ds
+
+val = ds["TopDepthSeabed"].values.flatten()
+min(val[~np.isnan(val)])
+
+val = ds["TopDepthSeabed"].values.flatten()
+max(val[~np.isnan(val)])
+
+val = ds["BaseDepthSeabed"].values.flatten()
+min(val[~np.isnan(val)])
+
+val = ds["BaseDepthSeabed"].values.flatten()
+max(val[~np.isnan(val)])
 
 plot_bath_map(
     ds["TopDepthSeabed"].sel(halite="Rossall"), cmap="jet", vmin=150, vmax=2250
 )
 
 plot_bath_map(ds["BaseDepthSeabed"].sel(halite="Rossall"), cmap="jet")
-
-min(set(ds["TopDepthSeabed"].values.flatten()))
-
-max(set(ds["TopDepthSeabed"].values.flatten()))
-
-min(set(ds["BaseDepthSeabed"].values.flatten()))
-
-max(set(ds["BaseDepthSeabed"].values.flatten()))

@@ -92,8 +92,7 @@ plt.show()
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
-    ),
-    dat_extent=extent,
+    )
 )
 
 # shape of the halite

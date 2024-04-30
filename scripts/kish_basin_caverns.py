@@ -27,9 +27,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
-    """
-    Plot zones of interest
-    """
+    """Plot zones of interest"""
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
@@ -45,10 +43,10 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
-# height = 155 m, 1,000 m <= depth <= 1,500 m
+# height = 120 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
     dat_xr=ds,
-    constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
+    constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
 plot_zones_map(zones, extent, rd.CRS)
@@ -57,9 +55,7 @@ plot_zones_map(zones, extent, rd.CRS)
 
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
-    """
-    Helper function to plot halite layer and caverns within the zones of
-    interest
+    """Helper function to plot halite and caverns within the zones of interest
 
     Parameters
     ----------
@@ -124,7 +120,6 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # ### Cavern calculations in a regular square grid
 
-# diameter = 80 m, separation = 320 m
 caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
 
 len_square = len(caverns)
@@ -148,6 +143,6 @@ plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
 print(
     "Percentage increase in the number of caverns when using a regular "
-    "hexagonal grid configuration compared to a square grid: "
+    "hexagonal grid\nconfiguration compared to a square grid: "
     f"{(len_hex - len_square) / len_square * 100:.3f}%"
 )

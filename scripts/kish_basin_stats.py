@@ -8,6 +8,7 @@ import os
 import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
+import numpy as np
 # import matplotlib.patches as mpatches
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
@@ -21,6 +22,8 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
 
 # ## Read data layers
 
@@ -117,7 +120,7 @@ def plot_facet_maps_distr(
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
     if levels:
         levels = sorted(levels)
-    legend_handles = []
+    # legend_handles = []
 
     f = dat_xr[v].plot.contourf(
         col="halite",
@@ -211,12 +214,11 @@ def plot_facet_maps_distr(
     #     fontsize=11.5,
     #     ncols=3
     # )
-    # if v == "ThicknessNet":
-    #     plt.savefig(
-    #         os.path.join("graphics", "fig_facet_thickness_ntg.jpg"),
-    #         format="jpg",
-    #         dpi=600,
-    #     )
+    # plt.savefig(
+    #     os.path.join("graphics", f"fig_facet_{v.lower()}.jpg"),
+    #     format="jpg",
+    #     dpi=600,
+    # )
     plt.show()
 
 
@@ -246,6 +248,12 @@ plot_facet_maps_distr(
     subplot_kws={"projection": ccrs.epsg(rd.CRS)},
 )
 plt.show()
+
+val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
+min(val[~np.isnan(val)])
+
+val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
+max(val[~np.isnan(val)])
 
 min(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
 

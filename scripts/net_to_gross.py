@@ -90,12 +90,12 @@ def net_to_gross(gross):
 
 
 ntg = []
-gross = np.arange(0, 700, step=1)
+gross_thickness = np.arange(0, 700, step=1)
 
-for x in gross:
+for x in gross_thickness:
     ntg.append(net_to_gross(x))
 
-df = pd.DataFrame({"gross": gross, "NTG": ntg})
+df = pd.DataFrame({"gross": gross_thickness, "NTG": ntg})
 
 df["net"] = df["gross"] * df["NTG"]
 
@@ -120,7 +120,7 @@ df.plot(
     zorder=1,
     color="slategrey",
     linestyle="dashed",
-    label=f"$y = \min({m:.5f}x {b:+.5f}, 0.75)$\n$R^2 = {r:.5f}$",
+    label=f"$y = \\min({m:.5f}x {b:+.5f}, 0.75)$\n$R^2 = {r:.5f}$",
     linewidth=2,
     ax=ax,
 )
@@ -132,9 +132,9 @@ ax.xaxis.grid(True, linewidth=0.25)
 ax.yaxis.grid(True, linewidth=0.25)
 plt.legend(title=None, loc="lower right")
 plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_net_to_gross.jpg"),
-    format="jpg",
-    dpi=600,
-)
+# plt.savefig(
+#     os.path.join("graphics", "fig_net_to_gross.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()

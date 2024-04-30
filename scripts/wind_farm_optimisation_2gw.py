@@ -11,13 +11,9 @@ import geopandas as gpd
 import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
-from matplotlib import patheffects
 from matplotlib_scalebar.scalebar import ScaleBar
-from shapely.geometry import Point
 
 from h2ss import capacity as cap
 from h2ss import compare
@@ -50,8 +46,7 @@ _, wells_b = fns.constraint_exploration_well(
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
-    ),
-    dat_extent=extent,
+    )
 )
 
 # frequent shipping routes
@@ -168,7 +163,6 @@ weibull_wf_df = fns.read_weibull_data(
     data_path_wind_farms=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
     ),
-    dat_extent=extent,
 )
 
 weibull_powercurve = opt.weibull_distribution(weibull_wf_data=weibull_wf_df)
@@ -214,7 +208,7 @@ weibull_wf_df["demand"] = cap.energy_storage_capacity(
 
 # ## Number of caverns required based on cumulative working mass and AHP
 
-opt.calculate_number_of_caverns(
+compare.calculate_number_of_caverns(
     cavern_df=caverns, weibull_wf_data=weibull_wf_df
 )
 
@@ -247,9 +241,7 @@ compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-caverns = opt.lcot_pipeline(
-    wf_data=wind_farms, weibull_wf_data=weibull_wf_df, cavern_df=caverns
-)
+caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
 
 caverns[
     [
@@ -301,11 +293,11 @@ axes[1].yaxis.grid(True, linewidth=0.25)
 axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_box_transmission_ntg_2gw.jpg"),
-    format="jpg",
-    dpi=600,
-)
+# plt.savefig(
+#     os.path.join("graphics", "fig_box_transmission_ntg_2gw.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()
 
 # ## Maps
@@ -316,7 +308,6 @@ shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 def plot_map_facet(
     cavern_df,
     classes,
-    filename="fig_map_transmission_ntg_2gw.jpg",
     fontsize=11.5,
 ):
     """Helper function for plotting LCOT facet maps"""
@@ -398,17 +389,14 @@ def plot_map_facet(
         ax1.set_title(list(wind_farms["name"])[a])
 
     plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", filename),
-        format="jpg",
-        dpi=600,
-    )
+    # plt.savefig(
+    #     os.path.join("graphics", "fig_map_transmission_ntg_2gw.jpg"),
+    #     format="jpg", dpi=600
+    # )
     plt.show()
 
 
-classes = mc.Quantiles(
-    caverns[list(caverns.filter(like="LCOT_"))],
-    k=6,
+plot_map_facet(
+    caverns,
+    list(mc.Quantiles(caverns[list(caverns.filter(like="LCOT_"))], k=6).bins),
 )
-
-plot_map_facet(caverns, list(classes.bins))

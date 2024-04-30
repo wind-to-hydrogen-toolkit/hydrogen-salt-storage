@@ -10,7 +10,6 @@ import contextily as cx
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -50,8 +49,7 @@ wells, wells_b = fns.constraint_exploration_well(
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
-    ),
-    dat_extent=extent,
+    )
 )
 
 # ### Frequent shipping routes
