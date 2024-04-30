@@ -31,7 +31,6 @@ from h2ss import functions as fns
 
 class HiddenPrints:
     """Suppress print statements: https://stackoverflow.com/a/45669280"""
-
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
@@ -73,7 +72,7 @@ def hydrogen_demand_ie(data):
 
     Notes
     -----
-    [#DECC23]_
+    Data from the National Hydrogen Strategy [#DECC23]_.
     """
     print(
         "Energy capacity as a percentage of Ireland's domestic hydrogen\n"
@@ -90,7 +89,15 @@ def hydrogen_demand_ie(data):
 
 
 def distance_from_pipeline(cavern_df, pipeline_data_path):
-    """Calculate the distance of the caverns from the nearest pipeline."""
+    """Calculate the distance of the caverns from the nearest pipeline.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    pipeline_data_path : str
+        Path to the offshore pipeline Shapefile data
+    """
     pipelines = rd.read_shapefile_from_zip(data_path=pipeline_data_path)
     pipelines = (
         pipelines.to_crs(rd.CRS)
@@ -112,6 +119,15 @@ def distance_from_pipeline(cavern_df, pipeline_data_path):
 
 
 def calculate_number_of_caverns(cavern_df, weibull_wf_data):
+    """Calculate the number of caverns required by each wind farm.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+    """
     working_mass_cumsum_1 = (
         cavern_df.sort_values("working_mass", ascending=False)
         .reset_index()[["working_mass", "capacity"]]
@@ -185,7 +201,13 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
 
 
 def load_all_data():
-    """Load all input datasets."""
+    """Load all input datasets.
+
+    Returns
+    -------
+    tuple[xarray.Dataset, geopandas.GeoDataFrame, dict[str, geopandas.GeoDataFrame]]
+        The halite data, extent, and exclusions
+    """
     ds, extent = rd.kish_basin_data_depth_adjusted(
         dat_path=os.path.join("data", "kish-basin"),
         bathymetry_path=os.path.join("data", "bathymetry"),
@@ -236,7 +258,30 @@ def load_all_data():
 
 
 def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
-    """Calculate the energy storage capacity for different cases."""
+    """Calculate the energy storage capacity for different cases.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Xarray dataset of the halite data
+    extent : geopandas.GeoSeries
+        Extent of the data
+    exclusions : dict[str, geopandas.GeoDataFrame]
+        Dictionary of exclusions data
+    cavern_diameter : float
+        Diameter of the cavern [m]
+    cavern_height : float
+        Height of the cavern [m]
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of the cavern diameter, height, and capacity
+
+    Notes
+    -----
+    Uses the defaults apart from the changing cavern diameters and heights.
+    """
     # distance from salt formation edge
     edge_buffer = fns.constraint_halite_edge(
         dat_xr=ds, buffer=cavern_diameter * 3

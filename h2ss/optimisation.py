@@ -151,7 +151,19 @@ def weibull_probability_distribution(v, k, c):
 
 
 def weibull_distribution(weibull_wf_data):
-    """Generate a power curve and Weibull distribution."""
+    """Generate a power curve and Weibull distribution.
+
+    Parameters
+    ----------
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of the Weibull distribution for each wind farm for wind
+        speeds of 0 to 30 m s⁻¹ at an interval of 0.01
+    """
     powercurve_weibull_data = {}
     for n in weibull_wf_data["name"]:
         powercurve_weibull_data[n] = {}
@@ -293,7 +305,18 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
 
 
 def annual_energy_production(weibull_wf_data):
-    """Annual energy production of the wind farms."""
+    """Annual energy production of the wind farms.
+
+    Parameters
+    ----------
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with the annual energy production for each wind farm
+    """
     aep = []
     for n in weibull_wf_data["name"]:
         aep.append(
@@ -316,7 +339,7 @@ def annual_energy_production(weibull_wf_data):
 
 
 def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
-    """Annual hydrogen production from the wind farm's energy.
+    """Annual hydrogen production from the wind farm's energy generation.
 
     Parameters
     ----------
@@ -358,14 +381,33 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
 def transmission_distance(
     cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)
 ):
+    """Calculate the transmission distance to the injection point.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    wf_data : geopandas.GeoDataFrame
+        Geodataframe of the offshore wind farm data
+    injection_point_coords : tuple[float, float, float, float]
+        Injection point coordinates (lon-deg, lon-min, lat-deg, lat-min)
+
+    Returns
+    -------
+    tuple[geopandas.GeoDataFrame, geopandas.GeoSeries]
+        The cavern dataframe and injection point
+
+    Notes
+    -----
+    A hacky way was used to prevent
+    "DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is
+    deprecated, and will error in future. Ensure you extract a single
+    element from your array before performing this operation. (Deprecated
+    NumPy 1.25.)"
+    during the transformation of the injection point from a single-row series,
+    i.e. assigning a duplicate row and dropping it after reprojecting.
+    """
     lond, lonm, latd, latm = injection_point_coords
-    # create injection point
-    # hacky way to prevent:
-    # "DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is
-    # deprecated, and will error in future. Ensure you extract a single
-    # element from your array before performing this operation. (Deprecated
-    # NumPy 1.25.)"
-    # during the transformation from a single-row series
     injection_point = (
         gpd.GeoSeries(
             [
@@ -574,6 +616,20 @@ def lcot_pipeline_function(
 
 
 def lcot_pipeline(weibull_wf_data, cavern_df):
+    """Calculate the pipeline levelised cost of transmission.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of potential caverns
+    """
     for wf in list(weibull_wf_data["name"]):
         cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = lcot_pipeline_function(
             capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
