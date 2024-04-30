@@ -149,7 +149,7 @@ def read_dat_file(dat_path):
             halite_member = "Preesall"
         elif halite_member == "Flyde":
             halite_member = "Fylde"
-        unit = d.split(" ")[-1]
+        # unit = d.split(" ")[-1]
         zvar = d.split("Halite ")[-1].split(" XYZ")[0]
         xds_[d] = (
             xds.sel(data=d)
@@ -158,9 +158,9 @@ def read_dat_file(dat_path):
             .drop_vars("data")
         )
         xds_[d] = xds_[d].rename({"Z": zvar.replace(" ", "")})
-        xds_[d][zvar.replace(" ", "")] = xds_[d][
-            zvar.replace(" ", "")
-        ].assign_attrs(units=unit, long_name=zvar)
+        # xds_[d][zvar.replace(" ", "")] = xds_[d][
+        #     zvar.replace(" ", "")
+        # ].assign_attrs(units=unit, long_name=zvar)
 
     xds = xr.combine_by_coords(xds_.values(), combine_attrs="override")
 
@@ -190,6 +190,13 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     -------
     tuple[xarray.Dataset, geopandas.GeoSeries]
         Xarray dataset of the halite data and GeoPandas geoseries of the extent
+
+    Notes
+    -----
+    A hacky workaround was used to prevent multiple grid mappings in the
+    resulting Xarray dataset by first assigning a variable of the desired
+    mapping and then multiplying it by zero prior to involving variables which
+    originally had a different mapping.
     """
     bath = xr.open_dataset(
         os.path.join(bathymetry_path, "D4_2022.nc"), decode_coords="all"
@@ -203,12 +210,13 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     xds = xds.assign(BaseDepthSeabed=xds["BaseDepth"] + bath["elevation"])
     # hacky way to prevent multiple grid mappings
     xds = xds.assign(Bathymetry=xds["TopDepth"] * 0 + bath["elevation"])
-    for v in ["TopDepth", "BaseDepth"]:
-        xds[f"{v}Seabed"].attrs = xds[v].attrs
-        xds[f"{v}Seabed"].attrs["long_name"] = (
-            xds[f"{v}Seabed"].attrs["long_name"] + " relative to the sea-floor"
-        )
-    xds["Bathymetry"].attrs = bath["elevation"].attrs
+    # for v in ["TopDepth", "BaseDepth"]:
+    #     xds[f"{v}Seabed"].attrs = xds[v].attrs
+    #     xds[f"{v}Seabed"].attrs["long_name"] = (
+    #         xds[f"{v}Seabed"].attrs["long_name"] + " relative to the "
+    #         "sea-floor"
+    #     )
+    # xds["Bathymetry"].attrs = bath["elevation"].attrs
     return xds, dat_extent
 
 

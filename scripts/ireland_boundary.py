@@ -15,6 +15,11 @@ import matplotlib.pyplot as plt
 
 from h2ss import data as rd
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 URL = (
     "https://data-osi.opendata.arcgis.com/datasets/"
     "559bc3300384413aa0fe93f0772cb7f1_0.zip?"

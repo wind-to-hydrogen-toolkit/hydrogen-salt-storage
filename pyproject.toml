@@ -64,3 +64,6 @@ line-length = 79
 
 [tool.pyfluids]
 units_system = "SI"
+
+[tool.coverage.report]
+show_missing = true

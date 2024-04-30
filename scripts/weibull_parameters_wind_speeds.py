@@ -20,6 +20,11 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 # base data download directory
 DATA_DIR = os.path.join("data", "weibull-parameters-wind-speeds")
 
@@ -92,8 +97,7 @@ plt.show()
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
-    ),
-    dat_extent=extent,
+    )
 )
 
 # shape of the halite

@@ -42,13 +42,13 @@ def test_cavern_volume():
 
 def test_corrected_cavern_volume():
     """Test ``h2ss.capacity.corrected_cavern_volume``"""
-    correction_factors = 0.7 * (1 - 0.25 * 0.865 * 1.46)
+    correction_factors = [0.61, 0.65, 0.72, 0.75, 0.84]
     volumes = [1e4, 2.5e4, 3e4, 4.7e4, 5.3e4]
     v_cavern = []
     v_cavern_func = []
-    for v in volumes:
-        v_cavern.append(v * correction_factors)
-        v_cavern_func.append(cap.corrected_cavern_volume(v_cavern=v))
+    for v, f in zip(volumes, correction_factors):
+        v_cavern.append(v * f)
+        v_cavern_func.append(cap.corrected_cavern_volume(v_cavern=v, scf=f))
     assert v_cavern_func == v_cavern
 
 
@@ -73,12 +73,15 @@ def test_temperature_cavern_mid_point():
 def test_pressure_operating():
     """Test ``h2ss.capacity.pressure_operating``"""
     thickness_overburden = [550, 650, 750, 850, 950]
+    depth_water = [10, 20, 30, 40, 50]
     p_operating = []
     p_operating_func = []
-    for t in thickness_overburden:
-        p_casing = (2400 * t + 2200 * 50) * 9.81
+    for t, d in zip(thickness_overburden, depth_water):
+        p_casing = (1027 * d + 2400 * t + 2200 * 50) * 9.81
         p_operating.append((0.3 * p_casing, 0.8 * p_casing))
-        p_operating_func.append(cap.pressure_operating(thickness_overburden=t))
+        p_operating_func.append(
+            cap.pressure_operating(thickness_overburden=t, depth_water=d)
+        )
     assert p_operating_func == p_operating
 
 

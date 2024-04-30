@@ -56,6 +56,7 @@ import pandas as pd
 from scipy import integrate
 from shapely.geometry import Point
 
+from h2ss import capacity as cap
 from h2ss import data as rd
 
 # NREL 15 MW reference turbine specifications
@@ -150,7 +151,19 @@ def weibull_probability_distribution(v, k, c):
 
 
 def weibull_distribution(weibull_wf_data):
-    """Generate a power curve and Weibull distribution."""
+    """Generate a power curve and Weibull distribution.
+
+    Parameters
+    ----------
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of the Weibull distribution for each wind farm for wind
+        speeds of 0 to 30 m s⁻¹ at an interval of 0.01
+    """
     powercurve_weibull_data = {}
     for n in weibull_wf_data["name"]:
         powercurve_weibull_data[n] = {}
@@ -292,7 +305,18 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
 
 
 def annual_energy_production(weibull_wf_data):
-    """Annual energy production of the wind farms."""
+    """Annual energy production of the wind farms.
+
+    Parameters
+    ----------
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with the annual energy production for each wind farm
+    """
     aep = []
     for n in weibull_wf_data["name"]:
         aep.append(
@@ -315,7 +339,7 @@ def annual_energy_production(weibull_wf_data):
 
 
 def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
-    """Annual hydrogen production from the wind farm's energy.
+    """Annual hydrogen production from the wind farm's energy generation.
 
     Parameters
     ----------
@@ -354,86 +378,47 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
     return aep / (e_elec / eta_conv + e_pcl)
 
 
-def calculate_number_of_caverns(cavern_df, weibull_wf_data):
-    working_mass_cumsum_1 = (
-        cavern_df.sort_values("working_mass", ascending=False)
-        .reset_index()[["working_mass", "capacity"]]
-        .cumsum()
-    )
-    working_mass_cumsum_2 = (
-        cavern_df.sort_values("working_mass")
-        .reset_index()[["working_mass", "capacity"]]
-        .cumsum()
-    )
-    caverns_low = []
-    caverns_high = []
-    cap_max = []
-    for x in range(len(weibull_wf_data)):
-        print(weibull_wf_data["name"].iloc[x])
-        print(f"Working mass [kg]: {(weibull_wf_data['AHP'].iloc[x]):.6E}")
-        caverns_low.append(
-            working_mass_cumsum_1.loc[
-                working_mass_cumsum_1["working_mass"]
-                >= weibull_wf_data["AHP"].iloc[x]
-            ]
-            .head(1)
-            .index[0]
-            + 1
-        )
-        caverns_high.append(
-            working_mass_cumsum_2.loc[
-                working_mass_cumsum_2["working_mass"]
-                >= weibull_wf_data["AHP"].iloc[x]
-            ]
-            .head(1)
-            .index[0]
-            + 1
-        )
-        print(
-            f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}"
-        )
-        cap_max.append(
-            max(
-                working_mass_cumsum_1.loc[
-                    working_mass_cumsum_1["working_mass"]
-                    >= weibull_wf_data["AHP"].iloc[x]
-                ]
-                .head(1)["capacity"]
-                .values[0],
-                working_mass_cumsum_2.loc[
-                    working_mass_cumsum_2["working_mass"]
-                    >= weibull_wf_data["AHP"].iloc[x]
-                ]
-                .head(1)["capacity"]
-                .values[0],
-            )
-        )
-        print(f"Capacity (approx.) [GWh]: {(cap_max[x]):,.2f}")
-        print("-" * 78)
-    # total number of caverns
-    print(
-        f"Total number of caverns required: {sum(caverns_low)}–{sum(caverns_high)}",
-    )
-    print("-" * 78)
-    # number of caverns as a percentage of the total available caverns
-    print(
-        "Number of caverns required as a percentage of all available caverns:"
-        f"\n{(sum(caverns_low) / len(cavern_df) * 100):.2f}–"
-        f"{(sum(caverns_high) / len(cavern_df) * 100):.2f}%"
-    )
-    print("-" * 78)
-    # total capacity
-    print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
-
-
 def transmission_distance(
     cavern_df, wf_data, injection_point_coords=(-6, -12, 53, 21)
 ):
+    """Calculate the transmission distance to the injection point.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    wf_data : geopandas.GeoDataFrame
+        Geodataframe of the offshore wind farm data
+    injection_point_coords : tuple[float, float, float, float]
+        Injection point coordinates (lon-deg, lon-min, lat-deg, lat-min)
+
+    Returns
+    -------
+    tuple[geopandas.GeoDataFrame, geopandas.GeoSeries]
+        The cavern dataframe and injection point
+
+    Notes
+    -----
+    A hacky workaround was used to prevent
+    "DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is
+    deprecated, and will error in future. Ensure you extract a single
+    element from your array before performing this operation. (Deprecated
+    NumPy 1.25.)"
+    during the transformation of the injection point from a single-row series,
+    i.e. assigning a duplicate row and dropping it after reprojecting.
+    """
     lond, lonm, latd, latm = injection_point_coords
-    injection_point = gpd.GeoSeries(
-        [Point(((lond) + (lonm) / 60), ((latd) + (latm) / 60))], crs=4326
+    injection_point = (
+        gpd.GeoSeries(
+            [
+                Point(lond + lonm / 60, latd + latm / 60),
+                Point(lond + lonm / 60, latd + latm / 60),
+            ],
+            crs=4326,
+        )
+        .to_crs(rd.CRS)
+        .drop_duplicates()
     )
-    injection_point = injection_point.to_crs(rd.CRS)
     distance_ip = []
     for j in range(len(cavern_df)):
         distance_ip.append(
@@ -511,7 +496,7 @@ def electrolyser_capacity(
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, rho=8, u=15):
+def capex_pipeline(e_cap, p_rate=0.0055, rho=cap.HYDROGEN_DENSITY, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -630,8 +615,22 @@ def lcot_pipeline_function(
     return (capex * d_transmission + opex * f) / (ahp * f)
 
 
-def lcot_pipeline(wf_data, weibull_wf_data, cavern_df):
-    for wf in list(wf_data["name"]):
+def lcot_pipeline(weibull_wf_data, cavern_df):
+    """Calculate the pipeline levelised cost of transmission.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of potential caverns
+    """
+    for wf in list(weibull_wf_data["name"]):
         cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = lcot_pipeline_function(
             capex=weibull_wf_data[weibull_wf_data["name"].str.contains(wf)][
                 "CAPEX"

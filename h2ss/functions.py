@@ -33,8 +33,6 @@ References
     (Accessed: 10 November 2023).
 """
 
-import os
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -527,7 +525,7 @@ def constraint_exploration_well(data_path, buffer=500):
     return wells, wells_b
 
 
-def constraint_wind_farm(data_path, dat_extent):
+def constraint_wind_farm(data_path):
     """Read data for wind farms.
 
     Parameters
@@ -755,7 +753,7 @@ def generate_caverns_with_constraints(cavern_df, exclusions):
     return cavern_df, caverns_excl
 
 
-def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
+def read_weibull_data(data_path_weibull, data_path_wind_farms):
     """Extract mean, max, and min Weibull parameters of wind speeds.
 
     Parameters
@@ -764,8 +762,6 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         Path to the Weibull parameter data Zip file
     data_path_wind_farms : str
         Path to the wind farm data Zip file
-    dat_extent : geopandas.GeoSeries
-        Extent of the Kish Basin data
 
     Returns
     -------
@@ -786,10 +782,7 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         )
 
         # read wind farm data
-        wind_farms = constraint_wind_farm(
-            data_path=data_path_wind_farms,
-            dat_extent=dat_extent,
-        )
+        wind_farms = constraint_wind_farm(data_path=data_path_wind_farms)
 
         # assign capacities
         wind_farms.sort_values(by=["name"], inplace=True)

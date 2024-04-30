@@ -13,6 +13,11 @@ import matplotlib.pyplot as plt
 
 from h2ss import data as rd
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 # base data download directory
 DATA_DIR = os.path.join("data", "shipwrecks")
 

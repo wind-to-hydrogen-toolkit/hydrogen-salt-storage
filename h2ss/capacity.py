@@ -51,8 +51,16 @@ import numpy as np
 import pandas as pd
 from pyfluids import Fluid, FluidsList, Input
 
+from h2ss import functions as fns
 
-def cavern_volume(height, diameter=85, theta=20):
+# pipeline hydrogen density
+# HYDROGEN_DENSITY = Fluid(FluidsList.Hydrogen).with_state(
+#         Input.pressure(100e5), Input.temperature(20 + 273.15)
+#     ).density
+HYDROGEN_DENSITY = 8
+
+
+def cavern_volume(height, diameter=fns.CAVERN_DIAMETER, theta=20):
     """Calculate the cavern volume.
 
     Parameters
@@ -367,55 +375,3 @@ def energy_storage_capacity(m_working, lhv=119.96):
         E_{cavern} = m_{working} \\, \\frac{LHV}{3,600,000}
     """
     return m_working * lhv / 3.6e6
-
-
-def calculate_capacity_dataframe(cavern_df):
-    """Calculate volumes and storage capacities for a dataframe of caverns.
-
-    Parameters
-    ----------
-    cavern_df : gpd.GeoDataFrame
-        Dataframe of caverns
-
-    Returns
-    -------
-    gpd.GeoDataFrame
-        Updated dataframe of caverns with volume and capacity values
-    """
-    cavern_df["cavern_volume"] = cavern_volume(
-        height=cavern_df["cavern_height"]
-    )
-    cavern_df["cavern_volume"] = corrected_cavern_volume(
-        v_cavern=cavern_df["cavern_volume"]
-    )
-
-    cavern_df["t_mid_point"] = temperature_cavern_mid_point(
-        height=cavern_df["cavern_height"], depth_top=cavern_df["cavern_depth"]
-    )
-
-    (
-        cavern_df["p_operating_min"],
-        cavern_df["p_operating_max"],
-    ) = pressure_operating(thickness_overburden=cavern_df["TopDepthSeabed"])
-
-    cavern_df["rho_min"], cavern_df["rho_max"] = density_hydrogen_gas(
-        p_operating_min=cavern_df["p_operating_min"],
-        p_operating_max=cavern_df["p_operating_max"],
-        t_mid_point=cavern_df["t_mid_point"],
-    )
-
-    (
-        cavern_df["working_mass"],
-        cavern_df["mass_operating_min"],
-        cavern_df["mass_operating_max"],
-    ) = mass_hydrogen_working(
-        rho_h2_min=cavern_df["rho_min"],
-        rho_h2_max=cavern_df["rho_max"],
-        v_cavern=cavern_df["cavern_volume"],
-    )
-
-    cavern_df["capacity"] = energy_storage_capacity(
-        m_working=cavern_df["working_mass"]
-    )
-
-    return cavern_df

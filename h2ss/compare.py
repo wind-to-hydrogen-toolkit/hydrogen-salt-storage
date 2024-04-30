@@ -73,7 +73,7 @@ def hydrogen_demand_ie(data):
 
     Notes
     -----
-    [#DECC23]_
+    Data from the National Hydrogen Strategy [#DECC23]_.
     """
     print(
         "Energy capacity as a percentage of Ireland's domestic hydrogen\n"
@@ -90,7 +90,15 @@ def hydrogen_demand_ie(data):
 
 
 def distance_from_pipeline(cavern_df, pipeline_data_path):
-    """Calculate the distance of the caverns from the nearest pipeline."""
+    """Calculate the distance of the caverns from the nearest pipeline.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    pipeline_data_path : str
+        Path to the offshore pipeline Shapefile data
+    """
     pipelines = rd.read_shapefile_from_zip(data_path=pipeline_data_path)
     pipelines = (
         pipelines.to_crs(rd.CRS)
@@ -111,8 +119,96 @@ def distance_from_pipeline(cavern_df, pipeline_data_path):
     )
 
 
+def calculate_number_of_caverns(cavern_df, weibull_wf_data):
+    """Calculate the number of caverns required by each wind farm.
+
+    Parameters
+    ----------
+    cavern_df : geopandas.GeoDataFrame
+        Dataframe of potential caverns
+    weibull_wf_data : pandas.DataFrame
+        Dataframe of the Weibull distribution parameters for the wind farms
+    """
+    working_mass_cumsum_1 = (
+        cavern_df.sort_values("working_mass", ascending=False)
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    working_mass_cumsum_2 = (
+        cavern_df.sort_values("working_mass")
+        .reset_index()[["working_mass", "capacity"]]
+        .cumsum()
+    )
+    caverns_low = []
+    caverns_high = []
+    cap_max = []
+    for x in range(len(weibull_wf_data)):
+        print(weibull_wf_data["name"].iloc[x])
+        print(f"Working mass [kg]: {(weibull_wf_data['AHP'].iloc[x]):.6E}")
+        caverns_low.append(
+            working_mass_cumsum_1.loc[
+                working_mass_cumsum_1["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        caverns_high.append(
+            working_mass_cumsum_2.loc[
+                working_mass_cumsum_2["working_mass"]
+                >= weibull_wf_data["AHP"].iloc[x]
+            ]
+            .head(1)
+            .index[0]
+            + 1
+        )
+        print(
+            f"Number of caverns required: {caverns_low[x]}–{caverns_high[x]}"
+        )
+        cap_max.append(
+            max(
+                working_mass_cumsum_1.loc[
+                    working_mass_cumsum_1["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+                working_mass_cumsum_2.loc[
+                    working_mass_cumsum_2["working_mass"]
+                    >= weibull_wf_data["AHP"].iloc[x]
+                ]
+                .head(1)["capacity"]
+                .values[0],
+            )
+        )
+        print(f"Capacity (approx.) [GWh]: {(cap_max[x]):,.2f}")
+        print("-" * 78)
+    # total number of caverns
+    print(
+        "Total number of caverns required: "
+        f"{sum(caverns_low)}–{sum(caverns_high)}"
+    )
+    print("-" * 78)
+    # number of caverns as a percentage of the total available caverns
+    print(
+        "Number of caverns required as a percentage of all available caverns:"
+        f"\n{(sum(caverns_low) / len(cavern_df) * 100):.2f}–"
+        f"{(sum(caverns_high) / len(cavern_df) * 100):.2f}%"
+    )
+    print("-" * 78)
+    # total capacity
+    print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
+
+
 def load_all_data():
-    """Load all input datasets."""
+    """Load all input datasets.
+
+    Returns
+    -------
+    tuple[xarray.Dataset, geopandas.GeoDataFrame, dict[str, geopandas.GeoDataFrame]]
+        The halite data, extent, and exclusions
+    """
     ds, extent = rd.kish_basin_data_depth_adjusted(
         dat_path=os.path.join("data", "kish-basin"),
         bathymetry_path=os.path.join("data", "bathymetry"),
@@ -133,8 +229,7 @@ def load_all_data():
     exclusions["wind_farms"] = fns.constraint_wind_farm(
         data_path=os.path.join(
             "data", "wind-farms", "marine-area-consent-wind.zip"
-        ),
-        dat_extent=extent,
+        )
     )
 
     # frequent shipping routes
@@ -164,7 +259,30 @@ def load_all_data():
 
 
 def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
-    """Calculate the energy storage capacity for different cases."""
+    """Calculate the energy storage capacity for different cases.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Xarray dataset of the halite data
+    extent : geopandas.GeoSeries
+        Extent of the data
+    exclusions : dict[str, geopandas.GeoDataFrame]
+        Dictionary of exclusions data
+    cavern_diameter : float
+        Diameter of the cavern [m]
+    cavern_height : float
+        Height of the cavern [m]
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe of the cavern diameter, height, and capacity
+
+    Notes
+    -----
+    Uses the defaults apart from the changing cavern diameters and heights.
+    """
     # distance from salt formation edge
     edge_buffer = fns.constraint_halite_edge(
         dat_xr=ds, buffer=cavern_diameter * 3

@@ -2,9 +2,15 @@
 
 """
 
+import geopandas as gpd
 import numpy as np
+import pandas as pd
+from geopandas.testing import assert_geodataframe_equal, assert_geoseries_equal
+from pandas.testing import assert_frame_equal
 from scipy import integrate
+from shapely.geometry import Point, Polygon
 
+from h2ss import data as rd
 from h2ss import optimisation as opt
 
 
@@ -67,8 +73,8 @@ def integrate_lambda(k, c):
     )
 
 
-def test_annual_energy_production():
-    """Test ``h2ss.optimisation.annual_energy_production``"""
+def test_annual_energy_production_function():
+    """Test ``h2ss.optimisation.annual_energy_production_function``"""
     n_turbines = [50, 65, 80, 95]
     k_vals = [1.4, 1.7, 1.9, 2.0, 2.15]
     c_vals = [5.1, 9.2, 11, 10.4, 8]
@@ -79,7 +85,7 @@ def test_annual_energy_production():
     aep_func = []
     for n, k, c in zip(n_turbines, k_vals, c_vals):
         aep_func.append(
-            opt.annual_energy_production(n_turbines=n, k=k, c=c)[0]
+            opt.annual_energy_production_function(n_turbines=n, k=k, c=c)[0]
         )
         integration = integrate.quad(
             integrate_lambda(k=k, c=c),
@@ -101,6 +107,80 @@ def test_annual_hydrogen_production():
     assert opt.annual_hydrogen_production(
         aep=aep, e_elec=e_elec, eta_conv=eta_conv, e_pcl=e_pcl
     ) == aep / (e_elec / eta_conv + e_pcl)
+
+
+def test_transmission_distance():
+    """Test ``h2ss.optimisation.transmission_distance``"""
+    wf_data = gpd.GeoDataFrame(
+        {
+            "name": ["Dublin Array", "Codling"],
+            "geometry": [
+                Polygon(
+                    [
+                        (10.0, 64.0),
+                        (10.0, 63.9),
+                        (10.1, 63.9),
+                        (10.1, 64.0),
+                        (10.0, 64.0),
+                    ]
+                ),
+                Polygon(
+                    [
+                        (10.2, 64.2),
+                        (10.2, 63.8),
+                        (10.2, 63.8),
+                        (10.2, 64.2),
+                        (10.2, 64.2),
+                    ]
+                ),
+            ],
+        },
+        crs=4326,
+    ).to_crs(rd.CRS)
+    cavern_df = gpd.GeoDataFrame(
+        {
+            "geometry": [
+                Point([11.0, 65.0]),
+                Point([11.1, 65.1]),
+                Point([11.2, 65.2]),
+                Point([11.3, 65.3]),
+                Point([11.4, 65.4]),
+            ]
+        },
+        crs=4326,
+    ).to_crs(rd.CRS)
+    injection_point_coords = (12, 10, 66, 30)
+    lond, lonm, latd, latm = injection_point_coords
+    injection_point = (
+        gpd.GeoSeries(
+            [
+                Point(lond + lonm / 60, latd + latm / 60),
+                Point(lond + lonm / 60, latd + latm / 60),
+            ],
+            crs=4326,
+        )
+        .to_crs(rd.CRS)
+        .drop_duplicates()
+    )
+    distance_ip = []
+    for j in list(cavern_df["geometry"]):
+        distance_ip.append(injection_point.distance(j, align=False) / 1000)
+    cavern_df["distance_ip"] = distance_ip
+    distance_wf = {}
+    for i, g in zip(list(wf_data["name"]), list(wf_data["geometry"])):
+        distance_wf[i] = []
+        for j, k in zip(
+            list(cavern_df["geometry"]), list(cavern_df["distance_ip"])
+        ):
+            distance_wf[i].append(g.distance(j) / 1000 + k)
+        cavern_df[f"dist_{i.replace(' ', '_')}"] = distance_wf[i]
+    cavern_df_func, injection_point_func = opt.transmission_distance(
+        cavern_df=cavern_df,
+        wf_data=wf_data,
+        injection_point_coords=injection_point_coords,
+    )
+    assert_geodataframe_equal(cavern_df_func, cavern_df)
+    assert_geoseries_equal(injection_point_func, injection_point)
 
 
 def test_electrolyser_capacity():
@@ -132,8 +212,8 @@ def test_capex_pipeline():
     assert opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate) == capex
 
 
-def test_lcot_pipeline():
-    """Test ``h2ss.optimisation.lcot_pipeline``"""
+def test_lcot_pipeline_function():
+    """Test ``h2ss.optimisation.lcot_pipeline_function``"""
     capex = 1000
     transmission_distance = 100
     ahp = 500
@@ -151,12 +231,46 @@ def test_lcot_pipeline():
         ahp / np.power((1 + discount_rate), year)
         for year in range(lifetime + 1)
     )
-    lcot_func = opt.lcot_pipeline(
+    lcot_func = opt.lcot_pipeline_function(
         capex=capex,
-        transmission_distance=transmission_distance,
+        d_transmission=transmission_distance,
         ahp=ahp,
         opex_ratio=opex_ratio,
         discount_rate=discount_rate,
         lifetime=lifetime,
     )
     assert lcot_func == lcot
+
+
+def test_lcot_pipeline():
+    """Test ``h2ss.optimisation.lcot_pipeline``"""
+    weibull_wf_data = pd.DataFrame(
+        {
+            "name": ["Dublin Array", "Codling", "NISA"],
+            "CAPEX": [1000, 2000, 3000],
+            "AHP": [8000, 9000, 10000],
+        }
+    )
+    cavern_df = pd.DataFrame(
+        {
+            "dist_Dublin_Array": [x + 2 for x in range(20)],
+            "dist_Codling": [x + 3 for x in range(20)],
+            "dist_NISA": [x + 4 for x in range(20)],
+        }
+    )
+
+    for wf, capex, ahp in zip(
+        list(weibull_wf_data["name"]),
+        list(weibull_wf_data["CAPEX"]),
+        list(weibull_wf_data["AHP"]),
+    ):
+        cavern_df[f"LCOT_{wf.replace(' ', '_')}"] = opt.lcot_pipeline_function(
+            capex=capex,
+            d_transmission=cavern_df[f"dist_{wf.replace(' ', '_')}"],
+            ahp=ahp,
+        )
+
+    cavern_df_func = opt.lcot_pipeline(
+        weibull_wf_data=weibull_wf_data, cavern_df=cavern_df
+    )
+    assert_frame_equal(cavern_df_func, cavern_df)

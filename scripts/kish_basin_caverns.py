@@ -16,6 +16,11 @@ from h2ss import functions as fns
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 # ## Read data layers
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -27,9 +32,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
-    """
-    Plot zones of interest
-    """
+    """Plot zones of interest"""
 
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
 
@@ -45,10 +48,10 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
-# height = 155 m, 1,000 m <= depth <= 1,500 m
+# height = 120 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
     dat_xr=ds,
-    constraints={"height": 155, "min_depth": 1000, "max_depth": 1500},
+    constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
 plot_zones_map(zones, extent, rd.CRS)
@@ -57,9 +60,7 @@ plot_zones_map(zones, extent, rd.CRS)
 
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
-    """
-    Helper function to plot halite layer and caverns within the zones of
-    interest
+    """Helper function to plot halite and caverns within the zones of interest
 
     Parameters
     ----------
@@ -76,26 +77,26 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.figure(figsize=(12, 9))
     ax = plt.axes(projection=ccrs.epsg(dat_crs))
 
-    cbar_label = (
-        f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
-    )
+    # cbar_label = (
+    #     f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
+    # )
 
     if stat == "max":
         plot_data = dat_xr.max(dim="halite", skipna=True)
-        cbar_label = f"Maximum {cbar_label}"
+        # cbar_label = f"Maximum {cbar_label}"
     elif stat == "min":
         plot_data = dat_xr.min(dim="halite", skipna=True)
-        cbar_label = f"Minimum {cbar_label}"
+        # cbar_label = f"Minimum {cbar_label}"
     elif stat == "mean":
         plot_data = dat_xr.mean(dim="halite", skipna=True)
-        cbar_label = f"Mean {cbar_label}"
+        # cbar_label = f"Mean {cbar_label}"
 
     plot_data[var].plot.contourf(
         cmap="jet",
         alpha=0.65,
         robust=True,
         levels=15,
-        cbar_kwargs={"label": cbar_label},
+        # cbar_kwargs={"label": cbar_label},
     )
     plt.xlim(xmin_, xmax_)
     plt.ylim(ymin_, ymax_)
@@ -124,7 +125,6 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # ### Cavern calculations in a regular square grid
 
-# diameter = 80 m, separation = 320 m
 caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
 
 len_square = len(caverns)
@@ -148,6 +148,6 @@ plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
 print(
     "Percentage increase in the number of caverns when using a regular "
-    "hexagonal grid configuration compared to a square grid: "
+    "hexagonal grid\nconfiguration compared to a square grid: "
     f"{(len_hex - len_square) / len_square * 100:.3f}%"
 )

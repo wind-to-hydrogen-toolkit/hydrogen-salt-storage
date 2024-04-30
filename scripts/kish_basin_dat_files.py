@@ -20,6 +20,11 @@ from shapely.geometry import Polygon
 
 from h2ss import data as rd
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
 
@@ -78,7 +83,7 @@ ax = plt.axes(projection=ccrs.epsg(3857))
 plt.xlim(-1.2e6, -0.55e6)
 plt.ylim(6.65e6, 7.475e6)
 extent.to_crs(3857).boundary.plot(ax=ax, color="darkslategrey")
-cx.add_basemap(ax, source=cx.providers.Stamen.Terrain, zoom=7)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 plt.title("Kish GIS Map Extent")
 plt.tight_layout()
 plt.show()

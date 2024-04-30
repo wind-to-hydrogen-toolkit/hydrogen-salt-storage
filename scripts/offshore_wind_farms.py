@@ -62,11 +62,11 @@ ax = wind_farms.to_crs(3857).plot(
     alpha=0.5,
     figsize=(10, 10),
     legend=True,
-    legend_kwds={"loc": "upper right"},
+    legend_kwds={"loc": "lower right"},
     linewidth=0.5,
     edgecolor="darkslategrey",
 )
-plt.xlim(-1.2e6, -0.3e6)
+plt.xlim(-1.2e6, -0.55e6)
 plt.ylim(6.65e6, 7.475e6)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 
@@ -235,11 +235,15 @@ plt.show()
 wind_farms_ = wind_farms.to_crs(rd.CRS)
 
 for i in range(len(wind_farms_)):
+    pv = (
+        wind_farms_.iloc[[i]]
+        .distance(shape["geometry"], align=False)
+        .values[0]
+        / 1000
+    )
     print(
         wind_farms_.iloc[[i]]["name"].values[0],
-        "is",
-        f"{wind_farms_.iloc[[i]].distance(shape['geometry'], align=False).values[0]:,.2f}",
-        "m away from Kish Bank",
+        f"is {pv:,.2f} km away from the Kish Bank",
     )
 
 # ## Distance from pipelines
@@ -282,15 +286,29 @@ plt.tight_layout()
 plt.show()
 
 for i in range(len(wind_farms_)):
+    pv = (
+        wind_farms_.iloc[[i]]
+        .distance(
+            pipelines.to_crs(rd.CRS)
+            .overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000)))
+            .dissolve()["geometry"],
+            align=False,
+        )
+        .values[0]
+        / 1000
+    )
     print(
         wind_farms_.iloc[[i]]["name"].values[0],
-        "is",
-        f"{wind_farms_.iloc[[i]].distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
-        "m away from the nearest pipeline",
+        f"is {pv:,.2f} km away from the nearest offshore pipeline",
     )
 
-print(
-    "Kish Basin is",
-    f"{shape.distance(pipelines.to_crs(rd.CRS).overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000))).dissolve()['geometry'], align=False).values[0]:,.2f}",
-    "m away from the nearest pipeline",
+pv = (
+    shape.distance(
+        pipelines.to_crs(rd.CRS)
+        .overlay(gpd.GeoDataFrame(geometry=shape.buffer(25000)))
+        .dissolve()["geometry"],
+        align=False,
+    ).values[0]
+    / 1000
 )
+print(f"Kish Basin is {pv:,.2f} km away from the nearest offshore pipeline")

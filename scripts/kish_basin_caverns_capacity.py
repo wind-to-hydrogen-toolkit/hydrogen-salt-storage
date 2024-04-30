@@ -11,12 +11,10 @@ import geopandas as gpd
 import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
-from matplotlib import ticker
-from matplotlib.lines import Line2D
+# from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
 from h2ss import capacity as cap
@@ -51,8 +49,7 @@ _, wells_b = fns.constraint_exploration_well(
 wind_farms = fns.constraint_wind_farm(
     data_path=os.path.join(
         "data", "wind-farms", "marine-area-consent-wind.zip"
-    ),
-    dat_extent=extent,
+    )
 )
 
 # frequent shipping routes
@@ -210,8 +207,11 @@ caverns[
     ]
 ].sum()
 
-# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+# compare with Ireland's electricity demand in 2050 (Deane, 2021)
 compare.electricity_demand_ie(data=caverns["capacity"])
+
+# compare with Ireland's hydrogen demand in 2050
+compare.hydrogen_demand_ie(data=caverns["capacity"])
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].sum()
@@ -242,7 +242,9 @@ def plot_map_alt(
     cavern_df,
     zones_gdf,
     classes,
-    # quantity="capacity", quantity_label="Hydrogen storage \ncapacity [GWh]", top_depth=True,
+    # quantity="capacity",
+    # quantity_label="Hydrogen storage \ncapacity [GWh]",
+    # top_depth=True,
     fontsize=11.5,
 ):
     """Helper function to plot caverns within the zones of interest"""
@@ -427,14 +429,14 @@ def plot_map_alt(
     )
 
     plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
-        format="jpg",
-        dpi=600,
-    )
+    # plt.savefig(
+    #     os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
+    #     format="jpg",
+    #     dpi=600,
+    # )
     plt.show()
 
 
-classes = mc.Quantiles(caverns["capacity"], k=6)
-
-plot_map_alt(ds, caverns, zones, list(classes.bins))
+plot_map_alt(
+    ds, caverns, zones, list(mc.Quantiles(caverns["capacity"], k=6).bins)
+)

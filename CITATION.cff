@@ -10,13 +10,24 @@ authors:
     given-names: Nithiya
     orcid: 'https://orcid.org/0000-0003-0575-5798'
     affiliation: University College Cork
+  - family-names: Byrne
+    given-names: Keith
+    affiliation: Aspen Energy Consulting
+  - family-names: White
+    given-names: James
+    affiliation: Illmatic Energy
+  - family-names: O'Neill
+    given-names: Nick
+    affiliation: SLR Consulting
+  - family-names: Leahy
+    given-names: Paul
+    affiliation: University College Cork
 repository-code: >-
   https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
 url: 'https://wind-to-hydrogen-toolkit.gitlab.io/hydrogen-salt-storage'
 abstract: >-
-  Optimising production and long-term bulk storage of
-  hydrogen from offshore wind in salt caverns in the Irish
-  Sea.
+  Optimising production and long-term bulk storage of hydrogen from offshore
+  wind in salt caverns in the Irish Sea.
 keywords:
   - hydrogen from offshore wind
   - long-term bulk hydrogen storage
@@ -24,4 +35,4 @@ keywords:
   - hydrogen economy in Ireland
   - geological storage
 license: Apache-2.0
-version: 0.1.0
+# version: 0.1.0

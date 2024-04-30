@@ -17,11 +17,11 @@ cavern_diameter = np.arange(45, 106, step=5)
 cavern_height = np.arange(80, 321, step=20)
 
 
-def generate_sensitivity_data(cavern_diameter, cavern_height):
+def generate_sensitivity_data(diameter, height):
     """Generate data to perform sensitivity analysis"""
     os.makedirs(os.path.join("data", "sensitivity"), exist_ok=True)
     ds, extent, exclusions = compare.load_all_data()
-    for d, h in product(cavern_diameter, cavern_height):
+    for d, h in product(diameter, height):
         filename = os.path.join(
             "data", "sensitivity", f"sensitivity_d{d}_h{h}.csv"
         )
@@ -36,24 +36,24 @@ def generate_sensitivity_data(cavern_diameter, cavern_height):
 # generate_sensitivity_data(cavern_diameter, cavern_height)
 
 filelist = []
-for d, h in product(cavern_diameter, cavern_height):
+for cd, ch in product(cavern_diameter, cavern_height):
     filelist.append(
-        os.path.join("data", "sensitivity", f"sensitivity_d{d}_h{h}.csv")
+        os.path.join("data", "sensitivity", f"sensitivity_d{cd}_h{ch}.csv")
     )
 
-df = pd.concat((pd.read_csv(f) for f in filelist), ignore_index=True)
+cdf = pd.concat((pd.read_csv(f) for f in filelist), ignore_index=True)
 
-df.drop(columns=["Unnamed: 0"], inplace=True)
+cdf.drop(columns=["Unnamed: 0"], inplace=True)
 
-df["cavern_height"] = df["cavern_height"].astype(int)
+cdf["cavern_height"] = cdf["cavern_height"].astype(int)
 
-df.describe()
+cdf.describe()
 
 # cavern height-to-diameter-ratio
-pd.Series((df["cavern_height"] / df["cavern_diameter"]).unique()).describe()
+pd.Series((cdf["cavern_height"] / cdf["cavern_diameter"]).unique()).describe()
 
 ax = sns.scatterplot(
-    data=df,
+    data=cdf,
     hue="cavern_diameter",
     y="capacity",
     x="cavern_height",
@@ -64,14 +64,14 @@ ax = sns.scatterplot(
 sns.despine()
 plt.show()
 
-len(df["cavern_diameter"].unique()) == len(df["cavern_height"].unique())
+len(cdf["cavern_diameter"].unique()) == len(cdf["cavern_height"].unique())
 
 # ## Number of caverns and total capacity
 
 f, ax = plt.subplots(1, 2, figsize=(14, 7), sharey=True)
 
 data = (
-    df.groupby(["cavern_height", "cavern_diameter"])
+    cdf.groupby(["cavern_height", "cavern_diameter"])
     .count()
     .reset_index()
     .pivot(index="cavern_height", columns="cavern_diameter", values="capacity")
@@ -88,7 +88,7 @@ sns.heatmap(
     robust=True,
 )
 
-data = df.copy()
+data = cdf.copy()
 data["capacity"] = data["capacity"] / 1000
 data = (
     data.groupby(["cavern_height", "cavern_diameter"])
@@ -119,17 +119,17 @@ ax[0].set_title("Number of caverns")
 ax[1].set_title("Total capacity [TWh]")
 plt.tight_layout()
 
-plt.savefig(
-    os.path.join("graphics", "fig_sensitivity_heatmap.jpg"),
-    format="jpg",
-    dpi=600,
-)
+# plt.savefig(
+#     os.path.join("graphics", "fig_sensitivity_heatmap.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()
 
 # ## Mean capacity
 
 data = (
-    df.groupby(["cavern_height", "cavern_diameter"])
+    cdf.groupby(["cavern_height", "cavern_diameter"])
     .mean()
     .reset_index()
     .pivot(index="cavern_height", columns="cavern_diameter", values="capacity")
@@ -158,8 +158,8 @@ plt.show()
 
 # ## Base case
 
-base = df[
-    (df["cavern_diameter"] == 85) & (df["cavern_height"] == 120)
+base = cdf[
+    (cdf["cavern_diameter"] == 85) & (cdf["cavern_height"] == 120)
 ].reset_index(drop=True)
 
 base.describe()[["capacity"]]
@@ -178,7 +178,7 @@ base_count
 
 # ## Base diameter, varying height
 
-dd = df[(df["cavern_diameter"] == 85)].reset_index(drop=True)
+dd = cdf[(cdf["cavern_diameter"] == 85)].reset_index(drop=True)
 
 dd_mean = (
     pd.DataFrame(dd.groupby("cavern_height").mean()["capacity"] - base_mean)
@@ -200,7 +200,7 @@ dd_count = (
 
 # ## Base height, varying diameter
 
-dh = df[(df["cavern_height"] == 120)].reset_index(drop=True)
+dh = cdf[(cdf["cavern_height"] == 120)].reset_index(drop=True)
 
 dh_mean = (
     pd.DataFrame(dh.groupby("cavern_diameter").mean()["capacity"] - base_mean)
@@ -261,19 +261,20 @@ ax[1].tick_params(axis="y", left=False)
 
 sns.despine()
 plt.tight_layout()
-plt.savefig(
-    os.path.join("graphics", "fig_sensitivity.jpg"),
-    format="jpg",
-    dpi=600,
-)
+# plt.savefig(
+#     os.path.join("graphics", "fig_sensitivity.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
 plt.show()
 
 
-def colour_label(df):
-    conditions = [(df["capacity"] < 0), (df["capacity"] >= 0)]
+def colour_label(data):
+    "Use different colours for negative and positive values"
+    conditions = [(data["capacity"] < 0), (data["capacity"] >= 0)]
     choices = ["N", "P"]
-    df["colour"] = np.select(conditions, choices)
-    return df
+    data["colour"] = np.select(conditions, choices)
+    return data
 
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
