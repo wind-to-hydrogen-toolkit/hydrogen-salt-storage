@@ -207,8 +207,11 @@ caverns[
     ]
 ].sum()
 
-# compare to Ireland's electricity demand in 2050 (Deane, 2021)
+# compare with Ireland's electricity demand in 2050 (Deane, 2021)
 compare.electricity_demand_ie(data=caverns["capacity"])
+
+# compare with Ireland's hydrogen demand in 2050
+compare.hydrogen_demand_ie(data=caverns["capacity"])
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["depth", "halite"], sort=False)[["capacity"]].sum()
@@ -426,11 +429,11 @@ def plot_map_alt(
     )
 
     plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
-        format="jpg",
-        dpi=600,
-    )
+    # plt.savefig(
+    #     os.path.join("graphics", "fig_caverns_capacity_ntg.jpg"),
+    #     format="jpg",
+    #     dpi=600,
+    # )
     plt.show()
 
 

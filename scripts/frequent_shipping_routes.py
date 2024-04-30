@@ -30,6 +30,11 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 ZipFile(DATA_FILE).namelist()

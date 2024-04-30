@@ -16,6 +16,11 @@ from h2ss import functions as fns
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+plt.rcParams["xtick.major.size"] = 0
+plt.rcParams["ytick.major.size"] = 0
+plt.rcParams["xtick.minor.size"] = 0
+plt.rcParams["ytick.minor.size"] = 0
+
 # ## Read data layers
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -72,26 +77,26 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
     plt.figure(figsize=(12, 9))
     ax = plt.axes(projection=ccrs.epsg(dat_crs))
 
-    cbar_label = (
-        f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
-    )
+    # cbar_label = (
+    #     f"{dat_xr[var].attrs['long_name']} [{dat_xr[var].attrs['units']}]"
+    # )
 
     if stat == "max":
         plot_data = dat_xr.max(dim="halite", skipna=True)
-        cbar_label = f"Maximum {cbar_label}"
+        # cbar_label = f"Maximum {cbar_label}"
     elif stat == "min":
         plot_data = dat_xr.min(dim="halite", skipna=True)
-        cbar_label = f"Minimum {cbar_label}"
+        # cbar_label = f"Minimum {cbar_label}"
     elif stat == "mean":
         plot_data = dat_xr.mean(dim="halite", skipna=True)
-        cbar_label = f"Mean {cbar_label}"
+        # cbar_label = f"Mean {cbar_label}"
 
     plot_data[var].plot.contourf(
         cmap="jet",
         alpha=0.65,
         robust=True,
         levels=15,
-        cbar_kwargs={"label": cbar_label},
+        # cbar_kwargs={"label": cbar_label},
     )
     plt.xlim(xmin_, xmax_)
     plt.ylim(ymin_, ymax_)

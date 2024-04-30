@@ -131,9 +131,10 @@ data_.rio.bounds()
 
 data_.rio.resolution()
 
-min(set(data_["elevation"].values.flatten()))
+val = data_["elevation"].values.flatten()
+min(val[~np.isnan(val)])
 
-max(set(data_["elevation"].values.flatten()))
+max(val[~np.isnan(val)])
 
 plot_bath_map(data_["elevation"], levels=14, vmax=0, vmin=-130)
 
@@ -150,13 +151,11 @@ ds
 val = ds["TopDepthSeabed"].values.flatten()
 min(val[~np.isnan(val)])
 
-val = ds["TopDepthSeabed"].values.flatten()
 max(val[~np.isnan(val)])
 
 val = ds["BaseDepthSeabed"].values.flatten()
 min(val[~np.isnan(val)])
 
-val = ds["BaseDepthSeabed"].values.flatten()
 max(val[~np.isnan(val)])
 
 plot_bath_map(

@@ -281,6 +281,8 @@ weibull_wf_df[
 
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
+compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
+
 # ## LCOT for pipeline [€ kg⁻¹]
 
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)

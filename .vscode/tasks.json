@@ -34,7 +34,7 @@
         {
             "label": "black-isort",
             "type": "shell",
-            "command": "source .venv/bin/activate && black **/*.py docs/notebooks/*.ipynb && isort **/*.py docs/notebooks/*.ipynb",
+            "command": "source .venv/bin/activate && black **/*.py docs/notebooks/*.ipynb && isort **/*.py",
             "problemMatcher": [],
             "group": {
                 "kind": "build"

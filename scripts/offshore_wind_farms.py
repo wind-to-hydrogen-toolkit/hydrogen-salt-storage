@@ -62,11 +62,11 @@ ax = wind_farms.to_crs(3857).plot(
     alpha=0.5,
     figsize=(10, 10),
     legend=True,
-    legend_kwds={"loc": "upper right"},
+    legend_kwds={"loc": "lower right"},
     linewidth=0.5,
     edgecolor="darkslategrey",
 )
-plt.xlim(-1.2e6, -0.3e6)
+plt.xlim(-1.2e6, -0.55e6)
 plt.ylim(6.65e6, 7.475e6)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, zoom=7)
 

@@ -221,11 +221,11 @@ def plot_map(dat_xr, fontsize=11.5):
     )
     plt.title(None)
     plt.tight_layout()
-    plt.savefig(
-        os.path.join("graphics", "fig_constraints.jpg"),
-        format="jpg",
-        dpi=600,
-    )
+    # plt.savefig(
+    #     os.path.join("graphics", "fig_constraints.jpg"),
+    #     format="jpg",
+    #     dpi=600,
+    # )
     plt.show()
 
 

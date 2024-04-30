@@ -66,6 +66,7 @@ def plot_facet_maps(dat_xr, dat_extent, dat_crs):
             subplot_kws={"projection": ccrs.epsg(dat_crs)},
             xlim=(xmin_, xmax_),
             ylim=(ymin_, ymax_),
+            cbar_kwargs={"label": v},
         )
         # add a basemap
         basemap = cx.providers.CartoDB.PositronNoLabels
@@ -254,7 +255,3 @@ min(val[~np.isnan(val)])
 
 val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
 max(val[~np.isnan(val)])
-
-min(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))
-
-max(set((ds["BaseDepth"] - ds["TopDepth"]).values.flatten()))

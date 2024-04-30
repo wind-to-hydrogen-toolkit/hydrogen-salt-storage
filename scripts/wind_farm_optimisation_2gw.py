@@ -114,6 +114,11 @@ caverns, _ = fns.generate_caverns_with_constraints(
 
 # ## Capacity
 
+print(
+    "Assumed density of hydrogen in the pipelines: "
+    f"{cap.HYDROGEN_DENSITY} kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
+)
+
 caverns["cavern_total_volume"] = cap.cavern_volume(
     height=caverns["cavern_height"]
 )
