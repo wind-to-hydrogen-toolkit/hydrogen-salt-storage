@@ -53,12 +53,6 @@ from pyfluids import Fluid, FluidsList, Input
 
 from h2ss import functions as fns
 
-# pipeline hydrogen density
-# HYDROGEN_DENSITY = Fluid(FluidsList.Hydrogen).with_state(
-#         Input.pressure(100e5), Input.temperature(20 + 273.15)
-#     ).density
-HYDROGEN_DENSITY = 8
-
 
 def cavern_volume(height, diameter=fns.CAVERN_DIAMETER, theta=20):
     """Calculate the cavern volume.

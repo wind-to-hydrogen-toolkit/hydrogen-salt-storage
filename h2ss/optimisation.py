@@ -55,8 +55,8 @@ import numpy as np
 import pandas as pd
 from scipy import integrate
 from shapely.geometry import Point
+from pyfluids import Fluid, FluidsList, Input
 
-from h2ss import capacity as cap
 from h2ss import data as rd
 
 # NREL 15 MW reference turbine specifications
@@ -496,7 +496,7 @@ def electrolyser_capacity(
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, rho=cap.HYDROGEN_DENSITY, u=15):
+def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=20, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -505,8 +505,10 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=cap.HYDROGEN_DENSITY, u=15):
         Electrolyser capacity [MW]
     p_rate : float
         Electrolyser production rate [kg s⁻¹ MW⁻¹]
-    rho : float
-        Mass density of hydrogen [kg m⁻³]
+    pressure : float
+        Pressure of hydrogen in the pipeline [Pa]
+    temperature : float
+        Temperature of hydrogen in the pipeline [°C]
     u : float
         Average fluid velocity [m s⁻¹]
 
@@ -548,6 +550,10 @@ def capex_pipeline(e_cap, p_rate=0.0055, rho=cap.HYDROGEN_DENSITY, u=15):
     :math:`\\rho_{H_2}` is the mass density of hydrogen [kg m⁻³], and
     :math:`v_{H_2}` is the average fluid velocity [m s⁻¹].
     """
+    # pipeline hydrogen density
+    rho = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(pressure), Input.temperature(temperature + 273.15)
+        ).density
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
