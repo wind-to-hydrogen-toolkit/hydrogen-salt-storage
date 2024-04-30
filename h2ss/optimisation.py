@@ -56,8 +56,8 @@ import pandas as pd
 from scipy import integrate
 from shapely.geometry import Point
 
-from h2ss import data as rd
 from h2ss import capacity as cap
+from h2ss import data as rd
 
 # NREL 15 MW reference turbine specifications
 REF_DIAMETER = 248  # m
@@ -366,9 +366,17 @@ def transmission_distance(
     # element from your array before performing this operation. (Deprecated
     # NumPy 1.25.)"
     # during the transformation from a single-row series
-    injection_point = gpd.GeoSeries(
-        [Point(lond + lonm / 60, latd + latm / 60), Point(lond + lonm / 60, latd + latm / 60)], crs=4326
-    ).to_crs(rd.CRS).drop_duplicates()
+    injection_point = (
+        gpd.GeoSeries(
+            [
+                Point(lond + lonm / 60, latd + latm / 60),
+                Point(lond + lonm / 60, latd + latm / 60),
+            ],
+            crs=4326,
+        )
+        .to_crs(rd.CRS)
+        .drop_duplicates()
+    )
     distance_ip = []
     for j in range(len(cavern_df)):
         distance_ip.append(

@@ -79,7 +79,9 @@ def test_pressure_operating():
     for t, d in zip(thickness_overburden, depth_water):
         p_casing = (1027 * d + 2400 * t + 2200 * 50) * 9.81
         p_operating.append((0.3 * p_casing, 0.8 * p_casing))
-        p_operating_func.append(cap.pressure_operating(thickness_overburden=t, depth_water=d))
+        p_operating_func.append(
+            cap.pressure_operating(thickness_overburden=t, depth_water=d)
+        )
     assert p_operating_func == p_operating
 
 

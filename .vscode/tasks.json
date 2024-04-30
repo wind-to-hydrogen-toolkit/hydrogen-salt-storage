@@ -34,7 +34,7 @@
         {
             "label": "black-isort",
             "type": "shell",
-            "command": "source .venv/bin/activate && black **/*.py **/*.ipynb && isort **/*.py **/*.ipynb",
+            "command": "source .venv/bin/activate && black **/*.py docs/notebooks/*.ipynb && isort **/*.py docs/notebooks/*.ipynb",
             "problemMatcher": [],
             "group": {
                 "kind": "build"
@@ -71,7 +71,7 @@
         {
             "label": "pylint-notebooks",
             "type": "shell",
-            "command": "source .venv/bin/activate && pylint scripts/*.py",
+            "command": "source .venv/bin/activate && pylint scripts/*.py --output data/pylint-notebooks.txt",
             "problemMatcher": [],
             "group": {
                 "kind": "test"

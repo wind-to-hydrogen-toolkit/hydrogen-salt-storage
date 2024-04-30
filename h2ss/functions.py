@@ -753,7 +753,7 @@ def generate_caverns_with_constraints(cavern_df, exclusions):
     return cavern_df, caverns_excl
 
 
-def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
+def read_weibull_data(data_path_weibull, data_path_wind_farms):
     """Extract mean, max, and min Weibull parameters of wind speeds.
 
     Parameters
@@ -762,8 +762,6 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms, dat_extent):
         Path to the Weibull parameter data Zip file
     data_path_wind_farms : str
         Path to the wind farm data Zip file
-    dat_extent : geopandas.GeoSeries
-        Extent of the Kish Basin data
 
     Returns
     -------
