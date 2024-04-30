@@ -6,7 +6,7 @@
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.04.1...2024.04.2).
 
 - fix and implement further tests (coverage at 63%)
-- regenerate all notebooks
+- regenerate all notebooks and rebuild docs
 - update docstrings
 - update tasks for linting / testing
 - update dataset metadata files
