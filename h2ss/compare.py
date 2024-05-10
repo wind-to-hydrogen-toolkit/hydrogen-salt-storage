@@ -10,6 +10,9 @@ References
     What is energy efficiency from production to utilization?’, Renewable
     Energy, 223, p. 120033. Available at:
     https://doi.org/10.1016/j.renene.2024.120033.
+.. [#RoyalSociety23] The Royal Society (2023) Large-scale electricity storage.
+    London: The Royal Society. Available at:
+    https://royalsociety.org/electricity-storage (Accessed: 15 September 2023).
 .. [#DECC23] Department of the Environment, Climate and Communications (2023)
     National Hydrogen Strategy. Government of Ireland. Available at:
     https://www.gov.ie/en/publication/624ab-national-hydrogen-strategy/
@@ -52,14 +55,26 @@ def electricity_demand_ie(data):
     Notes
     -----
     Figures from [#Deane21]_.
-    Assume that the conversion of hydrogen to electricity is 60% efficient
-    [#Pashchenko24]_.
+    Assume that the conversion of hydrogen to electricity is 50% efficient;
+    When fuel with 100% H2 is used, higher heating value and lower heating
+    value efficiency are 48.7% and 57.5%, respectively [#Pashchenko24]_.
+    This does not account for transmission losses.
+    Assume that the hydrogen demand is 17% of the electricity demand, based
+    on the Royal Society report on energy storage [#RoyalSociety23]_.
     """
     print(
         "Energy capacity as a percentage of Ireland's electricity demand\n"
-        "in 2050 (84–122 TWh electricity): "
-        f"{(data.sum() * .6 / 1000 / 122 * 100):.2f}–"
-        f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%"
+        "in 2050 (84–122 TWh electricity), assuming a conversion efficiency\n"
+        f"of 50%:"
+        f"{(data.sum() * .5 / 1000 / 122 * 100):.2f}–"
+        f"{(data.sum() * .5 / 1000 / 84 * 100):.2f}%"
+    )
+    print(
+        "Energy capacity as a percentage of Ireland's hydrogen demand\n"
+        f"in 2050, assuming it is 17% of the electricity demand\n"
+        "(84–122 TWh electricity):"
+        f"{(data.sum() / 1000 / (122 * .17) * 100):.2f}–"
+        f"{(data.sum() / 1000 / (84 * .17) * 100):.2f}%"
     )
 
 
