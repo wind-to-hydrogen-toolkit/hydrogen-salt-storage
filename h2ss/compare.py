@@ -232,7 +232,7 @@ def load_all_data():
     exclusions = {}
 
     # exploration wells
-    _, exclusions["wells_b"] = fns.constraint_exploration_well(
+    exclusions["wells"], exclusions["wells_b"] = fns.constraint_exploration_well(
         data_path=os.path.join(
             "data",
             "exploration-wells",
@@ -248,7 +248,7 @@ def load_all_data():
     )
 
     # frequent shipping routes
-    _, exclusions["shipping_b"] = fns.constraint_shipping_routes(
+    exclusions["shipping"], exclusions["shipping_b"] = fns.constraint_shipping_routes(
         data_path=os.path.join(
             "data", "shipping", "shipping_frequently_used_routes.zip"
         ),
@@ -256,7 +256,7 @@ def load_all_data():
     )
 
     # shipwrecks
-    _, exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
+    exclusions["shipwrecks"], exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
         data_path=os.path.join(
             "data",
             "shipwrecks",
@@ -266,7 +266,7 @@ def load_all_data():
     )
 
     # subsea cables
-    _, exclusions["cables_b"] = fns.constraint_subsea_cables(
+    exclusions["cables"], exclusions["cables_b"] = fns.constraint_subsea_cables(
         data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
     )
 
@@ -386,6 +386,6 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     caverns["cavern_diameter"] = cavern_diameter
 
-    df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
+    # df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
 
-    return df
+    return caverns
