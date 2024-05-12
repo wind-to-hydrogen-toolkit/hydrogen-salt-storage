@@ -267,7 +267,8 @@ def load_all_data():
 
     # subsea cables
     exclusions["cables"], exclusions["cables_b"] = fns.constraint_subsea_cables(
-        data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+        data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+        dat_extent=extent,
     )
 
     return ds, extent, exclusions
