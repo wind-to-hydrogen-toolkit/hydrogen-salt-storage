@@ -216,7 +216,7 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
     print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
 
 
-def load_all_data():
+def load_all_data(keep_orig=False):
     """Load all input datasets.
 
     Returns
@@ -270,6 +270,12 @@ def load_all_data():
         data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
         dat_extent=extent,
     )
+
+    if not keep_orig:
+        del exclusions["cables"]
+        del exclusions["shipwrecks"]
+        del exclusions["shipping"]
+        del exclusions["wells"]
 
     return ds, extent, exclusions
 

@@ -9,3 +9,4 @@ Notebooks
    notebooks/exclusions
    notebooks/caverns
    notebooks/optimisation
+   notebooks/kish_basin_interactive_map
