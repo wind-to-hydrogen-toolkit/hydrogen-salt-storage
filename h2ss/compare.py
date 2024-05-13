@@ -304,7 +304,7 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     Returns
     -------
-    pandas.DataFrame
+    geopandas.GeoDataFrame
         Dataframe of the cavern diameter, height, and capacity
 
     Notes
@@ -405,6 +405,30 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
 
 def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height):
+    """Run all capacity and optimisation functions.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Xarray dataset of the halite data
+    extent : geopandas.GeoSeries
+        Extent of the data
+    exclusions : dict[str, geopandas.GeoDataFrame]
+        Dictionary of exclusions data
+    cavern_diameter : float
+        Diameter of the cavern [m]
+    cavern_height : float
+        Height of the cavern [m]
+
+    Returns
+    -------
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoSeries]
+        Dataframe of the caverns, Weibull parameters, and injection point
+
+    Notes
+    -----
+    Uses the defaults apart from the changing cavern diameters and heights.
+    """
     caverns = capacity_function(ds=ds, extent=extent, exclusions=exclusions, cavern_diameter=cavern_diameter, cavern_height=cavern_height)
     # extract data for wind farms at 150 m
     weibull_wf_df = fns.read_weibull_data(
@@ -427,6 +451,7 @@ def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height
     weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
         n_turbines=weibull_wf_df["n_turbines"]
     )
-    weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
+    with HiddenPrints():
+        weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
     caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
     return caverns, weibull_wf_df, injection_point

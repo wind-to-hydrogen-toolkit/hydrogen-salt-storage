@@ -26,6 +26,7 @@ Contents
    datasets
    methods
    notebooks
+   map
 
 Installation
 ------------

@@ -71,9 +71,11 @@ html_theme_options = {
     "navbar_align": "right",
     "secondary_sidebar_items": {
         "datasets": [],
+        "map": [],
     },
 }
 
 html_sidebars = {
     "datasets": [],
+    "map": [],
 }
