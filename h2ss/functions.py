@@ -590,7 +590,9 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
         .reset_index()
     )
     # crop
-    shipping = shipping.overlay(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
+    shipping = shipping.overlay(
+        gpd.GeoDataFrame(geometry=dat_extent.buffer(3000))
+    )
     shipping.drop(columns=["index_right"], inplace=True)
     shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(buffer)).dissolve()
     return shipping, shipping_b

@@ -238,11 +238,13 @@ def load_all_data(keep_orig=False):
     exclusions = {}
 
     # exploration wells
-    exclusions["wells"], exclusions["wells_b"] = fns.constraint_exploration_well(
-        data_path=os.path.join(
-            "data",
-            "exploration-wells",
-            "Exploration_Wells_Irish_Offshore.shapezip.zip",
+    exclusions["wells"], exclusions["wells_b"] = (
+        fns.constraint_exploration_well(
+            data_path=os.path.join(
+                "data",
+                "exploration-wells",
+                "Exploration_Wells_Irish_Offshore.shapezip.zip",
+            )
         )
     )
 
@@ -254,27 +256,33 @@ def load_all_data(keep_orig=False):
     )
 
     # frequent shipping routes
-    exclusions["shipping"], exclusions["shipping_b"] = fns.constraint_shipping_routes(
-        data_path=os.path.join(
-            "data", "shipping", "shipping_frequently_used_routes.zip"
-        ),
-        dat_extent=extent,
+    exclusions["shipping"], exclusions["shipping_b"] = (
+        fns.constraint_shipping_routes(
+            data_path=os.path.join(
+                "data", "shipping", "shipping_frequently_used_routes.zip"
+            ),
+            dat_extent=extent,
+        )
     )
 
     # shipwrecks
-    exclusions["shipwrecks"], exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
-        data_path=os.path.join(
-            "data",
-            "shipwrecks",
-            "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip",
-        ),
-        dat_extent=extent,
+    exclusions["shipwrecks"], exclusions["shipwrecks_b"] = (
+        fns.constraint_shipwrecks(
+            data_path=os.path.join(
+                "data",
+                "shipwrecks",
+                "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip",
+            ),
+            dat_extent=extent,
+        )
     )
 
     # subsea cables
-    exclusions["cables"], exclusions["cables_b"] = fns.constraint_subsea_cables(
-        data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
-        dat_extent=extent,
+    exclusions["cables"], exclusions["cables_b"] = (
+        fns.constraint_subsea_cables(
+            data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+            dat_extent=extent,
+        )
     )
 
     if not keep_orig:
@@ -404,7 +412,9 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
     return caverns
 
 
-def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height):
+def optimisation_function(
+    ds, extent, exclusions, cavern_diameter, cavern_height
+):
     """Run all capacity and optimisation functions.
 
     Parameters
@@ -429,11 +439,19 @@ def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height
     -----
     Uses the defaults apart from the changing cavern diameters and heights.
     """
-    caverns = capacity_function(ds=ds, extent=extent, exclusions=exclusions, cavern_diameter=cavern_diameter, cavern_height=cavern_height)
+    caverns = capacity_function(
+        ds=ds,
+        extent=extent,
+        exclusions=exclusions,
+        cavern_diameter=cavern_diameter,
+        cavern_height=cavern_height,
+    )
     # extract data for wind farms at 150 m
     weibull_wf_df = fns.read_weibull_data(
         data_path_weibull=os.path.join(
-            "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
+            "data",
+            "weibull-parameters-wind-speeds",
+            "Weibull_150m_params_ITM.zip",
         ),
         data_path_wind_farms=os.path.join(
             "data", "wind-farms", "marine-area-consent-wind.zip"
@@ -444,7 +462,9 @@ def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height
         owf_cap=weibull_wf_df["cap"]
     )
     weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
-    weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
+    weibull_wf_df["AHP"] = opt.annual_hydrogen_production(
+        aep=weibull_wf_df["AEP"]
+    )
     caverns, injection_point = opt.transmission_distance(
         cavern_df=caverns, wf_data=exclusions["wind_farms"]
     )
@@ -452,6 +472,10 @@ def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height
         n_turbines=weibull_wf_df["n_turbines"]
     )
     with HiddenPrints():
-        weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
-    caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
+        weibull_wf_df["CAPEX"] = opt.capex_pipeline(
+            e_cap=weibull_wf_df["E_cap"]
+        )
+    caverns = opt.lcot_pipeline(
+        weibull_wf_data=weibull_wf_df, cavern_df=caverns
+    )
     return caverns, weibull_wf_df, injection_point

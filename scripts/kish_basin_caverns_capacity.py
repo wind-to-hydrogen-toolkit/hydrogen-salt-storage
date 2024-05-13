@@ -70,7 +70,8 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 
 # subsea cables
 _, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # distance from salt formation edge
@@ -333,7 +334,7 @@ def plot_map_alt(
             #     (cavern_df["capacity"] >= classes[n - 1])
             #     & (cavern_df["capacity"] < classes[n])
             # ]
-            label1 = f"{classes[n - 1]:.0f}–{classes[n]:.0f}"
+            label1 = f"{classes[n - 1]:.0f}–<{classes[n]:.0f}"
         # if top_depth:
         #     for df, markersize in zip(
         #         [

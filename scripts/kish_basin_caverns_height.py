@@ -69,7 +69,8 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 
 # subsea cables
 _, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # distance from salt formation edge

@@ -68,7 +68,8 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 
 # subsea cables
 _, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # distance from salt formation edge
@@ -362,7 +363,7 @@ def plot_map_facet(
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[-2]:.2f}"
         else:
-            label = f"{classes[n1 - 1]:.2f}–{classes[n1]:.2f}"
+            label = f"{classes[n1 - 1]:.2f}–<{classes[n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -402,7 +403,7 @@ def plot_map_facet(
                 draw_labels={"left": "y"},
                 color="lightslategrey",
                 alpha=0.25,
-                ylabel_style={"fontsize": fontsize, "rotation": 90},
+                ylabel_style={"fontsize": fontsize, "rotation": 89.9},
                 yformatter=LatitudeFormatter(auto_hide=False, dms=True),
             )
         if a == 2:

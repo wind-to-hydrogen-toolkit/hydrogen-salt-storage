@@ -27,6 +27,7 @@ def generate_sensitivity_data(diameter, height):
         )
         if not os.path.isfile(filename):
             df = compare.capacity_function(ds, extent, exclusions, d, h)
+            df = df[["cavern_diameter", "cavern_height", "capacity"]]
             df.to_csv(filename)
             print(f"{filename} done!")
         else:

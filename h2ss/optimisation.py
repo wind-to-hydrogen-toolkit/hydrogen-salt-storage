@@ -57,9 +57,9 @@ from functools import partial
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from pyfluids import Fluid, FluidsList, Input
 from scipy import integrate
 from shapely.geometry import Point
-from pyfluids import Fluid, FluidsList, Input
 
 from h2ss import data as rd
 
@@ -525,9 +525,13 @@ def hydrogen_pipeline_density(pressure, temperature):
     which was assumed to be the operating temperature of the hydrogen
     [#Baufume13]_.
     """
-    rho = Fluid(FluidsList.Hydrogen).with_state(
+    rho = (
+        Fluid(FluidsList.Hydrogen)
+        .with_state(
             Input.pressure(pressure), Input.temperature(temperature + 273.15)
-        ).density
+        )
+        .density
+    )
     print(
         f"Density of hydrogen in the pipelines: {rho:.4f} "
         f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"

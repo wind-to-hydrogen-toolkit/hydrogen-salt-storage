@@ -76,7 +76,8 @@ shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
 cables, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # ## Crop data layers

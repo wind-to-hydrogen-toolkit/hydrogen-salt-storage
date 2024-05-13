@@ -220,7 +220,7 @@ ax.gridlines(
     color="darkslategrey",
     xformatter=LongitudeFormatter(auto_hide=False, dms=True),
     yformatter=LatitudeFormatter(auto_hide=False, dms=True),
-    ylabel_style={"rotation": 90},
+    ylabel_style={"rotation": 89.9},
 )
 ax.add_artist(
     ScaleBar(1, box_alpha=0, location="lower right", color="darkslategrey")
@@ -243,7 +243,7 @@ for i in range(len(wind_farms_)):
     )
     print(
         wind_farms_.iloc[[i]]["name"].values[0],
-        f"is {pv:,.2f} km away from the Kish Bank",
+        f"is {pv:.2f} km away from the Kish Bank",
     )
 
 # ## Distance from pipelines
@@ -299,7 +299,7 @@ for i in range(len(wind_farms_)):
     )
     print(
         wind_farms_.iloc[[i]]["name"].values[0],
-        f"is {pv:,.2f} km away from the nearest offshore pipeline",
+        f"is {pv:.2f} km away from the nearest offshore pipeline",
     )
 
 pv = (
@@ -311,4 +311,4 @@ pv = (
     ).values[0]
     / 1000
 )
-print(f"Kish Basin is {pv:,.2f} km away from the nearest offshore pipeline")
+print(f"Kish Basin is {pv:.2f} km away from the nearest offshore pipeline")
