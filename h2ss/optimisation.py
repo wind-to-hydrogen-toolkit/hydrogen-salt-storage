@@ -20,6 +20,10 @@ References
     production from dedicated offshore wind farms’, International Journal of
     Hydrogen Energy, 46(48), pp. 24620–24631.
     https://doi.org/10.1016/j.ijhydene.2020.04.232.
+.. [#HydrogenTools] Hydrogen Tools (no date) Lower and Higher Heating Values
+    of Fuels. Available at:
+    https://h2tools.org/hyarc/calculator-tools/lower-and-higher-heating-values-fuels
+    (Accessed: 25 April 2024).
 .. [#Dinh24a] Dinh, Q. V., Dinh, V. N., and Leahy, P. G. (2024). ‘A
     differential evolution model for optimising the size and cost of
     electrolysers coupled with offshore wind farms’.
@@ -338,16 +342,13 @@ def annual_energy_production(weibull_wf_data):
     return weibull_wf_data
 
 
-def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
+def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003):
     """Annual hydrogen production from the wind farm's energy generation.
 
     Parameters
     ----------
     aep : float
         Annual energy production of wind farm [MWh]
-    e_elec : float
-        Electricity required to supply the electrolyser to produce 1 kg of
-        hydrogen [MWh kg⁻¹]
     eta_conv : float
         Conversion efficiency of the electrolyser
     e_pcl : float
@@ -360,22 +361,26 @@ def annual_hydrogen_production(aep, e_elec=0.05, eta_conv=0.93, e_pcl=0.003):
 
     Notes
     -----
-    Eqn. (4) of [#Dinh23]_, based on [#Dinh21]_. Constant values are based on
-    Table 3 of [#Dinh21]_ for proton exchange membrane (PEM) electrolysers
-    predicted for the year 2030.
+    Eqn. (4) of [#Dinh23]_, Eqn. (9) of [#Dinh21]_, and [#Dinh24a]_.
+    The value for the electricity consumed by other parts of the hydrogen
+    plant is from Table 3 of [#Dinh21]_ for proton exchange membrane (PEM)
+    electrolysers predicted for the year 2030.
+    This includes energy for water purification, hydrogen compression, and
+    losses.
+    The electrolyser conversion efficiency is based on [#Dinh24a]_.
+    See [#HydrogenTools]_ for the heating values.
 
     .. math::
-        m_{annual} = \\frac{E_{annual}}{\\frac{E_{electrolyser}}{\\eta} +
+        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\times \\eta} +
         E_{plant}}
 
     where :math:`m_{annual}` is the annual hydrogen production [kg],
-    :math:`E_{annual}` is the annual energy production of wind farm [MWh],
-    :math:`E_{electrolyser}` is the electricity required to supply the
-    electrolyser to produce 1 kg of hydrogen [MWh kg⁻¹], :math:`\\eta` is the
-    conversion efficiency of the electrolyser, and :math:`E_{plant}` is the
-    electricity consumed by other parts of the hydrogen plant [MWh kg⁻¹].
+    :math:`E_{annual}` is the annual energy production of the wind farm [MWh],
+    :math:`LHV` is the lower heating value of hydrogen [MJ kg⁻¹], :math:`\\eta`
+    is the conversion efficiency of the electrolyser, and :math:`E_{plant}` is
+    the electricity consumed by other parts of the hydrogen plant [MWh kg⁻¹].
     """
-    return aep / (e_elec / eta_conv + e_pcl)
+    return aep / (119.96 / (3600 * eta_conv) + e_pcl)
 
 
 def transmission_distance(
@@ -496,7 +501,41 @@ def electrolyser_capacity(
     return (n_turbines * wt_power * cap_ratio).astype(int)
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=25, u=15):
+def hydrogen_pipeline_density(pressure, temperature):
+    """Calculate the density of hydrogen in the pipelines.
+
+    Parameters
+    ----------
+    pressure : float
+        Pressure of hydrogen in the pipeline [Pa]
+    temperature : float
+        Temperature of hydrogen in the pipeline [°C]
+
+    Returns
+    -------
+    float
+        Pipeline hydrogen density [kg m⁻³]
+
+    Notes
+    -----
+    According to [#Baufume13]_, the envisaged future hydrogen pipeline system
+    is assumed to be operated at pressure levels up to 10 MPa.
+    They used an average operating pressure of 6.5 MPa for transmission
+    pipelines and calculated the density using the average soil temperature,
+    which was assumed to be the operating temperature of the hydrogen
+    [#Baufume13]_.
+    """
+    rho = Fluid(FluidsList.Hydrogen).with_state(
+            Input.pressure(pressure), Input.temperature(temperature + 273.15)
+        ).density
+    print(
+        f"Density of hydrogen in the pipelines: {rho:.4f} "
+        f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
+    )
+    return rho
+
+
+def capex_pipeline(e_cap, p_rate=0.0055, pressure=65e5, temperature=10, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -547,17 +586,10 @@ def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=25, u=15):
     where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],
     :math:`EPR` is the electrolyser production rate [kg s⁻¹ MW⁻¹],
-    :math:`\\rho_{H_2}` is the mass density of hydrogen [kg m⁻³], and
+    :math:`\\rho_{H_2}` is the density of hydrogen [kg m⁻³], and
     :math:`v_{H_2}` is the average fluid velocity [m s⁻¹].
     """
-    # pipeline hydrogen density
-    rho = Fluid(FluidsList.Hydrogen).with_state(
-            Input.pressure(pressure), Input.temperature(temperature + 273.15)
-        ).density
-    print(
-        f"Density of hydrogen in the pipelines: {rho:.3f} "
-        f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
-    )
+    rho = hydrogen_pipeline_density(pressure=pressure, temperature=temperature)
     f = e_cap * p_rate / (rho * u * np.pi)
     return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
