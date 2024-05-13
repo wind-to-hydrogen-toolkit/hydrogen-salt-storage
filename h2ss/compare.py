@@ -28,6 +28,7 @@ import numpy as np
 from h2ss import capacity as cap
 from h2ss import data as rd
 from h2ss import functions as fns
+from h2ss import optimisation as opt
 
 # from h2ss import optimisation as opt
 
@@ -219,6 +220,11 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
 def load_all_data(keep_orig=False):
     """Load all input datasets.
 
+    Parameters
+    ----------
+    keep_orig : bool
+        Whether to keep the original constraints datasets after buffering
+
     Returns
     -------
     tuple[xarray.Dataset, geopandas.GeoDataFrame, dict[str, geopandas.GeoDataFrame]]
@@ -396,3 +402,31 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
     # df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
 
     return caverns
+
+
+def optimisation_function(ds, extent, exclusions, cavern_diameter, cavern_height):
+    caverns = capacity_function(ds=ds, extent=extent, exclusions=exclusions, cavern_diameter=cavern_diameter, cavern_height=cavern_height)
+    # extract data for wind farms at 150 m
+    weibull_wf_df = fns.read_weibull_data(
+        data_path_weibull=os.path.join(
+            "data", "weibull-parameters-wind-speeds", "Weibull_150m_params_ITM.zip"
+        ),
+        data_path_wind_farms=os.path.join(
+            "data", "wind-farms", "marine-area-consent-wind.zip"
+        ),
+    )
+    # number of 15 MW turbines, rounded down to the nearest integer
+    weibull_wf_df["n_turbines"] = opt.number_of_turbines(
+        owf_cap=weibull_wf_df["cap"]
+    )
+    weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
+    weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
+    caverns, injection_point = opt.transmission_distance(
+        cavern_df=caverns, wf_data=exclusions["wind_farms"]
+    )
+    weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
+        n_turbines=weibull_wf_df["n_turbines"]
+    )
+    weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
+    caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
+    return caverns, weibull_wf_df, injection_point
