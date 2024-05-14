@@ -312,8 +312,8 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     Returns
     -------
-    geopandas.GeoDataFrame
-        Dataframe of the cavern diameter, height, and capacity
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
+        Dataframes of the caverns and zones of interest
 
     Notes
     -----
@@ -409,7 +409,7 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     # df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
 
-    return caverns
+    return caverns, zones
 
 
 def optimisation_function(
@@ -432,14 +432,14 @@ def optimisation_function(
 
     Returns
     -------
-    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoSeries]
-        Dataframe of the caverns, Weibull parameters, and injection point
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoSeries]
+        Dataframes of the caverns, zones, Weibull parameters, and injection point
 
     Notes
     -----
     Uses the defaults apart from the changing cavern diameters and heights.
     """
-    caverns = capacity_function(
+    caverns, zones = capacity_function(
         ds=ds,
         extent=extent,
         exclusions=exclusions,
@@ -478,4 +478,4 @@ def optimisation_function(
     caverns = opt.lcot_pipeline(
         weibull_wf_data=weibull_wf_df, cavern_df=caverns
     )
-    return caverns, weibull_wf_df, injection_point
+    return caverns, zones, weibull_wf_df, injection_point

@@ -56,7 +56,7 @@ def plot_interactive_map():
     """Plot an interactive map of the results using Folium."""
     ds, extent, exclusions = compare.load_all_data(keep_orig=True)
 
-    caverns, weibull_df, injection_point = compare.optimisation_function(
+    caverns, zones, weibull_df, injection_point = compare.optimisation_function(
         ds=ds,
         extent=extent,
         exclusions=exclusions,
@@ -157,52 +157,6 @@ def plot_interactive_map():
         max_lon=maxx,
     )
 
-    # basin boundary
-    folium.GeoJson(
-        shape.to_crs(4326),
-        name="Kish Basin boundary",
-        style_function=lambda feature: {
-            "fillColor": "none",
-            "color": "darkslategrey",
-            "weight": 1,
-        },
-        tooltip="Kish Basin boundary",
-    ).add_to(m)
-
-    # exclusion buffer
-    folium.GeoJson(
-        buffer.to_crs(4326),
-        name="Exclusion buffer",
-        style_function=lambda feature: {
-            "fillPattern": StripePattern(
-                angle=45,
-                color="slategrey",
-                space_color="none",
-            ),
-            "color": "slategrey",
-            "weight": 0.5,
-            "dashArray": "5, 5",
-        },
-        tooltip="Exclusion buffer",
-    ).add_to(m)
-
-    # wind farms
-    folium.GeoJson(
-        exclusions["wind_farms"].to_crs(4326),
-        name="Wind farms",
-        tooltip=folium.GeoJsonTooltip(
-            fields=["name", "cap"], aliases=["Wind farm", "Capacity [MW]"]
-        ),
-        style_function=lambda feature: {
-            "fillColor": "none",
-            "color": "seagreen",
-            "fillPattern": StripePattern(
-                angle=135, color="seagreen", space_color="none"
-            ),
-            "weight": 1,
-        },
-    ).add_to(m)
-
     # shipwrecks
     folium.GeoJson(
         exclusions["shipwrecks"].to_crs(4326),
@@ -243,13 +197,21 @@ def plot_interactive_map():
         tooltip="Subsea cable",
     ).add_to(m)
 
-    # injection point
+    # wind farms
     folium.GeoJson(
-        injection_point.to_crs(4326),
-        name="Gas grid injection point",
-        tooltip="Gas grid injection point<br>Dublin Port",
-        marker=folium.Marker(icon=folium.Icon(icon="anchor", prefix="fa")),
-        style_function=lambda feature: {"markerColor": "red"},
+        exclusions["wind_farms"].to_crs(4326),
+        name="Wind farms",
+        tooltip=folium.GeoJsonTooltip(
+            fields=["name", "cap"], aliases=["Wind farm", "Capacity [MW]"]
+        ),
+        style_function=lambda feature: {
+            "fillColor": "none",
+            "color": "seagreen",
+            "fillPattern": StripePattern(
+                angle=135, color="seagreen", space_color="none"
+            ),
+            "weight": 1,
+        },
     ).add_to(m)
 
     # caverns - capacity
@@ -325,6 +287,52 @@ def plot_interactive_map():
     ).add_to(fg2)
     m.add_child(fg2)
     cm2.caption = "Mean pipeline LCOT [€ kg⁻¹]"
+
+    # basin boundary
+    folium.GeoJson(
+        shape.to_crs(4326),
+        name="Kish Basin boundary",
+        style_function=lambda feature: {
+            "fillColor": "none", "color": "darkslategrey", "weight": 1
+        },
+        tooltip="Kish Basin boundary",
+    ).add_to(m)
+
+    # exclusion buffer
+    folium.GeoJson(
+        buffer.to_crs(4326),
+        name="Exclusion buffer",
+        style_function=lambda feature: {
+            "fillPattern": StripePattern(
+                angle=45, color="slategrey", space_color="none"
+            ),
+            "color": "slategrey",
+            "weight": 0.5,
+        },
+        tooltip="Exclusion buffer",
+    ).add_to(m)
+
+    # zones of interest
+    folium.GeoJson(
+        zones.to_crs(4326),
+        name="Area of interest",
+        style_function=lambda feature: {
+            "fillColor": "none",
+            "color": "darkslategrey",
+            "weight": 0.5,
+            "dashArray": "5, 5",
+        },
+        tooltip="Area of interest",
+    ).add_to(m)
+
+    # injection point
+    folium.GeoJson(
+        injection_point.to_crs(4326),
+        name="Gas grid injection point",
+        tooltip="Gas grid injection point<br>Dublin Port",
+        marker=folium.Marker(icon=folium.Icon(icon="anchor", prefix="fa")),
+        style_function=lambda feature: {"markerColor": "red"},
+    ).add_to(m)
 
     m.add_child(cm1).add_child(cm2)
     m.add_child(BindColormap(fg1, cm1)).add_child(BindColormap(fg2, cm2))
