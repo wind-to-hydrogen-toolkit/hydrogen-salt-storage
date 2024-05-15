@@ -452,9 +452,7 @@ def transmission_distance(
     return cavern_df, injection_point
 
 
-def electrolyser_capacity(
-    n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.837
-):
+def electrolyser_capacity(n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.83):
     """
     Calculate the electrolyser capacity for an offshore wind farm.
 
@@ -532,14 +530,14 @@ def hydrogen_pipeline_density(pressure, temperature):
         )
         .density
     )
-    print(
-        f"Density of hydrogen in the pipelines: {rho:.4f} "
-        f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
-    )
+    # print(
+    #     f"Density of hydrogen in the pipelines: {rho:.4f} "
+    #     f"kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
+    # )
     return rho
 
 
-def capex_pipeline(e_cap, p_rate=0.0055, pressure=65e5, temperature=10, u=15):
+def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=10, u=15):
     """Capital expenditure (CAPEX) for the pipeline.
 
     Parameters
@@ -595,7 +593,7 @@ def capex_pipeline(e_cap, p_rate=0.0055, pressure=65e5, temperature=10, u=15):
     """
     rho = hydrogen_pipeline_density(pressure=pressure, temperature=temperature)
     f = e_cap * p_rate / (rho * u * np.pi)
-    return 2e3 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
+    return 2000 * (16000 * f + 1197.2 * np.sqrt(f) + 329)
 
 
 def lcot_pipeline_function(
