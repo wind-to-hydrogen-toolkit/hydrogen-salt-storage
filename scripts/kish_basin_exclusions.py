@@ -94,10 +94,7 @@ land = land.dissolve().to_crs(rd.CRS)
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
-# crop land areas from constraints and the buffer
-# biospheres = biospheres.overlay(land, how="difference")
-shipping = shipping.overlay(land, how="difference")
-cables = cables.overlay(land, how="difference")
+# crop land areas from the buffer
 buffer = buffer.overlay(land, how="difference")
 
 # ## Map

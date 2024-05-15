@@ -56,12 +56,14 @@ def plot_interactive_map():
     """Plot an interactive map of the results using Folium."""
     ds, extent, exclusions = compare.load_all_data(keep_orig=True)
 
-    caverns, zones, weibull_df, injection_point = compare.optimisation_function(
-        ds=ds,
-        extent=extent,
-        exclusions=exclusions,
-        cavern_diameter=85,
-        cavern_height=120,
+    caverns, zones, weibull_df, injection_point = (
+        compare.optimisation_function(
+            ds=ds,
+            extent=extent,
+            exclusions=exclusions,
+            cavern_diameter=85,
+            cavern_height=120,
+        )
     )
 
     shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
@@ -294,7 +296,9 @@ def plot_interactive_map():
         shape.to_crs(4326),
         name="Kish Basin boundary",
         style_function=lambda feature: {
-            "fillColor": "none", "color": "darkslategrey", "weight": 1
+            "fillColor": "none",
+            "color": "darkslategrey",
+            "weight": 1,
         },
         tooltip="Kish Basin boundary",
     ).add_to(m)

@@ -34,6 +34,53 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
+ds
+
+# ax = ds.isel(halite=3)["Bathymetry"].plot.contourf(cmap="mako")
+ds.isel(halite=3)["Bathymetry"].plot.contourf(cmap="mako", levels=15)
+CS = ds.isel(halite=3)["Bathymetry"].plot.contour(
+    colors="black", levels=15, linewidths=0.5, alpha=0.5, linestyles="solid"
+)
+# plt.clabel(CS, inline=True)
+plt.tight_layout()
+plt.show()
+
+import importlib
+
+importlib.reload(rd)
+
+bath = rd.bathymetry_layer(
+    dat_extent=extent,
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
+
+bath
+
+plt.figure(figsize=(10, 7))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+# ax = ds.isel(halite=3)["Bathymetry"].plot.contourf(cmap="mako")
+ds.isel(halite=3)["Thickness"].plot.contourf(cmap="mako_r", levels=15)
+# CS = ds.isel(halite=3)["Bathymetry"].plot.contour(colors="black", levels=15, linewidths=0.5, alpha=.5, linestyles="solid")
+CS = bath["elevation"].plot.contour(
+    colors="darkslategrey",
+    levels=15,
+    linewidths=0.5,
+    linestyles="solid",
+    alpha=0.5,
+)
+plt.clabel(CS, inline=True)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Voyager, crs=rd.CRS)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+)
+plt.title(None)
+plt.tight_layout()
+plt.show()
+
+bath["elevation"]
+
 # ## Constraints
 
 # exploration wells
@@ -114,10 +161,6 @@ caverns, _ = fns.generate_caverns_with_constraints(
         "cables": cables_b,
         "edge": edge_buffer,
     },
-)
-
-compare.distance_from_pipeline(
-    caverns, os.path.join("data", "pipelines", "pipelines.zip")
 )
 
 # ## Capacity
@@ -232,6 +275,10 @@ s.groupby("depth").sum()[["capacity"]]
 
 s.groupby("halite").sum()[["capacity"]]
 
+compare.distance_from_pipeline(
+    caverns, os.path.join("data", "pipelines", "pipelines.zip")
+)
+
 # ## Map
 
 # create exclusion buffer
@@ -253,6 +300,16 @@ def plot_map_alt(
     axis1 = plt.axes(projection=ccrs.epsg(rd.CRS))
     legend_handles1 = []
     classes = sorted(classes)
+
+    # bath["elevation"].plot.contourf(cmap="Blues_r", robust=True, add_colorbar=False)
+    CS = bath["elevation"].plot.contour(
+        colors="tab:blue",
+        linewidths=0.5,
+        linestyles="solid",
+        alpha=0.5,
+        robust=True,
+    )
+    plt.clabel(CS, inline=True)
 
     # halite boundary - use buffering to smooth the outline
     shape = rd.halite_shape(dat_xr=dat_xr).buffer(1000).buffer(-1000)
@@ -428,6 +485,7 @@ def plot_map_alt(
         handles=legend_handles1,
         fontsize=fontsize,
     )
+    plt.title(None)
 
     plt.tight_layout()
     # plt.savefig(
@@ -437,6 +495,10 @@ def plot_map_alt(
     # )
     plt.show()
 
+
+plot_map_alt(
+    ds, caverns, zones, list(mc.Quantiles(caverns["capacity"], k=6).bins)
+)
 
 plot_map_alt(
     ds, caverns, zones, list(mc.Quantiles(caverns["capacity"], k=6).bins)

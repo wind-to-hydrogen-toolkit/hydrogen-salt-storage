@@ -452,7 +452,9 @@ def transmission_distance(
     return cavern_df, injection_point
 
 
-def electrolyser_capacity(n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.83):
+def electrolyser_capacity(
+    n_turbines, wt_power=REF_RATED_POWER, cap_ratio=0.83
+):
     """
     Calculate the electrolyser capacity for an offshore wind farm.
 
