@@ -145,6 +145,7 @@ def plot_interactive_map():
         .dissolve()
         .overlay(gpd.GeoDataFrame(geometry=shape))
     )
+
     minx, miny, maxx, maxy = shape.to_crs(4326).bounds.values[0]
     m = folium.Map(
         tiles="cartodbvoyager",

@@ -220,6 +220,29 @@ def kish_basin_data_depth_adjusted(dat_path, bathymetry_path):
     return xds, dat_extent
 
 
+def bathymetry_layer(dat_extent, bathymetry_path):
+    """Bathymetry layer for plotting.
+
+    Parameters
+    ----------
+    dat_extent : geopandas.GeoSeries
+        Extent of the Kish Basin data
+    bathymetry_path : str
+        Path to the bathymetry netCDF file
+
+    Returns
+    -------
+    xarray.Dataset
+        Xarray dataset of the halite data
+    """
+    bath = xr.open_dataset(
+        os.path.join(bathymetry_path, "D4_2022.nc"), decode_coords="all"
+    )
+    bath = bath.chunk({"lat": 1000, "lon": 1000, "cdi_index_count": 1000})
+    bath = bath.rio.reproject(CRS).rio.clip(dat_extent.buffer(3000))
+    return bath
+
+
 def read_shapefile_from_zip(data_path, endswith=".shp"):
     """Read the Shapefile layer from a Zip file.
 
