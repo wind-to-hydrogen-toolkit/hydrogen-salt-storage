@@ -371,7 +371,7 @@ def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003):
     See [#HydrogenTools]_ for the heating values.
 
     .. math::
-        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\times \\eta} +
+        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\, \\eta} +
         E_{plant}}
 
     where :math:`m_{annual}` is the annual hydrogen production [kg],

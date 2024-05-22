@@ -66,14 +66,14 @@ def electricity_demand_ie(data):
     print(
         "Energy capacity as a percentage of Ireland's electricity demand\n"
         "in 2050 (84–122 TWh electricity), assuming a conversion efficiency\n"
-        f"of 50%:"
+        f"of 50%: "
         f"{(data.sum() * .5 / 1000 / 122 * 100):.2f}–"
         f"{(data.sum() * .5 / 1000 / 84 * 100):.2f}%"
     )
     print(
         "Energy capacity as a percentage of Ireland's hydrogen demand\n"
         f"in 2050, assuming it is 17% of the electricity demand\n"
-        "(84–122 TWh electricity):"
+        "(84–122 TWh electricity): "
         f"{(data.sum() / 1000 / (122 * .17) * 100):.2f}–"
         f"{(data.sum() / 1000 / (84 * .17) * 100):.2f}%"
     )
