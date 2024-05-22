@@ -78,7 +78,7 @@ def test_annual_energy_production_function():
     n_turbines = [50, 65, 80, 95]
     k_vals = [1.4, 1.7, 1.9, 2.0, 2.15]
     c_vals = [5.1, 9.2, 11, 10.4, 8]
-    cut_in = 4
+    cut_in = 3
     cut_out = 25
     w_loss = 0.1
     aep = []

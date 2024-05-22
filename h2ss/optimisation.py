@@ -67,7 +67,7 @@ from h2ss import data as rd
 REF_DIAMETER = 248  # m
 REF_HUB_HEIGHT = 149  # m
 REF_RATED_POWER = 15  # MW
-REF_V_CUT_IN = 4  # m s-1
+REF_V_CUT_IN = 3  # m s-1
 REF_V_RATED = 11  # m s-1
 REF_V_CUT_OUT = 25  # m s-1
 
@@ -76,8 +76,8 @@ pc = pd.DataFrame(
     {
         "wind_speed": range(REF_V_RATED + 2),
         "power_curve": (
-            [0] * 4
-            + [0.499, 1.424, 2.732, 4.469, 6.643, 9.459, 12.975]
+            [0] * 3
+            + [0, 0.499, 1.424, 2.732, 4.469, 6.643, 9.459, 12.975]
             + [REF_RATED_POWER] * 2
         ),
     }
