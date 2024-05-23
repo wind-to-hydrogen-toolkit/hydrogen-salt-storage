@@ -334,7 +334,7 @@ axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission_ntg.jpg"),
+#     os.path.join("graphics", "fig_box_transmission.jpg"),
 #     format="jpg",
 #     dpi=600,
 # )
@@ -363,7 +363,7 @@ def plot_map_facet(
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[-2]:.2f}"
         else:
-            label = f"{classes[n1 - 1]:.2f}–<{classes[n1]:.2f}"
+            label = f"{classes[n1 - 1]:.2f} – < {classes[n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -430,7 +430,7 @@ def plot_map_facet(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_map_transmission_ntg.jpg"),
+    #     os.path.join("graphics", "fig_map_transmission.jpg"),
     #     format="jpg", dpi=600
     # )
     plt.show()
@@ -467,7 +467,7 @@ def plot_map_extent(cavern_df):
     cx.add_basemap(
         ax2,
         crs=rd.CRS,
-        source=cx.providers.CartoDB.VoyagerNoLabels,
+        source=basemap,
         attribution=False,
     )
     ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)

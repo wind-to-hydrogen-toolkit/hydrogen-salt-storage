@@ -147,7 +147,14 @@ for index, colour in zip(range(len(wind_farms)), colours):
         )
     )
 
-cx.add_basemap(ax, crs=rd.CRS, source=cx.providers.CartoDB.Voyager)
+basemap = cx.providers.CartoDB.Voyager
+cx.add_basemap(
+    ax,
+    crs=rd.CRS,
+    source=basemap,
+    attribution=False,
+)
+ax.text(xmin - 8200, ymin - 15000, basemap["attribution"], fontsize=8.5)
 ax.gridlines(
     draw_labels={"bottom": "x", "left": "y"},
     alpha=0.25,

@@ -24,10 +24,6 @@ from h2ss import optimisation as opt
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
-opt.hydrogen_pipeline_density(pressure=65e5, temperature=10)
-
-opt.hydrogen_pipeline_density(pressure=100e5, temperature=10)
-
 # ## Halite data
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -299,7 +295,7 @@ axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission_ntg_2gw.jpg"),
+#     os.path.join("graphics", "fig_box_transmission_2gw.jpg"),
 #     format="jpg",
 #     dpi=600,
 # )
@@ -328,7 +324,7 @@ def plot_map_facet(
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[-2]:.2f}"
         else:
-            label = f"{classes[n1 - 1]:.2f}–<{classes[n1]:.2f}"
+            label = f"{classes[n1 - 1]:.2f} – < {classes[n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -395,7 +391,7 @@ def plot_map_facet(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_map_transmission_ntg_2gw.jpg"),
+    #     os.path.join("graphics", "fig_map_transmission_2gw.jpg"),
     #     format="jpg", dpi=600
     # )
     plt.show()

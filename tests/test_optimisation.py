@@ -208,7 +208,9 @@ def test_capex_pipeline():
         + 1197200 * np.sqrt(e_cap * p_rate / (8.060934075639166 * 15 * np.pi))
         + 329000
     )
-    assert round(opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate), 8) == round(capex, 8)
+    assert round(opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate), 8) == round(
+        capex, 8
+    )
 
 
 def test_lcot_pipeline_function():

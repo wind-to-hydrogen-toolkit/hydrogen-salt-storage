@@ -411,7 +411,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_caverns_capacity_ntg_height.jpg"),
+    #     os.path.join("graphics", "fig_caverns_capacity_height.jpg"),
     #     format="jpg",
     #     dpi=600,
     # )

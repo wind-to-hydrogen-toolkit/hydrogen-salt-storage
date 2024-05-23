@@ -17,8 +17,7 @@
 - assign capacities to wind farm constraint layer
 - update choropleth legend labels
 - fix disappearing Cartopy rotated gridline latitude labels (i.e. use 89.9° instead of 90°)
-- update docstrings
-- update utility functions
+- update docstrings, utility functions, and tests
 - regenerate all notebooks and rebuild docs
 
 ## [2024.04.2](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.04.2)

@@ -34,7 +34,7 @@ def generate_sensitivity_data(diameter, height):
             print(f"{filename} exists!")
 
 
-# generate_sensitivity_data(cavern_diameter, cavern_height)
+generate_sensitivity_data(cavern_diameter, cavern_height)
 
 filelist = []
 for cd, ch in product(cavern_diameter, cavern_height):
@@ -81,7 +81,7 @@ data = (
 sns.heatmap(
     data,
     ax=ax[0],
-    cmap="rocket_r",
+    cmap="mako_r",
     cbar=False,
     square=True,
     annot=True,
@@ -237,6 +237,7 @@ sns.barplot(
     y="capacity",
     x="cavern_diameter",
     palette=sns.color_palette(["tab:red", "tab:blue"]),
+    legend=False,
     ax=ax[0],
 )
 sns.barplot(
@@ -245,7 +246,6 @@ sns.barplot(
     y="capacity",
     x="cavern_height",
     palette=sns.color_palette(["tab:red", "tab:blue"]),
-    legend=False,
     ax=ax[1],
 )
 for a in ax.flat:
