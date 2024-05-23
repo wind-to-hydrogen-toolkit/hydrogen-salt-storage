@@ -766,7 +766,7 @@ def power_coefficient(v):
         {\\rho_{air} \\cdot A \\cdot v^3}
 
     where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
-    the power contained in the wind resource [MW]:math:`\\rho_{air}` is the
+    the power contained in the wind resource [MW], :math:`\\rho_{air}` is the
     air density [kg m⁻³], :math:`A` is the rotor swept area [m²], :math:`v` is
     the wind speed [m s⁻¹], and :math:`C_p` is the power coefficient of the
     wind turbine.
