@@ -67,7 +67,8 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 
 # subsea cables
 _, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # distance from salt formation edge
@@ -113,11 +114,6 @@ caverns, _ = fns.generate_caverns_with_constraints(
 )
 
 # ## Capacity
-
-print(
-    "Assumed density of hydrogen in the pipelines: "
-    f"{cap.HYDROGEN_DENSITY} kg m\N{SUPERSCRIPT MINUS}\N{SUPERSCRIPT THREE}"
-)
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
     height=caverns["cavern_height"]
@@ -299,7 +295,7 @@ axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission_ntg_2gw.jpg"),
+#     os.path.join("graphics", "fig_box_transmission_2gw.jpg"),
 #     format="jpg",
 #     dpi=600,
 # )
@@ -328,7 +324,7 @@ def plot_map_facet(
         elif n1 == len(colours) - 1:
             label = f"≥ {classes[-2]:.2f}"
         else:
-            label = f"{classes[n1 - 1]:.2f}–{classes[n1]:.2f}"
+            label = f"{classes[n1 - 1]:.2f} – < {classes[n1]:.2f}"
         legend_handles.append(
             mpatches.Patch(
                 facecolor=sns.color_palette("flare", 256)[c], label=label
@@ -368,7 +364,7 @@ def plot_map_facet(
                 draw_labels={"left": "y"},
                 color="lightslategrey",
                 alpha=0.25,
-                ylabel_style={"fontsize": fontsize, "rotation": 90},
+                ylabel_style={"fontsize": fontsize, "rotation": 89.9},
                 yformatter=LatitudeFormatter(auto_hide=False, dms=True),
             )
         if a == 2:
@@ -395,7 +391,7 @@ def plot_map_facet(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_map_transmission_ntg_2gw.jpg"),
+    #     os.path.join("graphics", "fig_map_transmission_2gw.jpg"),
     #     format="jpg", dpi=600
     # )
     plt.show()

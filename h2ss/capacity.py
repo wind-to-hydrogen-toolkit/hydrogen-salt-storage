@@ -45,6 +45,10 @@ References
     documentation. Available at:
     http://www.coolprop.org/fluid_properties/fluids/Hydrogen.html
     (Accessed: 10 December 2023).
+.. [#HydrogenTools] Hydrogen Tools (no date) Lower and Higher Heating Values
+    of Fuels. Available at:
+    https://h2tools.org/hyarc/calculator-tools/lower-and-higher-heating-values-fuels
+    (Accessed: 25 April 2024).
 """
 
 import numpy as np
@@ -52,12 +56,6 @@ import pandas as pd
 from pyfluids import Fluid, FluidsList, Input
 
 from h2ss import functions as fns
-
-# pipeline hydrogen density
-# HYDROGEN_DENSITY = Fluid(FluidsList.Hydrogen).with_state(
-#         Input.pressure(100e5), Input.temperature(20 + 273.15)
-#     ).density
-HYDROGEN_DENSITY = 8
 
 
 def cavern_volume(height, diameter=fns.CAVERN_DIAMETER, theta=20):
@@ -349,15 +347,13 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     return m_working, m_min_operating, m_max_operating
 
 
-def energy_storage_capacity(m_working, lhv=119.96):
+def energy_storage_capacity(m_working):
     """Cavern energy storage capacity.
 
     Parameters
     ----------
     m_working : float
         Working mass of hydrogen [kg]
-    lhv : float
-        Lower heating value of hydrogen [MJ kg⁻¹]
 
     Returns
     -------
@@ -367,6 +363,7 @@ def energy_storage_capacity(m_working, lhv=119.96):
     Notes
     -----
     See [#Williams22]_, Eqn. (7).
+    See also [#HydrogenTools]_ for the heating values.
     The energy storage capacity of the cavern, :math:`E_{cavern}` [GWh] is a
     function of the working mass of hydrogen, :math:`m_{working}` [kg] and the
     lower heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
@@ -374,4 +371,4 @@ def energy_storage_capacity(m_working, lhv=119.96):
     .. math::
         E_{cavern} = m_{working} \\, \\frac{LHV}{3,600,000}
     """
-    return m_working * lhv / 3.6e6
+    return m_working * 119.96 / 3.6e6

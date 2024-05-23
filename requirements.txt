@@ -3,6 +3,7 @@ cartopy
 contextily
 dask
 flake8
+folium
 geocube
 jupyterlab
 mapclassify

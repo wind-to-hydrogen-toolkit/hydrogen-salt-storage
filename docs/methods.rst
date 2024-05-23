@@ -10,4 +10,5 @@ Methods
    methods/capacity
    methods/optimisation
    methods/compare
+   methods/plotting
    methods/tests

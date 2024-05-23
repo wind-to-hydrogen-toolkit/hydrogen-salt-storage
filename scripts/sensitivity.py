@@ -26,14 +26,15 @@ def generate_sensitivity_data(diameter, height):
             "data", "sensitivity", f"sensitivity_d{d}_h{h}.csv"
         )
         if not os.path.isfile(filename):
-            df = compare.capacity_function(ds, extent, exclusions, d, h)
+            df, _ = compare.capacity_function(ds, extent, exclusions, d, h)
+            df = df[["cavern_diameter", "cavern_height", "capacity"]]
             df.to_csv(filename)
             print(f"{filename} done!")
         else:
             print(f"{filename} exists!")
 
 
-# generate_sensitivity_data(cavern_diameter, cavern_height)
+generate_sensitivity_data(cavern_diameter, cavern_height)
 
 filelist = []
 for cd, ch in product(cavern_diameter, cavern_height):
@@ -80,7 +81,7 @@ data = (
 sns.heatmap(
     data,
     ax=ax[0],
-    cmap="rocket_r",
+    cmap="mako_r",
     cbar=False,
     square=True,
     annot=True,
@@ -236,6 +237,7 @@ sns.barplot(
     y="capacity",
     x="cavern_diameter",
     palette=sns.color_palette(["tab:red", "tab:blue"]),
+    legend=False,
     ax=ax[0],
 )
 sns.barplot(
@@ -244,7 +246,6 @@ sns.barplot(
     y="capacity",
     x="cavern_height",
     palette=sns.color_palette(["tab:red", "tab:blue"]),
-    legend=False,
     ax=ax[1],
 )
 for a in ax.flat:

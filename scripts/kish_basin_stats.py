@@ -179,7 +179,7 @@ def plot_facet_maps_distr(
                 draw_labels={"left": "y"},
                 color="none",
                 yformatter=LatitudeFormatter(auto_hide=False, dms=True),
-                ylabel_style={"rotation": 90},
+                ylabel_style={"rotation": 89.9},
                 ylocs=[53.2, 53.4],
             )
         if n in (2, 3):
@@ -253,5 +253,4 @@ plt.show()
 val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
 min(val[~np.isnan(val)])
 
-val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
 max(val[~np.isnan(val)])

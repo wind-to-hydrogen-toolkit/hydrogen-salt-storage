@@ -163,3 +163,32 @@ plot_bath_map(
 )
 
 plot_bath_map(ds["BaseDepthSeabed"].sel(halite="Rossall"), cmap="jet")
+
+bath = rd.bathymetry_layer(
+    dat_extent=extent,
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
+
+plt.figure(figsize=(10, 7))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+bath["elevation"].plot.contourf(cmap="mako", levels=10, robust=True)
+CS = bath["elevation"].plot.contour(
+    # colors="darkslategrey",
+    colors="white",
+    levels=10,
+    linewidths=0.5,
+    linestyles="solid",
+    # alpha=0.5,
+    robust=True,
+)
+plt.clabel(CS, inline=True)
+cx.add_basemap(ax, source=cx.providers.CartoDB.VoyagerNoLabels, crs=rd.CRS)
+cx.add_basemap(ax, source=cx.providers.CartoDB.VoyagerOnlyLabels, crs=rd.CRS)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+)
+plt.title(None)
+plt.tight_layout()
+plt.show()

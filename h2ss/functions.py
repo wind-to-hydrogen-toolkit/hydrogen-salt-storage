@@ -554,6 +554,9 @@ def constraint_wind_farm(data_path):
     wind_farms.at[3, "name"] = "Dublin Array"
     wind_farms = wind_farms.dissolve(by="name")
     wind_farms.reset_index(inplace=True)
+    # assign capacities
+    wind_farms.sort_values(by=["name"], inplace=True)
+    wind_farms["cap"] = [1300, 824, 500]
     return wind_farms
 
 
@@ -585,6 +588,10 @@ def constraint_shipping_routes(data_path, dat_extent, buffer=1852):
         shipping.to_crs(rd.CRS)
         .sjoin(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
         .reset_index()
+    )
+    # crop
+    shipping = shipping.overlay(
+        gpd.GeoDataFrame(geometry=dat_extent.buffer(3000))
     )
     shipping.drop(columns=["index_right"], inplace=True)
     shipping_b = gpd.GeoDataFrame(geometry=shipping.buffer(buffer)).dissolve()
@@ -624,13 +631,15 @@ def constraint_shipwrecks(data_path, dat_extent, buffer=100):
     return shipwrecks, shipwrecks_b
 
 
-def constraint_subsea_cables(data_path, buffer=750):
+def constraint_subsea_cables(data_path, dat_extent, buffer=750):
     """Read subsea cable data and generate constraint.
 
     Parameters
     ----------
     data_path : str
         Path to the GPKG file
+    dat_extent : geopandas.GeoSeries
+        Extent of the data
     buffer : float
         Buffer [m]
 
@@ -647,6 +656,8 @@ def constraint_subsea_cables(data_path, buffer=750):
     cables = cables.to_crs(rd.CRS)
     # remove point features
     cables = cables.drop(range(3)).reset_index(drop=True)
+    # crop
+    cables = cables.overlay(gpd.GeoDataFrame(geometry=dat_extent.buffer(3000)))
     cables_b = gpd.GeoDataFrame(geometry=cables.buffer(buffer)).dissolve()
     return cables, cables_b
 
@@ -783,10 +794,6 @@ def read_weibull_data(data_path_weibull, data_path_wind_farms):
 
         # read wind farm data
         wind_farms = constraint_wind_farm(data_path=data_path_wind_farms)
-
-        # assign capacities
-        wind_farms.sort_values(by=["name"], inplace=True)
-        wind_farms["cap"] = [1300, 824, 500]
 
         # convert CRS and keep areas intersecting with wind farms
         weibull_df[w] = (

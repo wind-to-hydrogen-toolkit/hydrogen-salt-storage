@@ -10,6 +10,9 @@ References
     What is energy efficiency from production to utilization?’, Renewable
     Energy, 223, p. 120033. Available at:
     https://doi.org/10.1016/j.renene.2024.120033.
+.. [#RoyalSociety23] The Royal Society (2023) Large-scale electricity storage.
+    London: The Royal Society. Available at:
+    https://royalsociety.org/electricity-storage (Accessed: 15 September 2023).
 .. [#DECC23] Department of the Environment, Climate and Communications (2023)
     National Hydrogen Strategy. Government of Ireland. Available at:
     https://www.gov.ie/en/publication/624ab-national-hydrogen-strategy/
@@ -25,6 +28,7 @@ import numpy as np
 from h2ss import capacity as cap
 from h2ss import data as rd
 from h2ss import functions as fns
+from h2ss import optimisation as opt
 
 # from h2ss import optimisation as opt
 
@@ -52,14 +56,26 @@ def electricity_demand_ie(data):
     Notes
     -----
     Figures from [#Deane21]_.
-    Assume that the conversion of hydrogen to electricity is 60% efficient
-    [#Pashchenko24]_.
+    Assume that the conversion of hydrogen to electricity is 50% efficient;
+    When fuel with 100% H2 is used, higher heating value and lower heating
+    value efficiency are 48.7% and 57.5%, respectively [#Pashchenko24]_.
+    This does not account for transmission losses.
+    Assume that the hydrogen demand is 17% of the electricity demand, based
+    on the Royal Society report on energy storage [#RoyalSociety23]_.
     """
     print(
         "Energy capacity as a percentage of Ireland's electricity demand\n"
-        "in 2050 (84–122 TWh electricity): "
-        f"{(data.sum() * .6 / 1000 / 122 * 100):.2f}–"
-        f"{(data.sum() * .6 / 1000 / 84 * 100):.2f}%"
+        "in 2050 (84–122 TWh electricity), assuming a conversion efficiency\n"
+        f"of 50%: "
+        f"{(data.sum() * .5 / 1000 / 122 * 100):.2f}–"
+        f"{(data.sum() * .5 / 1000 / 84 * 100):.2f}%"
+    )
+    print(
+        "Energy capacity as a percentage of Ireland's hydrogen demand\n"
+        f"in 2050, assuming it is 17% of the electricity demand\n"
+        "(84–122 TWh electricity): "
+        f"{(data.sum() / 1000 / (122 * .17) * 100):.2f}–"
+        f"{(data.sum() / 1000 / (84 * .17) * 100):.2f}%"
     )
 
 
@@ -201,8 +217,13 @@ def calculate_number_of_caverns(cavern_df, weibull_wf_data):
     print(f"Total maximum cavern capacity (approx.): {sum(cap_max):,.2f} GWh")
 
 
-def load_all_data():
+def load_all_data(keep_orig=False):
     """Load all input datasets.
+
+    Parameters
+    ----------
+    keep_orig : bool
+        Whether to keep the original constraints datasets after buffering
 
     Returns
     -------
@@ -217,11 +238,13 @@ def load_all_data():
     exclusions = {}
 
     # exploration wells
-    _, exclusions["wells_b"] = fns.constraint_exploration_well(
-        data_path=os.path.join(
-            "data",
-            "exploration-wells",
-            "Exploration_Wells_Irish_Offshore.shapezip.zip",
+    exclusions["wells"], exclusions["wells_b"] = (
+        fns.constraint_exploration_well(
+            data_path=os.path.join(
+                "data",
+                "exploration-wells",
+                "Exploration_Wells_Irish_Offshore.shapezip.zip",
+            )
         )
     )
 
@@ -233,27 +256,40 @@ def load_all_data():
     )
 
     # frequent shipping routes
-    _, exclusions["shipping_b"] = fns.constraint_shipping_routes(
-        data_path=os.path.join(
-            "data", "shipping", "shipping_frequently_used_routes.zip"
-        ),
-        dat_extent=extent,
+    exclusions["shipping"], exclusions["shipping_b"] = (
+        fns.constraint_shipping_routes(
+            data_path=os.path.join(
+                "data", "shipping", "shipping_frequently_used_routes.zip"
+            ),
+            dat_extent=extent,
+        )
     )
 
     # shipwrecks
-    _, exclusions["shipwrecks_b"] = fns.constraint_shipwrecks(
-        data_path=os.path.join(
-            "data",
-            "shipwrecks",
-            "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip",
-        ),
-        dat_extent=extent,
+    exclusions["shipwrecks"], exclusions["shipwrecks_b"] = (
+        fns.constraint_shipwrecks(
+            data_path=os.path.join(
+                "data",
+                "shipwrecks",
+                "IE_GSI_MI_Shipwrecks_IE_Waters_WGS84_LAT.zip",
+            ),
+            dat_extent=extent,
+        )
     )
 
     # subsea cables
-    _, exclusions["cables_b"] = fns.constraint_subsea_cables(
-        data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    exclusions["cables"], exclusions["cables_b"] = (
+        fns.constraint_subsea_cables(
+            data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+            dat_extent=extent,
+        )
     )
+
+    if not keep_orig:
+        del exclusions["cables"]
+        del exclusions["shipwrecks"]
+        del exclusions["shipping"]
+        del exclusions["wells"]
 
     return ds, extent, exclusions
 
@@ -276,8 +312,8 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     Returns
     -------
-    pandas.DataFrame
-        Dataframe of the cavern diameter, height, and capacity
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame]
+        Dataframes of the caverns and zones of interest
 
     Notes
     -----
@@ -371,6 +407,75 @@ def capacity_function(ds, extent, exclusions, cavern_diameter, cavern_height):
 
     caverns["cavern_diameter"] = cavern_diameter
 
-    df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
+    # df = caverns[["cavern_diameter", "cavern_height", "capacity"]].copy()
 
-    return df
+    return caverns, zones
+
+
+def optimisation_function(
+    ds, extent, exclusions, cavern_diameter, cavern_height
+):
+    """Run all capacity and optimisation functions.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Xarray dataset of the halite data
+    extent : geopandas.GeoSeries
+        Extent of the data
+    exclusions : dict[str, geopandas.GeoDataFrame]
+        Dictionary of exclusions data
+    cavern_diameter : float
+        Diameter of the cavern [m]
+    cavern_height : float
+        Height of the cavern [m]
+
+    Returns
+    -------
+    tuple[geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoDataFrame, geopandas.GeoSeries]
+        Dataframes of the caverns, zones, Weibull parameters, and injection point
+
+    Notes
+    -----
+    Uses the defaults apart from the changing cavern diameters and heights.
+    """
+    caverns, zones = capacity_function(
+        ds=ds,
+        extent=extent,
+        exclusions=exclusions,
+        cavern_diameter=cavern_diameter,
+        cavern_height=cavern_height,
+    )
+    # extract data for wind farms at 150 m
+    weibull_wf_df = fns.read_weibull_data(
+        data_path_weibull=os.path.join(
+            "data",
+            "weibull-parameters-wind-speeds",
+            "Weibull_150m_params_ITM.zip",
+        ),
+        data_path_wind_farms=os.path.join(
+            "data", "wind-farms", "marine-area-consent-wind.zip"
+        ),
+    )
+    # number of 15 MW turbines, rounded down to the nearest integer
+    weibull_wf_df["n_turbines"] = opt.number_of_turbines(
+        owf_cap=weibull_wf_df["cap"]
+    )
+    weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
+    weibull_wf_df["AHP"] = opt.annual_hydrogen_production(
+        aep=weibull_wf_df["AEP"]
+    )
+    caverns, injection_point = opt.transmission_distance(
+        cavern_df=caverns, wf_data=exclusions["wind_farms"]
+    )
+    weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
+        n_turbines=weibull_wf_df["n_turbines"]
+    )
+    with HiddenPrints():
+        weibull_wf_df["CAPEX"] = opt.capex_pipeline(
+            e_cap=weibull_wf_df["E_cap"]
+        )
+    caverns = opt.lcot_pipeline(
+        weibull_wf_data=weibull_wf_df, cavern_df=caverns
+    )
+    return caverns, zones, weibull_wf_df, injection_point

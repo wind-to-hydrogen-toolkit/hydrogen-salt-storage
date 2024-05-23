@@ -78,7 +78,7 @@ def test_annual_energy_production_function():
     n_turbines = [50, 65, 80, 95]
     k_vals = [1.4, 1.7, 1.9, 2.0, 2.15]
     c_vals = [5.1, 9.2, 11, 10.4, 8]
-    cut_in = 4
+    cut_in = 3
     cut_out = 25
     w_loss = 0.1
     aep = []
@@ -101,12 +101,11 @@ def test_annual_energy_production_function():
 def test_annual_hydrogen_production():
     """Test ``h2ss.optimisation.annual_hydrogen_production``"""
     aep = 15e6
-    e_elec = 0.07
-    eta_conv = 0.9
+    eta_conv = 0.6
     e_pcl = 0.004
     assert opt.annual_hydrogen_production(
-        aep=aep, e_elec=e_elec, eta_conv=eta_conv, e_pcl=e_pcl
-    ) == aep / (e_elec / eta_conv + e_pcl)
+        aep=aep, eta_conv=eta_conv, e_pcl=e_pcl
+    ) == aep / (119.96 / (3600 * eta_conv) + e_pcl)
 
 
 def test_transmission_distance():
@@ -205,11 +204,13 @@ def test_capex_pipeline():
     e_cap = 500
     p_rate = 0.006
     capex = 2 * (
-        16000000 * e_cap * p_rate / (8 * 15 * np.pi)
-        + 1197200 * np.sqrt(e_cap * p_rate / (8 * 15 * np.pi))
+        16000000 * e_cap * p_rate / (8.060934075639166 * 15 * np.pi)
+        + 1197200 * np.sqrt(e_cap * p_rate / (8.060934075639166 * 15 * np.pi))
         + 329000
     )
-    assert opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate) == capex
+    assert round(opt.capex_pipeline(e_cap=e_cap, p_rate=p_rate), 8) == round(
+        capex, 8
+    )
 
 
 def test_lcot_pipeline_function():

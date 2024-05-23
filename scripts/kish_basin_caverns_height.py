@@ -69,7 +69,8 @@ _, shipwrecks_b = fns.constraint_shipwrecks(
 
 # subsea cables
 _, cables_b = fns.constraint_subsea_cables(
-    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg")
+    data_path=os.path.join("data", "subsea-cables", "KIS-ORCA.gpkg"),
+    dat_extent=extent,
 )
 
 # distance from salt formation edge
@@ -410,7 +411,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_caverns_capacity_ntg_height.jpg"),
+    #     os.path.join("graphics", "fig_caverns_capacity_height.jpg"),
     #     format="jpg",
     #     dpi=600,
     # )
