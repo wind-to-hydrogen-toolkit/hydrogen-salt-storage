@@ -1,13 +1,7 @@
 {
   "recommendations": [
-    "streetsidesoftware.code-spell-checker",
     "ms-toolsai.jupyter",
     "ms-python.python",
-    "ms-python.flake8",
-    "ms-python.pylint",
-    "ms-python.isort",
     "editorconfig.editorconfig",
-    "davidanson.vscode-markdownlint",
-    "yzhang.markdown-all-in-one"
   ]
 }
