@@ -172,7 +172,7 @@ def weibull_distribution(weibull_wf_data):
     for n in weibull_wf_data["name"]:
         powercurve_weibull_data[n] = {}
         powercurve_weibull_data[n]["wind_speed"] = [
-            0 + 0.01 * n for n in range(3000)
+            0 + 0.01 * n for n in range(3001)
         ]
         powercurve_weibull_data[n]["power_curve"] = []
         powercurve_weibull_data[n][n] = []
