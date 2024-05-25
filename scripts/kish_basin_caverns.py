@@ -3,6 +3,9 @@
 
 # # Cavern generation
 
+# In[1]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -13,22 +16,36 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
+# In[2]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
+
+
+# In[18]:
+
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 plt.rcParams["xtick.minor.size"] = 0
 plt.rcParams["ytick.minor.size"] = 0
 
+
 # ## Read data layers
+
+# In[3]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
 # ## Zones of interest
+
+# In[4]:
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
@@ -48,15 +65,25 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
+# In[5]:
+
+
 # height = 120 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
     dat_xr=ds,
     constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
+
+# In[6]:
+
+
 plot_zones_map(zones, extent, rd.CRS)
 
+
 # ## Generate potential salt cavern locations
+
+# In[12]:
 
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
@@ -125,26 +152,61 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # ### Cavern calculations in a regular square grid
 
+# In[13]:
+
+
 caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
+
+
+# In[14]:
+
 
 len_square = len(caverns)
 
+
+# In[15]:
+
+
 len_square
+
+
+# In[19]:
+
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
+
 # ### Cavern calculations in a regular hexagonal grid
+
+# In[20]:
+
 
 caverns = fns.generate_caverns_hexagonal_grid(
     dat_extent=extent,
     zones_df=zones,
 )
 
+
+# In[21]:
+
+
 len_hex = len(caverns)
+
+
+# In[22]:
+
 
 len_hex
 
+
+# In[23]:
+
+
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
+
+
+# In[24]:
+
 
 print(
     "Percentage increase in the number of caverns when using a regular "

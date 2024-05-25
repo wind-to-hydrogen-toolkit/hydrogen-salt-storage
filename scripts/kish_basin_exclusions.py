@@ -3,6 +3,9 @@
 
 # # Kish Basin exclusions
 
+# In[1]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -17,21 +20,36 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
+# In[2]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
 # ## Halite data
+
+# In[3]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
+# In[4]:
+
+
 xmin, ymin, xmax, ymax = extent.total_bounds
+
 
 # ## Constraints
 
 # ### Exploration wells
+
+# In[5]:
+
 
 # 500 m buffer - suggested in draft OREDP II p. 108
 wells, wells_b = fns.constraint_exploration_well(
@@ -42,7 +60,11 @@ wells, wells_b = fns.constraint_exploration_well(
     )
 )
 
+
 # ### Wind farms
+
+# In[6]:
+
 
 # the shapes are used as is without a buffer - suggested for renewable energy
 # test site areas in draft OREDP II p. 109
@@ -52,7 +74,11 @@ wind_farms = fns.constraint_wind_farm(
     )
 )
 
+
 # ### Frequent shipping routes
+
+# In[7]:
+
 
 # 1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
 shipping, shipping_b = fns.constraint_shipping_routes(
@@ -62,7 +88,11 @@ shipping, shipping_b = fns.constraint_shipping_routes(
     dat_extent=extent,
 )
 
+
 # ### Shipwrecks
+
+# In[8]:
+
 
 # Archaeological Exclusion Zones recommendation - 100 m buffer
 shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
@@ -72,7 +102,11 @@ shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
     dat_extent=extent,
 )
 
+
 # ### Subsea cables
+
+# In[9]:
+
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
 cables, cables_b = fns.constraint_subsea_cables(
@@ -80,7 +114,11 @@ cables, cables_b = fns.constraint_subsea_cables(
     dat_extent=extent,
 )
 
+
 # ## Crop data layers
+
+# In[14]:
+
 
 # land boundary
 land = rd.read_shapefile_from_zip(
@@ -91,13 +129,24 @@ land = rd.read_shapefile_from_zip(
 
 land = land.dissolve().to_crs(rd.CRS)
 
+
+# In[10]:
+
+
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
+
+
+# In[15]:
+
 
 # crop land areas from the buffer
 buffer = buffer.overlay(land, how="difference")
 
+
 # ## Map
+
+# In[11]:
 
 
 def plot_map(dat_xr, fontsize=11.5):
@@ -200,7 +249,7 @@ def plot_map(dat_xr, fontsize=11.5):
         xformatter=LongitudeFormatter(auto_hide=False, dms=True),
         yformatter=LatitudeFormatter(auto_hide=False, dms=True),
         xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize, "rotation": 90},
+        ylabel_style={"fontsize": fontsize, "rotation": 89.9},
     )
     axis.add_artist(
         ScaleBar(
@@ -225,6 +274,9 @@ def plot_map(dat_xr, fontsize=11.5):
     #     dpi=600,
     # )
     plt.show()
+
+
+# In[16]:
 
 
 plot_map(ds)

@@ -3,6 +3,9 @@
 
 # # Kish Basin statistics
 
+# In[1]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -17,30 +20,64 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
+# In[2]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
+
+
+# In[3]:
+
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 plt.rcParams["xtick.minor.size"] = 0
 plt.rcParams["ytick.minor.size"] = 0
 
+
 # ## Read data layers
+
+# In[4]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
+# In[5]:
+
+
 ds = fns.net_to_gross(ds)
+
+
+# In[6]:
+
 
 ds
 
+
+# In[7]:
+
+
 ds.rio.crs
+
+
+# In[8]:
+
 
 ds.rio.resolution()
 
+
+# In[9]:
+
+
 ds.rio.bounds()
+
+
+# In[25]:
 
 
 def plot_facet_maps(dat_xr, dat_extent, dat_crs):
@@ -83,21 +120,47 @@ def plot_facet_maps(dat_xr, dat_extent, dat_crs):
         plt.show()
 
 
+# In[26]:
+
+
 plot_facet_maps(ds, extent, rd.CRS)
+
 
 # ## Stats
 
+# In[12]:
+
+
 df = ds.to_dataframe()[list(ds.data_vars)]
 
+
+# In[13]:
+
+
 df.describe()
+
+
+# In[14]:
+
 
 # max total thickness
 ds.sum(dim="halite").to_dataframe()[["Thickness", "ThicknessNet"]].max()
 
+
+# In[15]:
+
+
 # surface area
 shape = rd.halite_shape(dat_xr=ds)
 
+
+# In[16]:
+
+
 print(f"Surface area: {shape.area[0]:.4E} m\N{SUPERSCRIPT TWO}")
+
+
+# In[47]:
 
 
 def plot_facet_maps_distr(
@@ -223,6 +286,9 @@ def plot_facet_maps_distr(
     plt.show()
 
 
+# In[48]:
+
+
 plot_facet_maps_distr(
     ds,
     extent,
@@ -231,6 +297,10 @@ plot_facet_maps_distr(
     [85 + 35 * n + 90 for n in range(7)],
     "Net thickness [m]",
 )
+
+
+# In[49]:
+
 
 plot_facet_maps_distr(
     ds,
@@ -241,6 +311,10 @@ plot_facet_maps_distr(
     "Top depth [m]",
 )
 
+
+# In[20]:
+
+
 # compare depths
 (ds["BaseDepth"] - ds["TopDepth"]).plot(
     col="halite",
@@ -250,7 +324,15 @@ plot_facet_maps_distr(
 )
 plt.show()
 
+
+# In[21]:
+
+
 val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
 min(val[~np.isnan(val)])
+
+
+# In[22]:
+
 
 max(val[~np.isnan(val)])

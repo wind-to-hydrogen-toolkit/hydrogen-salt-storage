@@ -3,6 +3,9 @@
 
 # # Sensitivity analysis
 
+# In[1]:
+
+
 import os
 from itertools import product
 
@@ -13,8 +16,14 @@ import seaborn as sns
 
 from h2ss import compare
 
+# In[2]:
+
+
 cavern_diameter = np.arange(45, 106, step=5)
 cavern_height = np.arange(80, 321, step=20)
+
+
+# In[3]:
 
 
 def generate_sensitivity_data(diameter, height):
@@ -34,7 +43,14 @@ def generate_sensitivity_data(diameter, height):
             print(f"{filename} exists!")
 
 
+# In[4]:
+
+
 generate_sensitivity_data(cavern_diameter, cavern_height)
+
+
+# In[5]:
+
 
 filelist = []
 for cd, ch in product(cavern_diameter, cavern_height):
@@ -42,16 +58,40 @@ for cd, ch in product(cavern_diameter, cavern_height):
         os.path.join("data", "sensitivity", f"sensitivity_d{cd}_h{ch}.csv")
     )
 
+
+# In[6]:
+
+
 cdf = pd.concat((pd.read_csv(f) for f in filelist), ignore_index=True)
+
+
+# In[7]:
+
 
 cdf.drop(columns=["Unnamed: 0"], inplace=True)
 
+
+# In[8]:
+
+
 cdf["cavern_height"] = cdf["cavern_height"].astype(int)
+
+
+# In[9]:
+
 
 cdf.describe()
 
+
+# In[10]:
+
+
 # cavern height-to-diameter-ratio
 pd.Series((cdf["cavern_height"] / cdf["cavern_diameter"]).unique()).describe()
+
+
+# In[11]:
+
 
 ax = sns.scatterplot(
     data=cdf,
@@ -65,9 +105,17 @@ ax = sns.scatterplot(
 sns.despine()
 plt.show()
 
+
+# In[12]:
+
+
 len(cdf["cavern_diameter"].unique()) == len(cdf["cavern_height"].unique())
 
+
 # ## Number of caverns and total capacity
+
+# In[15]:
+
 
 f, ax = plt.subplots(1, 2, figsize=(14, 7), sharey=True)
 
@@ -127,7 +175,11 @@ plt.tight_layout()
 # )
 plt.show()
 
+
 # ## Mean capacity
+
+# In[14]:
+
 
 data = (
     cdf.groupby(["cavern_height", "cavern_diameter"])
@@ -157,29 +209,69 @@ plt.title("Mean capacity [GWh]")
 plt.tight_layout()
 plt.show()
 
+
 # ## Base case
+
+# In[16]:
+
 
 base = cdf[
     (cdf["cavern_diameter"] == 85) & (cdf["cavern_height"] == 120)
 ].reset_index(drop=True)
 
+
+# In[17]:
+
+
 base.describe()[["capacity"]]
+
+
+# In[18]:
+
 
 base_mean = base[["capacity"]].mean().values[0]
 
+
+# In[19]:
+
+
 base_sum = base[["capacity"]].sum().values[0]
+
+
+# In[20]:
+
 
 base_count = base[["capacity"]].count().values[0]
 
+
+# In[21]:
+
+
 print(f"{base_mean:.3f}")
+
+
+# In[22]:
+
 
 print(f"{base_sum:.3f}")
 
+
+# In[23]:
+
+
 base_count
+
 
 # ## Base diameter, varying height
 
+# In[24]:
+
+
 dd = cdf[(cdf["cavern_diameter"] == 85)].reset_index(drop=True)
+
+
+# In[25]:
+
 
 dd_mean = (
     pd.DataFrame(dd.groupby("cavern_height").mean()["capacity"] - base_mean)
@@ -187,11 +279,19 @@ dd_mean = (
     * 100
 ).reset_index()
 
+
+# In[26]:
+
+
 dd_sum = (
     pd.DataFrame(dd.groupby("cavern_height").sum()["capacity"] - base_sum)
     / base_sum
     * 100
 ).reset_index()
+
+
+# In[27]:
+
 
 dd_count = (
     pd.DataFrame(dd.groupby("cavern_height").count()["capacity"] - base_count)
@@ -199,9 +299,17 @@ dd_count = (
     * 100
 ).reset_index()
 
+
 # ## Base height, varying diameter
 
+# In[28]:
+
+
 dh = cdf[(cdf["cavern_height"] == 120)].reset_index(drop=True)
+
+
+# In[29]:
+
 
 dh_mean = (
     pd.DataFrame(dh.groupby("cavern_diameter").mean()["capacity"] - base_mean)
@@ -209,11 +317,19 @@ dh_mean = (
     * 100
 ).reset_index()
 
+
+# In[30]:
+
+
 dh_sum = (
     pd.DataFrame(dh.groupby("cavern_diameter").sum()["capacity"] - base_sum)
     / base_sum
     * 100
 ).reset_index()
+
+
+# In[31]:
+
 
 dh_count = (
     pd.DataFrame(
@@ -223,12 +339,20 @@ dh_count = (
     * 100
 ).reset_index()
 
+
 # ## Combined plots
+
+# In[32]:
+
 
 dh_sum["type"] = "Total capacity"
 dh_count["type"] = "Number of caverns"
 dd_sum["type"] = "Total capacity"
 dd_count["type"] = "Number of caverns"
+
+
+# In[39]:
+
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 sns.barplot(
@@ -270,12 +394,18 @@ plt.tight_layout()
 plt.show()
 
 
+# In[37]:
+
+
 def colour_label(data):
     "Use different colours for negative and positive values"
     conditions = [(data["capacity"] < 0), (data["capacity"] >= 0)]
     choices = ["N", "P"]
     data["colour"] = np.select(conditions, choices)
     return data
+
+
+# In[38]:
 
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)

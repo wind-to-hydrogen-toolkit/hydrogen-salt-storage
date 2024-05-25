@@ -5,6 +5,9 @@
 #
 # <https://hyss.ie/>
 
+# In[1]:
+
+
 import glob
 import os
 from textwrap import wrap
@@ -20,10 +23,17 @@ from shapely.geometry import Polygon
 
 from h2ss import data as rd
 
+# In[2]:
+
+
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 plt.rcParams["xtick.minor.size"] = 0
 plt.rcParams["ytick.minor.size"] = 0
+
+
+# In[3]:
+
 
 # base data download directory
 DATA_DIR = os.path.join("data", "kish-basin")
@@ -37,9 +47,21 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
+# In[4]:
+
+
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
+
+# In[5]:
+
+
 ZipFile(DATA_FILE).namelist()
+
+
+# In[6]:
+
 
 # extract archive
 try:
@@ -48,7 +70,11 @@ try:
 except BadZipFile:
     print("There were issues with the file", DATA_FILE)
 
+
 # ## Map extent
+
+# In[7]:
+
 
 with open(
     os.path.join(DATA_DIR, "Kish GIS Map Extent - Square.csv"),
@@ -56,7 +82,15 @@ with open(
 ) as f:
     print(f.read())
 
+
+# In[8]:
+
+
 CRS = 23029
+
+
+# In[9]:
+
 
 # create extent polygon
 extent = pd.read_csv(
@@ -74,9 +108,21 @@ extent = gpd.GeoSeries(
     crs=CRS,
 )
 
+
+# In[10]:
+
+
 extent.bounds
 
+
+# In[11]:
+
+
 extent.crs
+
+
+# In[13]:
+
 
 plt.figure(figsize=(7, 7))
 ax = plt.axes(projection=ccrs.epsg(3857))
@@ -88,7 +134,10 @@ plt.title("Kish GIS Map Extent")
 plt.tight_layout()
 plt.show()
 
+
 # ## XYZ data
+
+# In[14]:
 
 
 def read_dat_file(dat_path: str, dat_crs):
@@ -139,17 +188,43 @@ def read_dat_file(dat_path: str, dat_crs):
     return gdf
 
 
+# In[15]:
+
+
 ds = read_dat_file(DATA_DIR, dat_crs=CRS)
+
+
+# In[16]:
+
 
 ds
 
+
+# In[17]:
+
+
 ds.rio.crs
+
+
+# In[18]:
+
 
 ds.rio.resolution()
 
+
+# In[19]:
+
+
 ds.rio.bounds()
 
+
+# In[20]:
+
+
 xmin, ymin, xmax, ymax = extent.total_bounds
+
+
+# In[21]:
 
 
 def plot_maps(plot_data):
@@ -185,20 +260,39 @@ def plot_maps(plot_data):
 
 # ### Halite thickness
 
+# In[22]:
+
+
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
+
 
 # ### Halite thickness - zones of interest
 
+# In[23]:
+
+
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Zone" in x]))
+
 
 # ### Halite base depth
 
+# In[24]:
+
+
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Base" in x]))
+
 
 # ### Halite top depth
 
+# In[25]:
+
+
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
 
+
 # ### Halite top TWT (two-way thickness)
+
+# In[26]:
+
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Millisecond" in x]))

@@ -3,6 +3,9 @@
 
 # # Cavern storage capacity for variable heights
 
+# In[1]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -21,19 +24,34 @@ from h2ss import compare
 from h2ss import data as rd
 from h2ss import functions as fns
 
+# In[2]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
 # ## Halite data
+
+# In[3]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
+# In[4]:
+
+
 xmin, ymin, xmax, ymax = extent.total_bounds
 
+
 # ## Constraints
+
+# In[5]:
+
 
 # exploration wells
 _, wells_b = fns.constraint_exploration_well(
@@ -73,22 +91,38 @@ _, cables_b = fns.constraint_subsea_cables(
     dat_extent=extent,
 )
 
+
+# In[6]:
+
+
 # distance from salt formation edge
 edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
+
 # ## Zones of interest
+
+# In[7]:
+
 
 zones, zds = fns.zones_of_interest(
     dat_xr=ds,
     constraints={"net_height": 85, "min_depth": 500, "max_depth": 2000},
 )
 
+
 # ## Generate caverns
+
+# In[8]:
+
 
 caverns = fns.generate_caverns_hexagonal_grid(
     zones_df=zones,
     dat_extent=extent,
 )
+
+
+# In[9]:
+
 
 caverns = fns.cavern_dataframe(
     dat_zone=zds,
@@ -96,12 +130,20 @@ caverns = fns.cavern_dataframe(
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
 )
 
+
+# In[10]:
+
+
 # label caverns by depth and heights
 caverns = fns.label_caverns(
     cavern_df=caverns,
     heights=[85, 155, 311],
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
 )
+
+
+# In[11]:
+
 
 caverns, _ = fns.generate_caverns_with_constraints(
     cavern_df=caverns,
@@ -115,13 +157,21 @@ caverns, _ = fns.generate_caverns_with_constraints(
     },
 )
 
+
+# In[12]:
+
+
 compare.distance_from_pipeline(
     caverns, os.path.join("data", "pipelines", "pipelines.zip")
 )
 
+
 # ## Capacity
 
 # ### Cavern volume
+
+# In[13]:
+
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
     height=caverns["cavern_height"]
@@ -130,13 +180,21 @@ caverns["cavern_volume"] = cap.corrected_cavern_volume(
     v_cavern=caverns["cavern_total_volume"]
 )
 
+
 # ### Mid-point temperature
+
+# In[14]:
+
 
 caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
     height=caverns["cavern_height"], depth_top=caverns["cavern_depth"]
 )
 
+
 # ### Operating pressure
+
+# In[15]:
+
 
 (
     caverns["p_operating_min"],
@@ -146,7 +204,11 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
     depth_water=-caverns["Bathymetry"],
 )
 
+
 # ### Hydrogen gas density
+
+# In[16]:
+
 
 caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
     p_operating_min=caverns["p_operating_min"],
@@ -154,7 +216,11 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
     t_mid_point=caverns["t_mid_point"],
 )
 
+
 # ### Working mass of hydrogen
+
+# In[17]:
+
 
 (
     caverns["working_mass"],
@@ -166,18 +232,30 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
     v_cavern=caverns["cavern_volume"],
 )
 
+
 # ### Energy storage capacity in GWh
+
+# In[18]:
+
 
 caverns["capacity"] = cap.energy_storage_capacity(
     m_working=caverns["working_mass"]
 )
 
+
 # ## Stats
+
+# In[19]:
+
 
 # proportion of working gas to total gas
 caverns["working_mass_pct"] = caverns["working_mass"] / (
     caverns["working_mass"] + caverns["mass_operating_min"]
 )
+
+
+# In[20]:
+
 
 caverns.drop(
     columns=[
@@ -190,6 +268,10 @@ caverns.drop(
     ]
 ).describe()
 
+
+# In[21]:
+
+
 # totals
 caverns[
     [
@@ -201,11 +283,23 @@ caverns[
     ]
 ].sum()
 
+
+# In[37]:
+
+
 # compare with Ireland's electricity demand in 2050 (Deane, 2021)
 compare.electricity_demand_ie(data=caverns["capacity"])
 
+
+# In[38]:
+
+
 # compare with Ireland's hydrogen demand in 2050
 compare.hydrogen_demand_ie(data=caverns["capacity"])
+
+
+# In[24]:
+
 
 # total capacity at various depth/height combinations
 s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
@@ -214,11 +308,27 @@ s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
 s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
+
+# In[25]:
+
+
 s.groupby("depth").sum()[["capacity"]]
+
+
+# In[26]:
+
 
 s.groupby("cavern_height").sum()[["capacity"]]
 
+
+# In[27]:
+
+
 s.groupby("halite").sum()[["capacity"]]
+
+
+# In[28]:
+
 
 # number of caverns
 s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
@@ -227,16 +337,35 @@ s = caverns.groupby(["depth", "cavern_height", "halite"], sort=False)[
 s["%"] = s["capacity"] / len(caverns) * 100
 s
 
+
+# In[29]:
+
+
 s.groupby("depth").sum()[["capacity"]]
+
+
+# In[30]:
+
 
 s.groupby("cavern_height").sum()[["capacity"]]
 
+
+# In[31]:
+
+
 s.groupby("halite").sum()[["capacity"]]
+
 
 # ## Map
 
+# In[32]:
+
+
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
+
+
+# In[33]:
 
 
 def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
@@ -388,7 +517,7 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
         alpha=0.25,
         color="darkslategrey",
         xlabel_style={"fontsize": fontsize},
-        ylabel_style={"fontsize": fontsize, "rotation": 90},
+        ylabel_style={"fontsize": fontsize, "rotation": 89.9},
         xformatter=LongitudeFormatter(auto_hide=False, dms=True),
         yformatter=LatitudeFormatter(auto_hide=False, dms=True),
     )
@@ -416,6 +545,9 @@ def plot_map_alt(dat_xr, cavern_df, zones_gdf, top_depth=True, fontsize=11.5):
     #     dpi=600,
     # )
     plt.show()
+
+
+# In[34]:
 
 
 plot_map_alt(ds, caverns, zones)
