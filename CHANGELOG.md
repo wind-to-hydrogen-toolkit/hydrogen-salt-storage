@@ -1,5 +1,10 @@
 # Changelog
 
+## [2024.06.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.06.0)
+
+[Various enhancements](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/13) by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.05.0...2024.06.0).
+
 ## [2024.05.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.05.0)
 
 [Various enhancements](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/12) by @nmstreethran.
