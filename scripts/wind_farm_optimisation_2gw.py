@@ -14,6 +14,7 @@ import geopandas as gpd
 import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -330,7 +331,7 @@ weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 weibull_wf_df
 
 
-# In[26]:
+# In[25]:
 
 
 # totals
@@ -339,13 +340,13 @@ weibull_wf_df[
 ].sum()
 
 
-# In[27]:
+# In[26]:
 
 
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
 
-# In[28]:
+# In[27]:
 
 
 compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
@@ -353,7 +354,7 @@ compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-# In[29]:
+# In[28]:
 
 
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
@@ -374,57 +375,54 @@ caverns[
 ].describe()
 
 
+# In[29]:
+
+
+pd.Series(caverns[list(caverns.filter(like="dist_"))].values.flat).describe()
+
+
+# In[30]:
+
+
+pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
+
+
 # In[31]:
 
 
-caverns[list(caverns.filter(like="LCOT_"))].describe().mean(axis=1)
-
-
-# In[32]:
-
-
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
-sns.boxplot(
-    caverns.filter(like="dist_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[0],
-    legend=False,
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[0].set_ylabel("Transmission distance [km]")
-axes[0].tick_params(axis="x", bottom=False)
-sns.boxplot(
-    caverns.filter(like="LCOT_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[1],
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
+for n, col, lab, show_legend in zip(
+    [0, 1],
+    ["dist_", "LCOT_"],
+    ["Transmission distance [km]", "Pipeline LCOT [€ kg⁻¹]"],
+    [False, True],
+):
+    sns.boxplot(
+        caverns.filter(like=col)
+        .set_axis(list(wind_farms["name"]), axis=1)
+        .melt(),
+        y="value",
+        hue="variable",
+        palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
+        width=0.35,
+        ax=axes[n],
+        legend=show_legend,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.15,
+        showmeans=True,
+        meanprops={
+            "marker": "d",
+            "markeredgecolor": "black",
+            "markerfacecolor": "none",
+        },
+    )
+    axes[n].set_ylabel(lab)
+    axes[n].tick_params(axis="x", bottom=False)
+    axes[n].yaxis.grid(True, linewidth=0.25)
 axes[1].legend(loc="lower right")
-axes[1].tick_params(axis="x", bottom=False)
-axes[1].yaxis.grid(True, linewidth=0.25)
-axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
-# plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission_2gw.jpg"),
-#     format="jpg",
-#     dpi=600,
-# )
 plt.show()
 
 

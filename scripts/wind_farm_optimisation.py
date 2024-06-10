@@ -14,6 +14,7 @@ import geopandas as gpd
 import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib import patheffects
@@ -284,7 +285,7 @@ plt.show()
 
 # ## Number of reference wind turbines
 
-# In[17]:
+# In[14]:
 
 
 # number of 15 MW turbines, rounded down to the nearest integer
@@ -295,7 +296,7 @@ weibull_wf_df["n_turbines"] = opt.number_of_turbines(
 
 # ## Annual energy production [MWh]
 
-# In[18]:
+# In[15]:
 
 
 weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
@@ -303,7 +304,7 @@ weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
 
 # ## Annual hydrogen production [kg]
 
-# In[19]:
+# In[16]:
 
 
 weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
@@ -311,7 +312,7 @@ weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
 
 # ## AHP as a proportion of the total working mass
 
-# In[20]:
+# In[17]:
 
 
 weibull_wf_df["AHP_frac"] = (
@@ -321,7 +322,7 @@ weibull_wf_df["AHP_frac"] = (
 
 # ## AHP converted to storage demand [GWh]
 
-# In[21]:
+# In[18]:
 
 
 weibull_wf_df["demand"] = cap.energy_storage_capacity(
@@ -331,7 +332,7 @@ weibull_wf_df["demand"] = cap.energy_storage_capacity(
 
 # ## Number of caverns required based on cumulative working mass and AHP
 
-# In[22]:
+# In[19]:
 
 
 compare.calculate_number_of_caverns(
@@ -341,7 +342,7 @@ compare.calculate_number_of_caverns(
 
 # ## Transmission distance [km]
 
-# In[23]:
+# In[20]:
 
 
 caverns, injection_point = opt.transmission_distance(
@@ -351,7 +352,7 @@ caverns, injection_point = opt.transmission_distance(
 
 # ## Electrolyser capacity [MW]
 
-# In[24]:
+# In[21]:
 
 
 weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
@@ -361,7 +362,7 @@ weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
-# In[25]:
+# In[22]:
 
 
 weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
@@ -373,7 +374,7 @@ weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 weibull_wf_df
 
 
-# In[27]:
+# In[23]:
 
 
 # totals
@@ -382,13 +383,13 @@ weibull_wf_df[
 ].sum()
 
 
-# In[28]:
+# In[24]:
 
 
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
 
-# In[29]:
+# In[25]:
 
 
 compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
@@ -396,7 +397,7 @@ compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-# In[30]:
+# In[26]:
 
 
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
@@ -417,50 +418,52 @@ caverns[
 ].describe()
 
 
-# In[32]:
+# In[53]:
 
 
-caverns[list(caverns.filter(like="LCOT_"))].describe().mean(axis=1)
+pd.Series(caverns[list(caverns.filter(like="dist_"))].values.flat).describe()
 
 
-# In[33]:
+# In[54]:
+
+
+pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
+
+
+# In[63]:
 
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
-sns.boxplot(
-    caverns.filter(like="dist_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[0],
-    legend=False,
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[0].set_ylabel("Transmission distance [km]")
-axes[0].tick_params(axis="x", bottom=False)
-sns.boxplot(
-    caverns.filter(like="LCOT_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[1],
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
+for n, col, lab, show_legend in zip(
+    [0, 1],
+    ["dist_", "LCOT_"],
+    ["Transmission distance [km]", "Pipeline LCOT [€ kg⁻¹]"],
+    [False, True],
+):
+    sns.boxplot(
+        caverns.filter(like=col)
+        .set_axis(list(wind_farms["name"]), axis=1)
+        .melt(),
+        y="value",
+        hue="variable",
+        palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
+        width=0.35,
+        ax=axes[n],
+        legend=show_legend,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.15,
+        showmeans=True,
+        meanprops={
+            "marker": "d",
+            "markeredgecolor": "black",
+            "markerfacecolor": "none",
+        },
+    )
+    axes[n].set_ylabel(lab)
+    axes[n].tick_params(axis="x", bottom=False)
+    axes[n].yaxis.grid(True, linewidth=0.25)
 axes[1].legend(loc="lower right")
-axes[1].tick_params(axis="x", bottom=False)
-axes[1].yaxis.grid(True, linewidth=0.25)
-axes[0].yaxis.grid(True, linewidth=0.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
@@ -473,13 +476,13 @@ plt.show()
 
 # ## Maps
 
-# In[34]:
+# In[64]:
 
 
 shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 
-# In[35]:
+# In[65]:
 
 
 def plot_map_facet(
@@ -582,7 +585,7 @@ plot_map_facet(
 )
 
 
-# In[37]:
+# In[86]:
 
 
 def plot_map_extent(cavern_df):
@@ -603,7 +606,7 @@ def plot_map_extent(cavern_df):
     wind_farms.plot(
         ax=ax2, facecolor="none", hatch="///", edgecolor="royalblue"
     )
-    plt.xlim(xmin_ - 19000, xmax_ + 1500)
+    plt.xlim(xmin_ - 25000, xmax_ + 9500)
     plt.ylim(ymin_ - 3000, ymax_ + 3000)
     injection_point.plot(ax=ax2, marker="*", color="darkslategrey")
     basemap = cx.providers.CartoDB.VoyagerNoLabels
@@ -613,7 +616,7 @@ def plot_map_extent(cavern_df):
         source=basemap,
         attribution=False,
     )
-    ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
+    ax2.text(xmin_ - 24250, ymin_ - 2150, basemap["attribution"], fontsize=9)
     map_labels = zip(
         zip(wind_farms.centroid.x, wind_farms.centroid.y), wind_farms["name"]
     )
@@ -659,7 +662,7 @@ def plot_map_extent(cavern_df):
     plt.show()
 
 
-# In[38]:
+# In[87]:
 
 
 plot_map_extent(caverns)
