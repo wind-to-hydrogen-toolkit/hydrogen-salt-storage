@@ -309,7 +309,7 @@ plot_bath_map(ds["BaseDepthSeabed"].sel(halite="Rossall"), cmap="jet")
 
 
 bath = rd.bathymetry_layer(
-    dat_extent=extent,
+    dat_extent=extent.buffer(3000),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 

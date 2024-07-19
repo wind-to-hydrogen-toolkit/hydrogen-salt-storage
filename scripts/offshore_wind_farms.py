@@ -126,7 +126,7 @@ plt.show()
 wind_farms.drop(index=[0, 1, 7], inplace=True)
 
 
-# In[12]:
+# In[11]:
 
 
 # merge wind farm polygons
@@ -163,7 +163,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[13]:
+# In[12]:
 
 
 # read Kish Basin data
@@ -175,11 +175,205 @@ ds, extent = rd.read_dat_file(dat_path=DATA_DIR)
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 
-# In[14]:
+# In[13]:
 
 
 # shape of the halite
 shape = rd.halite_shape(dat_xr=ds)
+
+
+# In[60]:
+
+
+# wind farm bounds
+wxmin, wymin, wxmax, wymax = wind_farms.to_crs(rd.CRS).dissolve().total_bounds
+
+
+# In[63]:
+
+
+# extent for bathymetry layer
+bath_extent = (
+    gpd.GeoDataFrame(geometry=extent)
+    .overlay(wind_farms.to_crs(rd.CRS), how="union")
+    .dissolve()
+    .buffer(1000)
+    .envelope
+)
+
+
+# In[66]:
+
+
+# bathymetry layer
+bath = rd.bathymetry_layer(
+    dat_extent=bath_extent,
+    bathymetry_path=os.path.join("data", "bathymetry"),
+)
+
+
+# In[110]:
+
+
+plt.figure(figsize=(11, 11))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+
+ds.max(dim="halite")["Thickness"].plot.contourf(
+    cmap="flare",
+    # alpha=0.65,
+    robust=True,
+    levels=15,
+    cbar_kwargs={
+        "label": "Maximum halite thickness [m]",
+        "aspect": 25,
+        "pad": 0.035,
+    },
+)
+
+CS = bath["elevation"].plot.contour(
+    colors="black",
+    levels=[-180 + 30 * n for n in range(6)],
+    linewidths=0.5,
+    linestyles="solid",
+    # alpha=0.5,
+    robust=True,
+)
+plt.clabel(CS, inline=True, fontsize=11)
+
+plt.xlim(xmin - 8550, xmax + 1000)
+plt.ylim(wymin - 1000, wymax + 1000)
+
+# wind farms
+# colours = ["firebrick", "black", "royalblue"]
+hatches = ["///", "xxx", "\\\\\\"]
+legend_handles = []
+# for index, colour in zip(range(3), colours):
+for index, hatch in zip(range(3), hatches):
+    wind_farms.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+        ax=ax, hatch=hatch, facecolor="none", linewidth=2, edgecolor="black"
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            hatch=hatch,
+            edgecolor="black",
+            label=wind_farms.iloc[[index]]["name"].values[0],
+        )
+    )
+
+basemap = cx.providers.CartoDB.Voyager
+cx.add_basemap(
+    ax,
+    crs=rd.CRS,
+    source=basemap,
+    attribution=False,
+)
+ax.text(xmin - 8200, ymin - 15000, basemap["attribution"], fontsize=8.5)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+    xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+    yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+    ylabel_style={"rotation": 89.9},
+)
+ax.add_artist(
+    ScaleBar(
+        1,
+        box_alpha=0,
+        location="lower left",
+        color="darkslategrey",
+        width_fraction=0.0075,
+    )
+)
+ax.legend(handles=legend_handles, loc="lower left", bbox_to_anchor=(0, 0.05))
+
+plt.title(None)
+plt.tight_layout()
+
+# plt.savefig(
+#     os.path.join("graphics", "fig_offshore_wind_farms.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
+plt.show()
+
+
+# In[113]:
+
+
+plt.figure(figsize=(11, 11))
+ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+
+ds.max(dim="halite")["Thickness"].plot.contourf(
+    cmap="flare",
+    # alpha=0.65,
+    robust=True,
+    levels=15,
+    cbar_kwargs={
+        "label": "Maximum halite thickness [m]",
+        "aspect": 25,
+        "pad": 0.035,
+    },
+)
+
+plt.xlim(xmin - 8550, xmax + 1000)
+# plt.ylim(ymin - 10500, ymax + 10500)
+
+# wind farms
+# colours = ["firebrick", "black", "royalblue"]
+hatches = ["///", "xxx", "\\\\\\"]
+legend_handles = []
+# for index, colour in zip(range(3), colours):
+for index, hatch in zip(range(3), hatches):
+    wind_farms.iloc[[index]].to_crs(rd.CRS).to_crs(rd.CRS).plot(
+        ax=ax, hatch=hatch, facecolor="none", linewidth=2, edgecolor="black"
+    )
+    legend_handles.append(
+        mpatches.Patch(
+            facecolor="none",
+            hatch=hatch,
+            edgecolor="black",
+            label=wind_farms.iloc[[index]]["name"].values[0],
+        )
+    )
+
+basemap = cx.providers.CartoDB.Voyager
+cx.add_basemap(
+    ax,
+    crs=rd.CRS,
+    source=basemap,
+    attribution=False,
+)
+ax.text(xmin - 8200, ymin - 15000, basemap["attribution"], fontsize=8.5)
+ax.gridlines(
+    draw_labels={"bottom": "x", "left": "y"},
+    alpha=0.25,
+    color="darkslategrey",
+    xformatter=LongitudeFormatter(auto_hide=False, dms=True),
+    yformatter=LatitudeFormatter(auto_hide=False, dms=True),
+    ylabel_style={"rotation": 89.9},
+)
+ax.add_artist(
+    ScaleBar(
+        1,
+        box_alpha=0,
+        location="lower right",
+        color="darkslategrey",
+        width_fraction=0.0075,
+    )
+)
+ax.legend(handles=legend_handles, loc="lower right", bbox_to_anchor=(1, 0.05))
+
+plt.title(None)
+plt.tight_layout()
+
+# plt.savefig(
+#     os.path.join("graphics", "fig_offshore_wind_farms_alt.jpg"),
+#     format="jpg",
+#     dpi=600,
+# )
+plt.show()
 
 
 # In[25]:
