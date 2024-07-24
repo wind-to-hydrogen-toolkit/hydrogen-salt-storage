@@ -642,9 +642,9 @@ def lcot_pipeline_function(
     .. math::
         OPEX = CAPEX \\cdot F_{OPEX}
     .. math::
-        LCOT = \\frac{CAPEX \\cdot d + \\sum_{l=0}^{L}
+        LCOT = \\frac{CAPEX \\cdot d + \\displaystyle\\sum_{l=0}^{L}
         \\frac{OPEX}{{(1 + DR)}^l}}
-        {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
+        {\\displaystyle\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
     :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline [€ km⁻¹],
