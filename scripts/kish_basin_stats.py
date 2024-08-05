@@ -11,7 +11,6 @@ import os
 import cartopy.crs as ccrs
 import contextily as cx
 import matplotlib.pyplot as plt
-import numpy as np
 # import matplotlib.patches as mpatches
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
@@ -32,8 +31,6 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
 
 
 # ## Read data layers
@@ -325,14 +322,13 @@ plot_facet_maps_distr(
 plt.show()
 
 
-# In[21]:
+# In[12]:
 
 
-val = (ds["BaseDepth"] - ds["TopDepth"]).values.flatten()
-min(val[~np.isnan(val)])
+(ds["BaseDepth"] - ds["TopDepth"]).max().values
 
 
-# In[22]:
+# In[13]:
 
 
-max(val[~np.isnan(val)])
+(ds["BaseDepth"] - ds["TopDepth"]).min().values

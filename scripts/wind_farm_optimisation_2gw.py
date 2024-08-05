@@ -331,7 +331,7 @@ weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 weibull_wf_df
 
 
-# In[25]:
+# In[26]:
 
 
 # totals
@@ -340,13 +340,13 @@ weibull_wf_df[
 ].sum()
 
 
-# In[26]:
+# In[27]:
 
 
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
 
-# In[27]:
+# In[28]:
 
 
 compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
@@ -354,7 +354,7 @@ compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-# In[28]:
+# In[29]:
 
 
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
@@ -375,19 +375,19 @@ caverns[
 ].describe()
 
 
-# In[29]:
+# In[31]:
 
 
 pd.Series(caverns[list(caverns.filter(like="dist_"))].values.flat).describe()
 
 
-# In[30]:
+# In[32]:
 
 
 pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
 
 
-# In[31]:
+# In[33]:
 
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
@@ -428,13 +428,13 @@ plt.show()
 
 # ## Maps
 
-# In[33]:
+# In[34]:
 
 
 shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 
-# In[34]:
+# In[35]:
 
 
 def plot_map_facet(
@@ -528,7 +528,7 @@ def plot_map_facet(
     plt.show()
 
 
-# In[35]:
+# In[36]:
 
 
 plot_map_facet(

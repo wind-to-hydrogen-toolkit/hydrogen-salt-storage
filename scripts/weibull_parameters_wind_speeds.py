@@ -28,8 +28,6 @@ from h2ss import functions as fns
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
 
 
 # In[3]:

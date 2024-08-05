@@ -28,8 +28,6 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
 
 
 # ## Read data layers
