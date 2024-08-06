@@ -5,7 +5,7 @@
 #
 # Data from HYSS for Kish Basin (<https://hyss.ie/>)
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -16,7 +16,7 @@ import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
 
-# In[2]:
+# In[ ]:
 
 
 data = pd.DataFrame(
@@ -45,39 +45,39 @@ data = pd.DataFrame(
 )
 
 
-# In[3]:
+# In[ ]:
 
 
 data.sort_values(by=["gross", "NTG"], inplace=True)
 
 
-# In[4]:
+# In[ ]:
 
 
 data
 
 
-# In[5]:
+# In[ ]:
 
 
 model = sm.OLS(data["NTG"], sm.add_constant(data["gross"]))
 results = model.fit()
 
 
-# In[6]:
+# In[ ]:
 
 
 print(results.summary())
 
 
-# In[7]:
+# In[ ]:
 
 
 b, m = results.params
 r = results.rsquared
 
 
-# In[8]:
+# In[ ]:
 
 
 g = sns.lmplot(data=data, x="gross", y="NTG")
@@ -86,7 +86,7 @@ g.set_axis_labels("Gross halite thickness [m]", "Net-to-gross ratio")
 plt.show()
 
 
-# In[9]:
+# In[ ]:
 
 
 g = sns.lmplot(data=data, x="gross", y="NTG", hue="halite")
@@ -95,7 +95,7 @@ g.set_axis_labels("Gross halite thickness [m]", "Net-to-gross ratio")
 plt.show()
 
 
-# In[10]:
+# In[ ]:
 
 
 data.describe()
@@ -103,33 +103,33 @@ data.describe()
 
 # ## Fylde only
 
-# In[11]:
+# In[ ]:
 
 
 fylde = data[data["halite"] == "Fylde"]
 
 
-# In[12]:
+# In[ ]:
 
 
 model = sm.OLS(fylde["NTG"], sm.add_constant(fylde["gross"]))
 results = model.fit()
 
 
-# In[13]:
+# In[ ]:
 
 
 print(results.summary())
 
 
-# In[14]:
+# In[ ]:
 
 
 b, m = results.params
 r = results.rsquared
 
 
-# In[15]:
+# In[ ]:
 
 
 g = sns.lmplot(data=fylde, x="gross", y="NTG")
@@ -138,7 +138,7 @@ g.set_axis_labels("Gross halite thickness [m]", "Net-to-gross ratio")
 plt.show()
 
 
-# In[16]:
+# In[ ]:
 
 
 data.describe()
@@ -146,7 +146,7 @@ data.describe()
 
 # ## Linear regression
 
-# In[17]:
+# In[ ]:
 
 
 def net_to_gross(gross):
@@ -154,51 +154,51 @@ def net_to_gross(gross):
     return min(y, 0.75)
 
 
-# In[18]:
+# In[ ]:
 
 
 ntg = []
 gross_thickness = np.arange(0, 700, step=1)
 
 
-# In[19]:
+# In[ ]:
 
 
 for x in gross_thickness:
     ntg.append(net_to_gross(x))
 
 
-# In[20]:
+# In[ ]:
 
 
 df = pd.DataFrame({"gross": gross_thickness, "NTG": ntg})
 
 
-# In[21]:
+# In[ ]:
 
 
 df["net"] = df["gross"] * df["NTG"]
 
 
-# In[22]:
+# In[ ]:
 
 
 df.describe()
 
 
-# In[23]:
+# In[ ]:
 
 
 net_to_gross(1000)
 
 
-# In[24]:
+# In[ ]:
 
 
 print(f"{net_to_gross(300):.5f}")
 
 
-# In[25]:
+# In[ ]:
 
 
 ax = sns.scatterplot(

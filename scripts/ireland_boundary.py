@@ -8,7 +8,7 @@
 # - <https://data.gov.ie/dataset/provinces-national-statutory-boundaries-2019>
 # - <https://data-osi.opendata.arcgis.com/maps/osi::provinces-national-statutory-boundaries-2019>
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -18,14 +18,14 @@ import matplotlib.pyplot as plt
 
 from h2ss import data as rd
 
-# In[2]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 
 
-# In[3]:
+# In[ ]:
 
 
 URL = (
@@ -38,55 +38,55 @@ FILE_NAME = "osi-provinces-ungeneralised-2019.zip"
 DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 
 
-# In[4]:
+# In[ ]:
 
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 
-# In[5]:
+# In[ ]:
 
 
 ZipFile(DATA_FILE).namelist()
 
 
-# In[6]:
+# In[ ]:
 
 
 data = rd.read_shapefile_from_zip(data_path=DATA_FILE)
 
 
-# In[7]:
+# In[ ]:
 
 
 data
 
 
-# In[8]:
+# In[ ]:
 
 
 data.crs
 
 
-# In[9]:
+# In[ ]:
 
 
 data.shape
 
 
-# In[10]:
+# In[ ]:
 
 
 data = data.dissolve()
 
 
-# In[11]:
+# In[ ]:
 
 
 data.bounds
 
 
-# In[12]:
+# In[ ]:
 
 
 data.plot(

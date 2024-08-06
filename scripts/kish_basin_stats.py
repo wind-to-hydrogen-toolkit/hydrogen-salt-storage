@@ -3,7 +3,7 @@
 
 # # Kish Basin statistics
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -19,14 +19,14 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
-# In[2]:
+# In[ ]:
 
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 
-# In[3]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
@@ -35,7 +35,7 @@ plt.rcParams["ytick.major.size"] = 0
 
 # ## Read data layers
 
-# In[4]:
+# In[ ]:
 
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -44,37 +44,37 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 )
 
 
-# In[5]:
+# In[ ]:
 
 
 ds = fns.net_to_gross(ds)
 
 
-# In[6]:
+# In[ ]:
 
 
 ds
 
 
-# In[7]:
+# In[ ]:
 
 
 ds.rio.crs
 
 
-# In[8]:
+# In[ ]:
 
 
 ds.rio.resolution()
 
 
-# In[9]:
+# In[ ]:
 
 
 ds.rio.bounds()
 
 
-# In[25]:
+# In[ ]:
 
 
 def plot_facet_maps(dat_xr, dat_extent, dat_crs):
@@ -117,7 +117,7 @@ def plot_facet_maps(dat_xr, dat_extent, dat_crs):
         plt.show()
 
 
-# In[26]:
+# In[ ]:
 
 
 plot_facet_maps(ds, extent, rd.CRS)
@@ -125,39 +125,39 @@ plot_facet_maps(ds, extent, rd.CRS)
 
 # ## Stats
 
-# In[12]:
+# In[ ]:
 
 
 df = ds.to_dataframe()[list(ds.data_vars)]
 
 
-# In[13]:
+# In[ ]:
 
 
 df.describe()
 
 
-# In[14]:
+# In[ ]:
 
 
 # max total thickness
 ds.sum(dim="halite").to_dataframe()[["Thickness", "ThicknessNet"]].max()
 
 
-# In[15]:
+# In[ ]:
 
 
 # surface area
 shape = rd.halite_shape(dat_xr=ds)
 
 
-# In[16]:
+# In[ ]:
 
 
 print(f"Surface area: {shape.area[0]:.4E} m\N{SUPERSCRIPT TWO}")
 
 
-# In[47]:
+# In[ ]:
 
 
 def plot_facet_maps_distr(
@@ -283,7 +283,7 @@ def plot_facet_maps_distr(
     plt.show()
 
 
-# In[48]:
+# In[ ]:
 
 
 plot_facet_maps_distr(
@@ -296,7 +296,7 @@ plot_facet_maps_distr(
 )
 
 
-# In[49]:
+# In[ ]:
 
 
 plot_facet_maps_distr(
@@ -309,7 +309,7 @@ plot_facet_maps_distr(
 )
 
 
-# In[20]:
+# In[ ]:
 
 
 # compare depths
@@ -322,13 +322,13 @@ plot_facet_maps_distr(
 plt.show()
 
 
-# In[12]:
+# In[ ]:
 
 
 (ds["BaseDepth"] - ds["TopDepth"]).max().values
 
 
-# In[13]:
+# In[ ]:
 
 
 (ds["BaseDepth"] - ds["TopDepth"]).min().values

@@ -6,7 +6,7 @@
         {
             "label": "convert-notebooks",
             "type": "shell",
-            "command": "source .venv/bin/activate && jupyter nbconvert --to script docs/notebooks/*.ipynb && rm -rf scripts/* && mv docs/notebooks/*.py scripts",
+            "command": "source .venv/bin/activate && jupyter nbconvert --to script --ClearOutputPreprocessor.enabled=True docs/notebooks/*.ipynb && rm -rf scripts/* && mv docs/notebooks/*.py scripts",
             "problemMatcher": [],
             "group": {
                 "kind": "build"

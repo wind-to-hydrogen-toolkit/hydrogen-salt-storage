@@ -6,7 +6,7 @@
 # - <https://data.gov.ie/dataset/weibull-parameters-wind-speeds-2001-to-2010-150m-above-ground-level>
 # - <https://gis.seai.ie/wind/>
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -23,14 +23,14 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
-# In[2]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 
 
-# In[3]:
+# In[ ]:
 
 
 # base data download directory
@@ -46,19 +46,19 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 
-# In[4]:
+# In[ ]:
 
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 
-# In[5]:
+# In[ ]:
 
 
 ZipFile(DATA_FILE).namelist()
 
 
-# In[6]:
+# In[ ]:
 
 
 weibull_c = rd.read_shapefile_from_zip(
@@ -66,7 +66,7 @@ weibull_c = rd.read_shapefile_from_zip(
 )
 
 
-# In[7]:
+# In[ ]:
 
 
 weibull_k = rd.read_shapefile_from_zip(
@@ -74,67 +74,67 @@ weibull_k = rd.read_shapefile_from_zip(
 )
 
 
-# In[8]:
+# In[ ]:
 
 
 weibull_c.crs
 
 
-# In[9]:
+# In[ ]:
 
 
 weibull_k.crs
 
 
-# In[10]:
+# In[ ]:
 
 
 weibull_c.shape
 
 
-# In[11]:
+# In[ ]:
 
 
 weibull_k.shape
 
 
-# In[12]:
+# In[ ]:
 
 
 weibull_c.columns
 
 
-# In[13]:
+# In[ ]:
 
 
 weibull_k.columns
 
 
-# In[14]:
+# In[ ]:
 
 
 weibull_c.head()
 
 
-# In[15]:
+# In[ ]:
 
 
 weibull_k.head()
 
 
-# In[16]:
+# In[ ]:
 
 
 ds, extent = rd.read_dat_file(dat_path=os.path.join("data", "kish-basin"))
 
 
-# In[17]:
+# In[ ]:
 
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 
-# In[18]:
+# In[ ]:
 
 
 ax = weibull_c.to_crs(3857).plot(
@@ -150,7 +150,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[19]:
+# In[ ]:
 
 
 ax = weibull_k.to_crs(3857).plot(
@@ -166,7 +166,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[20]:
+# In[ ]:
 
 
 # wind farms in the area
@@ -177,14 +177,14 @@ wind_farms = fns.constraint_wind_farm(
 )
 
 
-# In[21]:
+# In[ ]:
 
 
 # shape of the halite
 shape = rd.halite_shape(dat_xr=ds)
 
 
-# In[22]:
+# In[ ]:
 
 
 # land boundary
@@ -197,7 +197,7 @@ land = rd.read_shapefile_from_zip(
 land = land.dissolve().to_crs(rd.CRS)
 
 
-# In[23]:
+# In[ ]:
 
 
 # crop to wind farm and basin extent
@@ -213,7 +213,7 @@ weibull_c = weibull_c.to_crs(rd.CRS).overlay(extent_wf, how="intersection")
 weibull_k = weibull_k.to_crs(rd.CRS).overlay(extent_wf, how="intersection")
 
 
-# In[24]:
+# In[ ]:
 
 
 # crop land boundary from c and k
@@ -221,7 +221,7 @@ weibull_c = weibull_c.overlay(land, how="difference")
 weibull_k = weibull_k.overlay(land, how="difference")
 
 
-# In[25]:
+# In[ ]:
 
 
 def plot_map(df, label):
@@ -292,19 +292,19 @@ def plot_map(df, label):
     plt.show()
 
 
-# In[26]:
+# In[ ]:
 
 
 plot_map(weibull_c, "c")
 
 
-# In[27]:
+# In[ ]:
 
 
 plot_map(weibull_k, "k")
 
 
-# In[28]:
+# In[ ]:
 
 
 # areas intersecting with wind farms
@@ -312,7 +312,7 @@ weibull_c = weibull_c.overlay(wind_farms, how="intersection")
 weibull_k = weibull_k.overlay(wind_farms, how="intersection")
 
 
-# In[29]:
+# In[ ]:
 
 
 # compute c and k over wind farms
@@ -326,13 +326,13 @@ weibull_k = wind_farms.merge(
 )
 
 
-# In[30]:
+# In[ ]:
 
 
 weibull_c[["name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]
 
 
-# In[31]:
+# In[ ]:
 
 
 weibull_k[["name", ("Value", "min"), ("Value", "max"), ("Value", "mean")]]

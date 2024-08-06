@@ -3,7 +3,7 @@
 
 # # Kish Basin exclusions
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -20,7 +20,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
-# In[2]:
+# In[ ]:
 
 
 # basemap cache directory
@@ -29,7 +29,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-# In[3]:
+# In[ ]:
 
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -38,7 +38,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 )
 
 
-# In[4]:
+# In[ ]:
 
 
 xmin, ymin, xmax, ymax = extent.total_bounds
@@ -48,7 +48,7 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # ### Exploration wells
 
-# In[5]:
+# In[ ]:
 
 
 # 500 m buffer - suggested in draft OREDP II p. 108
@@ -63,7 +63,7 @@ wells, wells_b = fns.constraint_exploration_well(
 
 # ### Wind farms
 
-# In[6]:
+# In[ ]:
 
 
 # the shapes are used as is without a buffer - suggested for renewable energy
@@ -77,7 +77,7 @@ wind_farms = fns.constraint_wind_farm(
 
 # ### Frequent shipping routes
 
-# In[7]:
+# In[ ]:
 
 
 # 1 NM (1,852 m) buffer - suggested in draft OREDP II p. 108
@@ -91,7 +91,7 @@ shipping, shipping_b = fns.constraint_shipping_routes(
 
 # ### Shipwrecks
 
-# In[8]:
+# In[ ]:
 
 
 # Archaeological Exclusion Zones recommendation - 100 m buffer
@@ -105,7 +105,7 @@ shipwrecks, shipwrecks_b = fns.constraint_shipwrecks(
 
 # ### Subsea cables
 
-# In[9]:
+# In[ ]:
 
 
 # 750 m buffer - suggested in draft OREDP II p. 109-111
@@ -117,7 +117,7 @@ cables, cables_b = fns.constraint_subsea_cables(
 
 # ## Crop data layers
 
-# In[14]:
+# In[ ]:
 
 
 # land boundary
@@ -130,14 +130,14 @@ land = rd.read_shapefile_from_zip(
 land = land.dissolve().to_crs(rd.CRS)
 
 
-# In[10]:
+# In[ ]:
 
 
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-# In[15]:
+# In[ ]:
 
 
 # crop land areas from the buffer
@@ -146,7 +146,7 @@ buffer = buffer.overlay(land, how="difference")
 
 # ## Map
 
-# In[11]:
+# In[ ]:
 
 
 def plot_map(dat_xr, fontsize=11.5):
@@ -276,7 +276,7 @@ def plot_map(dat_xr, fontsize=11.5):
     plt.show()
 
 
-# In[16]:
+# In[ ]:
 
 
 plot_map(ds)

@@ -3,7 +3,7 @@
 
 # # Wind farm optimisation - 2 GW of dedicated offshore wind for hydrogen production
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -25,7 +25,7 @@ from h2ss import data as rd
 from h2ss import functions as fns
 from h2ss import optimisation as opt
 
-# In[2]:
+# In[ ]:
 
 
 # basemap cache directory
@@ -34,7 +34,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-# In[3]:
+# In[ ]:
 
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -45,7 +45,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 # ## Constraints
 
-# In[4]:
+# In[ ]:
 
 
 # exploration wells
@@ -87,7 +87,7 @@ _, cables_b = fns.constraint_subsea_cables(
 )
 
 
-# In[5]:
+# In[ ]:
 
 
 # distance from salt formation edge
@@ -96,7 +96,7 @@ edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 # ## Zones of interest
 
-# In[6]:
+# In[ ]:
 
 
 zones, zds = fns.zones_of_interest(
@@ -107,7 +107,7 @@ zones, zds = fns.zones_of_interest(
 
 # ## Generate caverns
 
-# In[7]:
+# In[ ]:
 
 
 caverns = fns.generate_caverns_hexagonal_grid(
@@ -116,7 +116,7 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 
-# In[8]:
+# In[ ]:
 
 
 caverns = fns.cavern_dataframe(
@@ -126,7 +126,7 @@ caverns = fns.cavern_dataframe(
 )
 
 
-# In[9]:
+# In[ ]:
 
 
 # label caverns by depth and heights
@@ -137,7 +137,7 @@ caverns = fns.label_caverns(
 )
 
 
-# In[10]:
+# In[ ]:
 
 
 caverns, _ = fns.generate_caverns_with_constraints(
@@ -155,7 +155,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
 
 # ## Capacity
 
-# In[11]:
+# In[ ]:
 
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
@@ -200,7 +200,7 @@ caverns["capacity"] = cap.energy_storage_capacity(
 
 # ## Power curve [MW] and Weibull wind speed distribution
 
-# In[12]:
+# In[ ]:
 
 
 # extract data for wind farms at 150 m
@@ -214,7 +214,7 @@ weibull_wf_df = fns.read_weibull_data(
 )
 
 
-# In[13]:
+# In[ ]:
 
 
 weibull_powercurve = opt.weibull_distribution(weibull_wf_data=weibull_wf_df)
@@ -222,7 +222,7 @@ weibull_powercurve = opt.weibull_distribution(weibull_wf_data=weibull_wf_df)
 
 # ## Number of reference wind turbines
 
-# In[14]:
+# In[ ]:
 
 
 # 2 GW of offshore wind for green hydrogen production by 2030
@@ -235,14 +235,14 @@ print(
 )
 
 
-# In[15]:
+# In[ ]:
 
 
 # max wind farm capacity
 weibull_wf_df["cap"] = [int(x * 2 / 7) for x in [1300, 824, 500]]
 
 
-# In[16]:
+# In[ ]:
 
 
 # number of 15 MW turbines, rounded down to the nearest integer
@@ -253,7 +253,7 @@ weibull_wf_df["n_turbines"] = opt.number_of_turbines(
 
 # ## Annual energy production [MWh]
 
-# In[17]:
+# In[ ]:
 
 
 weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
@@ -261,7 +261,7 @@ weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
 
 # ## Annual hydrogen production [kg]
 
-# In[18]:
+# In[ ]:
 
 
 weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
@@ -269,7 +269,7 @@ weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
 
 # ## AHP as a proportion of the total working mass
 
-# In[19]:
+# In[ ]:
 
 
 weibull_wf_df["AHP_frac"] = (
@@ -279,7 +279,7 @@ weibull_wf_df["AHP_frac"] = (
 
 # ## AHP converted to storage demand [GWh]
 
-# In[20]:
+# In[ ]:
 
 
 weibull_wf_df["demand"] = cap.energy_storage_capacity(
@@ -289,7 +289,7 @@ weibull_wf_df["demand"] = cap.energy_storage_capacity(
 
 # ## Number of caverns required based on cumulative working mass and AHP
 
-# In[21]:
+# In[ ]:
 
 
 compare.calculate_number_of_caverns(
@@ -299,7 +299,7 @@ compare.calculate_number_of_caverns(
 
 # ## Transmission distance [km]
 
-# In[22]:
+# In[ ]:
 
 
 caverns, injection_point = opt.transmission_distance(
@@ -309,7 +309,7 @@ caverns, injection_point = opt.transmission_distance(
 
 # ## Electrolyser capacity [MW]
 
-# In[23]:
+# In[ ]:
 
 
 weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
@@ -319,19 +319,19 @@ weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
 
 # ## CAPEX for pipeline [€ km⁻¹]
 
-# In[24]:
+# In[ ]:
 
 
 weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 
 
-# In[25]:
+# In[ ]:
 
 
 weibull_wf_df
 
 
-# In[26]:
+# In[ ]:
 
 
 # totals
@@ -340,13 +340,13 @@ weibull_wf_df[
 ].sum()
 
 
-# In[27]:
+# In[ ]:
 
 
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
 
 
-# In[28]:
+# In[ ]:
 
 
 compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
@@ -354,13 +354,13 @@ compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
 # ## LCOT for pipeline [€ kg⁻¹]
 
-# In[29]:
+# In[ ]:
 
 
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
 
 
-# In[30]:
+# In[ ]:
 
 
 caverns[
@@ -375,19 +375,19 @@ caverns[
 ].describe()
 
 
-# In[31]:
+# In[ ]:
 
 
 pd.Series(caverns[list(caverns.filter(like="dist_"))].values.flat).describe()
 
 
-# In[32]:
+# In[ ]:
 
 
 pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
 
 
-# In[33]:
+# In[ ]:
 
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
@@ -428,13 +428,13 @@ plt.show()
 
 # ## Maps
 
-# In[34]:
+# In[ ]:
 
 
 shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
 
 
-# In[35]:
+# In[ ]:
 
 
 def plot_map_facet(
@@ -528,7 +528,7 @@ def plot_map_facet(
     plt.show()
 
 
-# In[36]:
+# In[ ]:
 
 
 plot_map_facet(

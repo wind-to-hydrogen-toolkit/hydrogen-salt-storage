@@ -8,7 +8,7 @@
 # **IMPORTANT:** There may be some incorrect name assignments as a simple
 # backfill and multiline conversion was used and no further checks were done
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -22,7 +22,7 @@ import pandas as pd
 
 from h2ss import data as rd
 
-# In[2]:
+# In[ ]:
 
 
 # base data download directory
@@ -38,14 +38,14 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 
-# In[3]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 
 
-# In[4]:
+# In[ ]:
 
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
@@ -53,7 +53,7 @@ rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 # ## Read data
 
-# In[5]:
+# In[ ]:
 
 
 # extract the archive
@@ -64,13 +64,13 @@ except BadZipFile:
     print("There were issues with the file", DATA_FILE)
 
 
-# In[6]:
+# In[ ]:
 
 
 DATA_FILE = os.path.join(DATA_DIR, ZipFile(DATA_FILE).namelist()[0])
 
 
-# In[7]:
+# In[ ]:
 
 
 # extract gz file using gzip
@@ -78,13 +78,13 @@ DATA_FILE = os.path.join(DATA_DIR, ZipFile(DATA_FILE).namelist()[0])
 subprocess.run(["gzip", "-d", "<", DATA_FILE, ">", DATA_FILE[:-3]])
 
 
-# In[8]:
+# In[ ]:
 
 
 DATA_FILE = DATA_FILE[:-3]
 
 
-# In[9]:
+# In[ ]:
 
 
 for n, line in enumerate(open(DATA_FILE, "r", encoding="ISO-8859-15")):
@@ -92,7 +92,7 @@ for n, line in enumerate(open(DATA_FILE, "r", encoding="ISO-8859-15")):
         print(line[:-1])
 
 
-# In[10]:
+# In[ ]:
 
 
 # coordinates
@@ -108,7 +108,7 @@ with open(f"{DATA_FILE}_names.txt", "w", encoding="utf-8") as outfile:
             outfile.write(f"{n}, {line[18:]}")
 
 
-# In[11]:
+# In[ ]:
 
 
 data = pd.read_csv(
@@ -123,31 +123,31 @@ names = pd.read_csv(
 )
 
 
-# In[12]:
+# In[ ]:
 
 
 data.head()
 
 
-# In[13]:
+# In[ ]:
 
 
 data.shape
 
 
-# In[14]:
+# In[ ]:
 
 
 names.head()
 
 
-# In[15]:
+# In[ ]:
 
 
 names.shape
 
 
-# In[16]:
+# In[ ]:
 
 
 names.set_index("index", inplace=True)
@@ -155,13 +155,13 @@ names.set_index("index", inplace=True)
 
 # ## Merge names with coordinates
 
-# In[17]:
+# In[ ]:
 
 
 names = names.reindex(range(max(data.index) + 1))
 
 
-# In[18]:
+# In[ ]:
 
 
 # handle missing data with backfill / forward fill
@@ -169,32 +169,32 @@ names = names.bfill()
 names = names.ffill()
 
 
-# In[19]:
+# In[ ]:
 
 
 names.head()
 
 
-# In[20]:
+# In[ ]:
 
 
 names.shape
 
 
-# In[21]:
+# In[ ]:
 
 
 # merge names and data
 data = pd.merge(data, names, left_index=True, right_index=True)
 
 
-# In[22]:
+# In[ ]:
 
 
 data.head()
 
 
-# In[23]:
+# In[ ]:
 
 
 data.shape
@@ -202,20 +202,20 @@ data.shape
 
 # ## Convert to geodataframe
 
-# In[24]:
+# In[ ]:
 
 
 # drop duplicate entries using coordinates
 data = data.drop_duplicates(["y", "x"])
 
 
-# In[25]:
+# In[ ]:
 
 
 data.shape
 
 
-# In[26]:
+# In[ ]:
 
 
 # convert coords from minutes to degrees
@@ -224,13 +224,13 @@ data["x"] = data["x"] / 60
 data["y"] = data["y"] / 60
 
 
-# In[27]:
+# In[ ]:
 
 
 data.head()
 
 
-# In[28]:
+# In[ ]:
 
 
 # convert to geodataframe
@@ -239,19 +239,19 @@ data = gpd.GeoDataFrame(
 )
 
 
-# In[29]:
+# In[ ]:
 
 
 data.head()
 
 
-# In[30]:
+# In[ ]:
 
 
 data.crs
 
 
-# In[31]:
+# In[ ]:
 
 
 ax = data.to_crs(3857).plot(marker=".", markersize=1, figsize=(9, 9))
@@ -263,20 +263,20 @@ plt.show()
 
 # ## Dissolve geometries
 
-# In[32]:
+# In[ ]:
 
 
 # dissolve by name
 data = data.dissolve("name").reset_index()
 
 
-# In[33]:
+# In[ ]:
 
 
 data.head()
 
 
-# In[34]:
+# In[ ]:
 
 
 data.shape
@@ -284,26 +284,26 @@ data.shape
 
 # ## Data for the Irish Sea
 
-# In[35]:
+# In[ ]:
 
 
 # extent
 mask = (-7, 53, -4.5, 54)
 
 
-# In[36]:
+# In[ ]:
 
 
 data_ie = data.clip(mask)
 
 
-# In[37]:
+# In[ ]:
 
 
 data_ie
 
 
-# In[38]:
+# In[ ]:
 
 
 data_ie.shape
@@ -311,7 +311,7 @@ data_ie.shape
 
 # ## Convert multipoint geometries to multilines
 
-# In[39]:
+# In[ ]:
 
 
 # convert all multi points to multi lines
@@ -326,7 +326,7 @@ data_ie_1["geometry"] = gpd.GeoSeries.from_wkt(
 )
 
 
-# In[40]:
+# In[ ]:
 
 
 # merge multilines with remaining geometry data
@@ -338,20 +338,20 @@ data_ie = pd.concat(
 ).reset_index(drop=True)
 
 
-# In[41]:
+# In[ ]:
 
 
 data_ie
 
 
-# In[42]:
+# In[ ]:
 
 
 # get bounds of Irish Sea data
 xmin, ymin, xmax, ymax = data_ie.to_crs(rd.CRS).total_bounds
 
 
-# In[43]:
+# In[ ]:
 
 
 # view plotter points in the Irish Sea
@@ -364,14 +364,14 @@ plt.tight_layout()
 plt.show()
 
 
-# In[44]:
+# In[ ]:
 
 
 # remove incorrect data lines that are obvious - Hibernia Atlantic
 data_ie = data_ie.drop([6]).reset_index(drop=True)
 
 
-# In[45]:
+# In[ ]:
 
 
 ax = (
@@ -397,7 +397,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[46]:
+# In[ ]:
 
 
 data_ie.to_file(os.path.join(DATA_DIR, "KIS-ORCA.gpkg"))

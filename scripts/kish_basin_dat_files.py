@@ -5,7 +5,7 @@
 #
 # <https://hyss.ie/>
 
-# In[1]:
+# In[ ]:
 
 
 import glob
@@ -23,14 +23,14 @@ from shapely.geometry import Polygon
 
 from h2ss import data as rd
 
-# In[2]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
 
 
-# In[3]:
+# In[ ]:
 
 
 # base data download directory
@@ -46,19 +46,19 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 
-# In[4]:
+# In[ ]:
 
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
 
-# In[5]:
+# In[ ]:
 
 
 ZipFile(DATA_FILE).namelist()
 
 
-# In[6]:
+# In[ ]:
 
 
 # extract archive
@@ -71,7 +71,7 @@ except BadZipFile:
 
 # ## Map extent
 
-# In[7]:
+# In[ ]:
 
 
 with open(
@@ -81,13 +81,13 @@ with open(
     print(f.read())
 
 
-# In[8]:
+# In[ ]:
 
 
 CRS = 23029
 
 
-# In[9]:
+# In[ ]:
 
 
 # create extent polygon
@@ -107,19 +107,19 @@ extent = gpd.GeoSeries(
 )
 
 
-# In[10]:
+# In[ ]:
 
 
 extent.bounds
 
 
-# In[11]:
+# In[ ]:
 
 
 extent.crs
 
 
-# In[13]:
+# In[ ]:
 
 
 plt.figure(figsize=(7, 7))
@@ -135,7 +135,7 @@ plt.show()
 
 # ## XYZ data
 
-# In[14]:
+# In[ ]:
 
 
 def read_dat_file(dat_path: str, dat_crs):
@@ -186,43 +186,43 @@ def read_dat_file(dat_path: str, dat_crs):
     return gdf
 
 
-# In[15]:
+# In[ ]:
 
 
 ds = read_dat_file(DATA_DIR, dat_crs=CRS)
 
 
-# In[16]:
+# In[ ]:
 
 
 ds
 
 
-# In[17]:
+# In[ ]:
 
 
 ds.rio.crs
 
 
-# In[18]:
+# In[ ]:
 
 
 ds.rio.resolution()
 
 
-# In[19]:
+# In[ ]:
 
 
 ds.rio.bounds()
 
 
-# In[20]:
+# In[ ]:
 
 
 xmin, ymin, xmax, ymax = extent.total_bounds
 
 
-# In[21]:
+# In[ ]:
 
 
 def plot_maps(plot_data):
@@ -258,7 +258,7 @@ def plot_maps(plot_data):
 
 # ### Halite thickness
 
-# In[22]:
+# In[ ]:
 
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
@@ -266,7 +266,7 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Thickness XYZ" in x]))
 
 # ### Halite thickness - zones of interest
 
-# In[23]:
+# In[ ]:
 
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Zone" in x]))
@@ -274,7 +274,7 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Zone" in x]))
 
 # ### Halite base depth
 
-# In[24]:
+# In[ ]:
 
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Base" in x]))
@@ -282,7 +282,7 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Base" in x]))
 
 # ### Halite top depth
 
-# In[25]:
+# In[ ]:
 
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
@@ -290,7 +290,7 @@ plot_maps(ds.sel(data=[x for x in ds["data"].values if "Top Depth" in x]))
 
 # ### Halite top TWT (two-way thickness)
 
-# In[26]:
+# In[ ]:
 
 
 plot_maps(ds.sel(data=[x for x in ds["data"].values if "Millisecond" in x]))

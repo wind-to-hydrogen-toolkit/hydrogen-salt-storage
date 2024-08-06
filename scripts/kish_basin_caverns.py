@@ -3,7 +3,7 @@
 
 # # Cavern generation
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -16,14 +16,14 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
-# In[2]:
+# In[ ]:
 
 
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 
-# In[18]:
+# In[ ]:
 
 
 plt.rcParams["xtick.major.size"] = 0
@@ -32,7 +32,7 @@ plt.rcParams["ytick.major.size"] = 0
 
 # ## Read data layers
 
-# In[3]:
+# In[ ]:
 
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -43,7 +43,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 
 # ## Zones of interest
 
-# In[4]:
+# In[ ]:
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
@@ -63,7 +63,7 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
-# In[5]:
+# In[ ]:
 
 
 # height = 120 m, 500 m <= depth <= 2,000 m
@@ -73,7 +73,7 @@ zones, _ = fns.zones_of_interest(
 )
 
 
-# In[6]:
+# In[ ]:
 
 
 plot_zones_map(zones, extent, rd.CRS)
@@ -81,7 +81,7 @@ plot_zones_map(zones, extent, rd.CRS)
 
 # ## Generate potential salt cavern locations
 
-# In[12]:
+# In[ ]:
 
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
@@ -150,25 +150,25 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # ### Cavern calculations in a regular square grid
 
-# In[13]:
+# In[ ]:
 
 
 caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
 
 
-# In[14]:
+# In[ ]:
 
 
 len_square = len(caverns)
 
 
-# In[15]:
+# In[ ]:
 
 
 len_square
 
 
-# In[19]:
+# In[ ]:
 
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
@@ -176,7 +176,7 @@ plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
 # ### Cavern calculations in a regular hexagonal grid
 
-# In[20]:
+# In[ ]:
 
 
 caverns = fns.generate_caverns_hexagonal_grid(
@@ -185,25 +185,25 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 
-# In[21]:
+# In[ ]:
 
 
 len_hex = len(caverns)
 
 
-# In[22]:
+# In[ ]:
 
 
 len_hex
 
 
-# In[23]:
+# In[ ]:
 
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
 
-# In[24]:
+# In[ ]:
 
 
 print(

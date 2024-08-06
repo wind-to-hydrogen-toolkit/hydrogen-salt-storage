@@ -3,7 +3,7 @@
 
 # # Sensitivity analysis
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -16,14 +16,14 @@ import seaborn as sns
 
 from h2ss import compare
 
-# In[2]:
+# In[ ]:
 
 
 cavern_diameter = np.arange(45, 106, step=5)
 cavern_height = np.arange(80, 321, step=20)
 
 
-# In[3]:
+# In[ ]:
 
 
 def generate_sensitivity_data(diameter, height):
@@ -43,13 +43,13 @@ def generate_sensitivity_data(diameter, height):
             print(f"{filename} exists!")
 
 
-# In[4]:
+# In[ ]:
 
 
 generate_sensitivity_data(cavern_diameter, cavern_height)
 
 
-# In[5]:
+# In[ ]:
 
 
 filelist = []
@@ -59,38 +59,38 @@ for cd, ch in product(cavern_diameter, cavern_height):
     )
 
 
-# In[6]:
+# In[ ]:
 
 
 cdf = pd.concat((pd.read_csv(f) for f in filelist), ignore_index=True)
 
 
-# In[7]:
+# In[ ]:
 
 
 cdf.drop(columns=["Unnamed: 0"], inplace=True)
 
 
-# In[8]:
+# In[ ]:
 
 
 cdf["cavern_height"] = cdf["cavern_height"].astype(int)
 
 
-# In[9]:
+# In[ ]:
 
 
 cdf.describe()
 
 
-# In[10]:
+# In[ ]:
 
 
 # cavern height-to-diameter-ratio
 pd.Series((cdf["cavern_height"] / cdf["cavern_diameter"]).unique()).describe()
 
 
-# In[11]:
+# In[ ]:
 
 
 ax = sns.scatterplot(
@@ -106,7 +106,7 @@ sns.despine()
 plt.show()
 
 
-# In[12]:
+# In[ ]:
 
 
 len(cdf["cavern_diameter"].unique()) == len(cdf["cavern_height"].unique())
@@ -114,7 +114,7 @@ len(cdf["cavern_diameter"].unique()) == len(cdf["cavern_height"].unique())
 
 # ## Number of caverns and total capacity
 
-# In[15]:
+# In[ ]:
 
 
 f, ax = plt.subplots(1, 2, figsize=(14, 7), sharey=True)
@@ -178,7 +178,7 @@ plt.show()
 
 # ## Mean capacity
 
-# In[14]:
+# In[ ]:
 
 
 data = (
@@ -212,7 +212,7 @@ plt.show()
 
 # ## Base case
 
-# In[16]:
+# In[ ]:
 
 
 base = cdf[
@@ -220,43 +220,43 @@ base = cdf[
 ].reset_index(drop=True)
 
 
-# In[17]:
+# In[ ]:
 
 
 base.describe()[["capacity"]]
 
 
-# In[18]:
+# In[ ]:
 
 
 base_mean = base[["capacity"]].mean().values[0]
 
 
-# In[19]:
+# In[ ]:
 
 
 base_sum = base[["capacity"]].sum().values[0]
 
 
-# In[20]:
+# In[ ]:
 
 
 base_count = base[["capacity"]].count().values[0]
 
 
-# In[21]:
+# In[ ]:
 
 
 print(f"{base_mean:.3f}")
 
 
-# In[22]:
+# In[ ]:
 
 
 print(f"{base_sum:.3f}")
 
 
-# In[23]:
+# In[ ]:
 
 
 base_count
@@ -264,13 +264,13 @@ base_count
 
 # ## Base diameter, varying height
 
-# In[24]:
+# In[ ]:
 
 
 dd = cdf[(cdf["cavern_diameter"] == 85)].reset_index(drop=True)
 
 
-# In[25]:
+# In[ ]:
 
 
 dd_mean = (
@@ -280,7 +280,7 @@ dd_mean = (
 ).reset_index()
 
 
-# In[26]:
+# In[ ]:
 
 
 dd_sum = (
@@ -290,7 +290,7 @@ dd_sum = (
 ).reset_index()
 
 
-# In[27]:
+# In[ ]:
 
 
 dd_count = (
@@ -302,13 +302,13 @@ dd_count = (
 
 # ## Base height, varying diameter
 
-# In[28]:
+# In[ ]:
 
 
 dh = cdf[(cdf["cavern_height"] == 120)].reset_index(drop=True)
 
 
-# In[29]:
+# In[ ]:
 
 
 dh_mean = (
@@ -318,7 +318,7 @@ dh_mean = (
 ).reset_index()
 
 
-# In[30]:
+# In[ ]:
 
 
 dh_sum = (
@@ -328,7 +328,7 @@ dh_sum = (
 ).reset_index()
 
 
-# In[31]:
+# In[ ]:
 
 
 dh_count = (
@@ -342,7 +342,7 @@ dh_count = (
 
 # ## Combined plots
 
-# In[32]:
+# In[ ]:
 
 
 dh_sum["type"] = "Total capacity"
@@ -351,7 +351,7 @@ dd_sum["type"] = "Total capacity"
 dd_count["type"] = "Number of caverns"
 
 
-# In[39]:
+# In[ ]:
 
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
@@ -394,7 +394,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[37]:
+# In[ ]:
 
 
 def colour_label(data):
@@ -405,7 +405,7 @@ def colour_label(data):
     return data
 
 
-# In[38]:
+# In[ ]:
 
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)

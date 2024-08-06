@@ -3,7 +3,7 @@
 
 # # Cavern storage capacity
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -25,7 +25,7 @@ from h2ss import compare
 from h2ss import data as rd
 from h2ss import functions as fns
 
-# In[2]:
+# In[ ]:
 
 
 # basemap cache directory
@@ -34,7 +34,7 @@ cx.set_cache_dir(os.path.join("data", "basemaps"))
 
 # ## Halite data
 
-# In[3]:
+# In[ ]:
 
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
@@ -43,7 +43,7 @@ ds, extent = rd.kish_basin_data_depth_adjusted(
 )
 
 
-# In[4]:
+# In[ ]:
 
 
 xmin, ymin, xmax, ymax = extent.total_bounds
@@ -51,7 +51,7 @@ xmin, ymin, xmax, ymax = extent.total_bounds
 
 # ## Constraints
 
-# In[5]:
+# In[ ]:
 
 
 # exploration wells
@@ -93,7 +93,7 @@ _, cables_b = fns.constraint_subsea_cables(
 )
 
 
-# In[6]:
+# In[ ]:
 
 
 # distance from salt formation edge
@@ -102,7 +102,7 @@ edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
 # ## Zones of interest
 
-# In[7]:
+# In[ ]:
 
 
 zones, zds = fns.zones_of_interest(
@@ -113,7 +113,7 @@ zones, zds = fns.zones_of_interest(
 
 # ## Generate caverns
 
-# In[8]:
+# In[ ]:
 
 
 caverns = fns.generate_caverns_hexagonal_grid(
@@ -122,7 +122,7 @@ caverns = fns.generate_caverns_hexagonal_grid(
 )
 
 
-# In[9]:
+# In[ ]:
 
 
 caverns = fns.cavern_dataframe(
@@ -132,7 +132,7 @@ caverns = fns.cavern_dataframe(
 )
 
 
-# In[10]:
+# In[ ]:
 
 
 # label caverns by depth and heights
@@ -143,7 +143,7 @@ caverns = fns.label_caverns(
 )
 
 
-# In[11]:
+# In[ ]:
 
 
 caverns, _ = fns.generate_caverns_with_constraints(
@@ -163,7 +163,7 @@ caverns, _ = fns.generate_caverns_with_constraints(
 
 # ### Cavern volume
 
-# In[12]:
+# In[ ]:
 
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
@@ -176,7 +176,7 @@ caverns["cavern_volume"] = cap.corrected_cavern_volume(
 
 # ### Mid-point temperature
 
-# In[13]:
+# In[ ]:
 
 
 caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
@@ -186,7 +186,7 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
 
 # ### Operating pressure
 
-# In[14]:
+# In[ ]:
 
 
 (
@@ -200,7 +200,7 @@ caverns["t_mid_point"] = cap.temperature_cavern_mid_point(
 
 # ### Hydrogen gas density
 
-# In[15]:
+# In[ ]:
 
 
 caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
@@ -212,7 +212,7 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
 
 # ### Working mass of hydrogen
 
-# In[16]:
+# In[ ]:
 
 
 (
@@ -228,7 +228,7 @@ caverns["rho_min"], caverns["rho_max"] = cap.density_hydrogen_gas(
 
 # ### Energy storage capacity in GWh
 
-# In[17]:
+# In[ ]:
 
 
 caverns["capacity"] = cap.energy_storage_capacity(
@@ -238,7 +238,7 @@ caverns["capacity"] = cap.energy_storage_capacity(
 
 # ## Stats
 
-# In[18]:
+# In[ ]:
 
 
 # proportion of working gas to total gas
@@ -247,7 +247,7 @@ caverns["working_mass_pct"] = caverns["working_mass"] / (
 )
 
 
-# In[19]:
+# In[ ]:
 
 
 caverns.drop(
@@ -265,14 +265,14 @@ caverns.drop(
 ).describe()
 
 
-# In[20]:
+# In[ ]:
 
 
 # fixed values
 caverns[["cavern_height", "cavern_total_volume", "cavern_volume"]].iloc[0]
 
 
-# In[21]:
+# In[ ]:
 
 
 # totals
@@ -287,21 +287,21 @@ caverns[
 ].sum()
 
 
-# In[22]:
+# In[ ]:
 
 
 # compare with Ireland's electricity demand in 2050 (Deane, 2021)
 compare.electricity_demand_ie(data=caverns["capacity"])
 
 
-# In[23]:
+# In[ ]:
 
 
 # compare with Ireland's hydrogen demand in 2050
 compare.hydrogen_demand_ie(data=caverns["capacity"])
 
 
-# In[24]:
+# In[ ]:
 
 
 # total capacity at various depth/height combinations
@@ -310,19 +310,19 @@ s["%"] = s["capacity"] / caverns[["capacity"]].sum().iloc[0] * 100
 s
 
 
-# In[25]:
+# In[ ]:
 
 
 s.groupby("depth").sum()[["capacity"]]
 
 
-# In[26]:
+# In[ ]:
 
 
 s.groupby("halite").sum()[["capacity"]]
 
 
-# In[27]:
+# In[ ]:
 
 
 # number of caverns
@@ -331,19 +331,19 @@ s["%"] = s["capacity"] / len(caverns) * 100
 s
 
 
-# In[28]:
+# In[ ]:
 
 
 s.groupby("depth").sum()[["capacity"]]
 
 
-# In[29]:
+# In[ ]:
 
 
 s.groupby("halite").sum()[["capacity"]]
 
 
-# In[30]:
+# In[ ]:
 
 
 compare.distance_from_pipeline(
@@ -353,14 +353,14 @@ compare.distance_from_pipeline(
 
 # ## Map
 
-# In[31]:
+# In[ ]:
 
 
 # create exclusion buffer
 buffer = pd.concat([wells_b, shipwrecks_b, shipping_b, cables_b]).dissolve()
 
 
-# In[32]:
+# In[ ]:
 
 
 def plot_map_alt(
@@ -564,7 +564,7 @@ def plot_map_alt(
     plt.show()
 
 
-# In[33]:
+# In[ ]:
 
 
 plot_map_alt(
