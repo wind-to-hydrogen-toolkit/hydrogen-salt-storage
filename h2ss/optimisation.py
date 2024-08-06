@@ -291,12 +291,12 @@ def annual_energy_production_function(
     constant value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in
     and cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
     the wind turbine power output, :math:`f(v)` [s m⁻¹] is the Weibull
-    probability distribution function, and :math:`\\epsilon_{AC-DC}` is the
+    probability distribution function, and :math:`\\varepsilon_{AC-DC}` is the
     AC-DC conversion loss.
 
     .. math::
         E_{annual} = 365 \\times 24 \\times n \\times
-        \\left( 1 - w \\right) \\times \\epsilon_{AC-DC} \\times
+        \\left( 1 - w \\right) \\times \\varepsilon_{AC-DC} \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -376,7 +376,7 @@ def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003053):
     See [#HydrogenTools]_ for the heating values.
 
     .. math::
-        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\, \\eta} +
+        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\times \\eta} +
         E_{plant}}
 
     where :math:`m_{annual}` is the annual hydrogen production [kg],
