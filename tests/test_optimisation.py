@@ -81,6 +81,7 @@ def test_annual_energy_production_function():
     cut_in = 3
     cut_out = 25
     w_loss = 0.1
+    acdc_loss = 0.982
     aep = []
     aep_func = []
     for n, k, c in zip(n_turbines, k_vals, c_vals):
@@ -94,7 +95,7 @@ def test_annual_energy_production_function():
             limit=100,  # an upper bound on the number of subintervals used
             epsabs=1.49e-6,  # absolute error tolerance
         )
-        aep.append(365 * 24 * n * (1 - w_loss) * integration[0])
+        aep.append(365 * 24 * n * (1 - w_loss) * acdc_loss * integration[0])
     assert aep_func == aep
 
 
