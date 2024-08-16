@@ -224,14 +224,18 @@ def test_lcot_pipeline_function():
     lifetime = 40
     opex = capex * opex_ratio
     lcot = (
-        capex
-        + sum(
-            opex / np.power((1 + discount_rate), year)
+        (
+            capex
+            + sum(
+                opex / np.power((1 + discount_rate), year)
+                for year in range(lifetime + 1)
+            )
+        )
+        * transmission_distance
+        / sum(
+            ahp / np.power((1 + discount_rate), year)
             for year in range(lifetime + 1)
         )
-    ) * transmission_distance / sum(
-        ahp / np.power((1 + discount_rate), year)
-        for year in range(lifetime + 1)
     )
     lcot_func = opt.lcot_pipeline_function(
         capex=capex,
