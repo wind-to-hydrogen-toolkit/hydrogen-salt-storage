@@ -291,12 +291,12 @@ def annual_energy_production_function(
     constant value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in
     and cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
     the wind turbine power output, :math:`f(v)` [s m⁻¹] is the Weibull
-    probability distribution function, and :math:`\\varepsilon_{AC-DC}` is the
+    probability distribution function, and :math:`\\varepsilon` is the
     AC-DC conversion loss.
 
     .. math::
         E_{annual} = 365 \\times 24 \\times n \\times
-        \\left( 1 - w \\right) \\times \\varepsilon_{AC-DC} \\times
+        \\left( 1 - w \\right) \\times \\varepsilon \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -622,8 +622,7 @@ def lcot_pipeline_function(
     ahp : float
         Annual hydrogen production [kg]
     opex_ratio : float
-        Ratio of the operational expenditure (OPEX) to the CAPEX; the OPEX is
-        calculated as a percentage of the CAPEX
+        Ratio of the operational expenditure (OPEX) to the CAPEX
     discount_rate : float
         Discount rate
     lifetime : int
@@ -636,6 +635,7 @@ def lcot_pipeline_function(
 
     Notes
     -----
+    The OPEX is calculated as a percentage of the CAPEX.
     See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
     (22) of [#Dinh24b]_; see Tables 2 and 3 for the assumptions and constants
     used.
@@ -647,14 +647,14 @@ def lcot_pipeline_function(
     .. math::
         OPEX = CAPEX \\cdot F_{OPEX}
     .. math::
-        LCOT = \\frac{CAPEX \\cdot d + \\displaystyle\\sum_{l=0}^{L}
-        \\frac{OPEX}{{(1 + DR)}^l}}
+        LCOT = \\frac{\\left( CAPEX + \\displaystyle\\sum_{l=0}^{L}
+        \\frac{OPEX}{{(1 + DR)}^l} \\right) d}
         {\\displaystyle\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
     :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline [€ km⁻¹],
     :math:`d` is the pipeline transmission distance [km], :math:`OPEX` is the
-    OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the discount rate,
+    OPEX of the pipeline [€ km⁻¹], :math:`DR` is the discount rate,
     :math:`AHP` is the annual hydrogen production [kg], :math:`L` is the
     lifetime of the pipeline [year], and :math:`F_{OPEX}` is the ratio of the
     OPEX to the CAPEX.
@@ -663,7 +663,7 @@ def lcot_pipeline_function(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
     opex = capex * opex_ratio
-    return (capex * d_transmission + opex * f) / (ahp * f)
+    return (capex + opex * f) * d_transmission / (ahp * f)
 
 
 def lcot_pipeline(weibull_wf_data, cavern_df):
