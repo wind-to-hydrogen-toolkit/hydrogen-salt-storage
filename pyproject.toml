@@ -38,6 +38,7 @@ docs = [
 notebooks = [
   "cartopy",
   "contextily",
+  "folium",
   "jupyterlab",
   "mapclassify",
   "matplotlib-scalebar",
