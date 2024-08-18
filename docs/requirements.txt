@@ -1,10 +1,7 @@
 folium
 geocube
 myst-nb
-pip
 pooch
 pydata-sphinx-theme
 pyfluids
 seaborn
-setuptools
-wheel
