@@ -16,14 +16,18 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@v4
-    # - uses: actions/setup-python@v5
-    #   with:
-    #     python-version: '3.11'
-    #     cache: 'pip'
-    - name: Build HTML
-      uses: ammaraskar/sphinx-action@master
+    - uses: actions/setup-python@v5
       with:
-        pre-build-command: 'python -m pip install --upgrade pip setuptools wheel'
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: docs/requirements.txt
+    - run: python -m pip install --upgrade pip setuptools wheel
+    - run: python -m pip install -r docs/requirements.txt
+    - name: Build HTML
+    - run: cd docs && make html
+    #   uses: ammaraskar/sphinx-action@master
+    #   with:
+    #     pre-build-command: 'python -m pip install --upgrade pip setuptools wheel'
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
