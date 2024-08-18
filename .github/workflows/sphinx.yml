@@ -15,15 +15,20 @@ jobs:
     # permissions:
     #   contents: write
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - name: Check out Git repository
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
         cache-dependency-path: docs/requirements.txt
-    - run: python -m pip install --upgrade pip setuptools wheel
-    - run: python -m pip install -r docs/requirements.txt
-    - run: cd docs && make html
+    - name: Install setup dependencies
+      run: python -m pip install --upgrade pip setuptools wheel
+    - name: Install docs dependencies
+      run: python -m pip install -r docs/requirements.txt
+    - name: Make HTML
+      run: cd docs && make html
     # - name: Build HTML
     #   uses: ammaraskar/sphinx-action@master
     #   with:
