@@ -226,11 +226,11 @@ sns.despine()
 ax.set(xlim=(0, 700), ylim=(0, 0.8))
 ax.xaxis.grid(True, linewidth=0.25)
 ax.yaxis.grid(True, linewidth=0.25)
-plt.legend(title=None, loc="lower right")
+plt.legend(title=None, loc="lower right", fontsize=11.5)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_net_to_gross.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_3.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()

@@ -442,8 +442,8 @@ plt.title(None)
 plt.tight_layout()
 
 # plt.savefig(
-#     os.path.join("graphics", "fig_offshore_wind_farms.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_1.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()

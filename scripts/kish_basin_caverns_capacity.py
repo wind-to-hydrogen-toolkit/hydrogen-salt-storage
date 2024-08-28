@@ -557,8 +557,8 @@ def plot_map_alt(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_caverns_capacity.jpg"),
-    #     format="jpg",
+    #     os.path.join("graphics", "Figure_8.png"),
+    #     format="png",
     #     dpi=600,
     # )
     plt.show()

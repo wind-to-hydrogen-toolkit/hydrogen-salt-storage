@@ -381,14 +381,14 @@ ax[1].axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax[0].set_xlabel("Cavern diameter [m]")
 ax[1].set_xlabel("Cavern height [m]")
 ax[0].set_ylabel("Difference [%]")
-ax[1].legend(title=None, fontsize=11)
+ax[1].legend(title=None, fontsize=12)
 ax[1].tick_params(axis="y", left=False)
 
 sns.despine()
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_sensitivity.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_9.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()

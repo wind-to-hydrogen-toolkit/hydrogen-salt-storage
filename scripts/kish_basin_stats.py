@@ -10,8 +10,8 @@ import os
 
 import cartopy.crs as ccrs
 import contextily as cx
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-# import matplotlib.patches as mpatches
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -167,6 +167,7 @@ def plot_facet_maps_distr(
     v,
     levels,
     label,
+    legend_ncols,
 ):
     """
     Helper function to plot facet maps of the halite layers
@@ -181,53 +182,53 @@ def plot_facet_maps_distr(
     xmin_, ymin_, xmax_, ymax_ = dat_extent.total_bounds
     if levels:
         levels = sorted(levels)
-    # legend_handles = []
+    legend_handles = []
 
     f = dat_xr[v].plot.contourf(
         col="halite",
         robust=True,
-        levels=levels,
+        levels=levels[:-1],
         cmap=sns.color_palette("flare", as_cmap=True),
-        figsize=(6, 8.5),
+        figsize=(6, 6),
         subplot_kws={"projection": ccrs.epsg(dat_crs)},
         xlim=(xmin_, xmax_),
         ylim=(ymin_, ymax_),
-        cbar_kwargs={
-            "location": "bottom",
-            "aspect": 20,
-            "shrink": 0.8,
-            "pad": 0.07,
-            "extendfrac": 0.2,
-            "label": label,
-            "format": lambda x, _: f"{x:,.0f}",
-        },
-        # add_colorbar=False,
+        # cbar_kwargs={
+        #     "location": "bottom",
+        #     "aspect": 20,
+        #     "shrink": 0.8,
+        #     "pad": 0.07,
+        #     "extendfrac": 0.2,
+        #     "label": label,
+        #     "format": lambda x, _: f"{x:,.0f}",
+        # },
+        add_colorbar=False,
         col_wrap=2,
     )
 
-    # colours = [int(n * 255 / (len(levels) - 1)) for n in range(len(levels))]
-    # for n, (level, colour) in enumerate(zip(levels, colours)):
-    #     if n == 0:
-    #         legend_handles.append(
-    #             mpatches.Patch(
-    #                 facecolor=sns.color_palette("flare", 256)[colour],
-    #                 label=f"< {level}"
-    #             )
-    #         )
-    #     elif n == len(levels) - 1:
-    #         legend_handles.append(
-    #             mpatches.Patch(
-    #                 facecolor=sns.color_palette("flare", 256)[colour],
-    #                 label=f"> {levels[n - 1]}"
-    #             )
-    #         )
-    #     else:
-    #         legend_handles.append(
-    #             mpatches.Patch(
-    #                 facecolor=sns.color_palette("flare", 256)[colour],
-    #                 label=f"{levels[n - 1]}–{level}"
-    #             )
-    #         )
+    colours = [int(n * 255 / (len(levels) - 1)) for n in range(len(levels))]
+    for n, (level, colour) in enumerate(zip(levels, colours)):
+        if n == 0:
+            legend_handles.append(
+                mpatches.Patch(
+                    facecolor=sns.color_palette("flare", 256)[colour],
+                    label=f"< {level:,.0f}",
+                )
+            )
+        elif n == len(levels) - 1:
+            legend_handles.append(
+                mpatches.Patch(
+                    facecolor=sns.color_palette("flare", 256)[colour],
+                    label=f"≥ {levels[n - 1]:,.0f}",
+                )
+            )
+        else:
+            legend_handles.append(
+                mpatches.Patch(
+                    facecolor=sns.color_palette("flare", 256)[colour],
+                    label=f"{levels[n - 1]:,.0f} – < {level:,.0f}",
+                )
+            )
 
     # add a basemap
     basemap = cx.providers.CartoDB.PositronNoLabels
@@ -257,7 +258,8 @@ def plot_facet_maps_distr(
                     box_alpha=0,
                     location="lower right",
                     color="darkslategrey",
-                    width_fraction=0.015,
+                    width_fraction=0.02,
+                    font_properties={"size": 11},
                 )
             )
         if n == 2:
@@ -268,16 +270,19 @@ def plot_facet_maps_distr(
                 fontsize=8,
             )
     f.set_titles("{value}", weight="semibold")
-    # plt.legend(
-    #     bbox_to_anchor=(0.875, -0.12),
-    #     title=label,
-    #     handles=legend_handles,
-    #     fontsize=11.5,
-    #     ncols=3
-    # )
+    plt.legend(
+        bbox_to_anchor=(-0.025, -0.5),
+        loc="lower center",
+        title=label,
+        handles=legend_handles,
+        fontsize=12,
+        title_fontsize=13,
+        ncols=legend_ncols,
+        frameon=False,
+    )
     # plt.savefig(
-    #     os.path.join("graphics", f"fig_facet_{v.lower()}.jpg"),
-    #     format="jpg",
+    #     os.path.join("graphics", f"Figure_4_{v.lower()}.png"),
+    #     format="png",
     #     dpi=600,
     # )
     plt.show()
@@ -291,8 +296,9 @@ plot_facet_maps_distr(
     extent,
     rd.CRS,
     "ThicknessNet",
-    [85 + 35 * n + 90 for n in range(7)],
+    [85 + 90, 155 + 90, 311 + 90, 99999],
     "Net thickness [m]",
+    2,
 )
 
 
@@ -304,8 +310,9 @@ plot_facet_maps_distr(
     extent,
     rd.CRS,
     "TopDepthSeabed",
-    [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80],
+    [500 - 80, 1000 - 80, 1500 - 80, 2000 - 80, 99999],
     "Top depth [m]",
+    3,
 )
 
 

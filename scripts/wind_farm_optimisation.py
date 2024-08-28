@@ -246,7 +246,7 @@ ax.xaxis.grid(True, linewidth=0.25)
 ax.yaxis.grid(True, linewidth=0.25)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_powercurve.jpg"), format="jpg", dpi=600
+#     os.path.join("graphics", "Figure_6.png"), format="png", dpi=600
 # )
 plt.show()
 
@@ -433,7 +433,7 @@ pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
 # In[ ]:
 
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.5))
 for n, col, lab, show_legend in zip(
     [0, 1],
     ["dist_", "LCOT_"],
@@ -463,12 +463,12 @@ for n, col, lab, show_legend in zip(
     axes[n].set_ylabel(lab)
     axes[n].tick_params(axis="x", bottom=False)
     axes[n].yaxis.grid(True, linewidth=0.25)
-axes[1].legend(loc="lower right")
+axes[1].legend(loc="lower right", fontsize=11.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_10.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()
@@ -570,8 +570,9 @@ def plot_map_facet(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_map_transmission.jpg"),
-    #     format="jpg", dpi=600
+    #     os.path.join("graphics", "Figure_11.png"),
+    #     format="png",
+    #     dpi=600,
     # )
     plt.show()
 
@@ -655,8 +656,8 @@ def plot_map_extent(cavern_df):
     )
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_transmission_map_inset.jpg"),
-    #     format="jpg",
+    #     os.path.join("graphics", "Figure_11_inset.png"),
+    #     format="png",
     #     dpi=600,
     # )
     plt.show()

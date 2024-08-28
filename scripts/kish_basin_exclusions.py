@@ -269,8 +269,8 @@ def plot_map(dat_xr, fontsize=11.5):
     plt.title(None)
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_constraints.jpg"),
-    #     format="jpg",
+    #     os.path.join("graphics", "Figure_5.png"),
+    #     format="png",
     #     dpi=600,
     # )
     plt.show()
