@@ -621,9 +621,9 @@ def plot_map_extent(cavern_df):
     map_labels = zip(
         zip(wind_farms.centroid.x, wind_farms.centroid.y), wind_farms["name"]
     )
-    for xy, lab in map_labels:
+    for xy, lab2 in map_labels:
         ax2.annotate(
-            text=lab,
+            text=lab2,
             xy=xy,
             path_effects=[
                 patheffects.withStroke(linewidth=2.5, foreground="white")

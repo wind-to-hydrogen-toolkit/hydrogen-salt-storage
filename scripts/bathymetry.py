@@ -316,7 +316,7 @@ bath = rd.bathymetry_layer(
 
 
 plt.figure(figsize=(10, 7))
-ax = plt.axes(projection=ccrs.epsg(rd.CRS))
+ax2 = plt.axes(projection=ccrs.epsg(rd.CRS))
 bath["elevation"].plot.contourf(cmap="mako", levels=10, robust=True)
 CS = bath["elevation"].plot.contour(
     # colors="darkslategrey",
@@ -328,9 +328,9 @@ CS = bath["elevation"].plot.contour(
     robust=True,
 )
 plt.clabel(CS, inline=True)
-cx.add_basemap(ax, source=cx.providers.CartoDB.VoyagerNoLabels, crs=rd.CRS)
-cx.add_basemap(ax, source=cx.providers.CartoDB.VoyagerOnlyLabels, crs=rd.CRS)
-ax.gridlines(
+cx.add_basemap(ax2, source=cx.providers.CartoDB.VoyagerNoLabels, crs=rd.CRS)
+cx.add_basemap(ax2, source=cx.providers.CartoDB.VoyagerOnlyLabels, crs=rd.CRS)
+ax2.gridlines(
     draw_labels={"bottom": "x", "left": "y"},
     alpha=0.25,
     color="darkslategrey",

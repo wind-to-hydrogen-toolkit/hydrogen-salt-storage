@@ -397,12 +397,12 @@ plt.show()
 # In[ ]:
 
 
-def colour_label(data):
+def colour_label(dataset):
     "Use different colours for negative and positive values"
-    conditions = [(data["capacity"] < 0), (data["capacity"] >= 0)]
+    conditions = [(dataset["capacity"] < 0), (dataset["capacity"] >= 0)]
     choices = ["N", "P"]
-    data["colour"] = np.select(conditions, choices)
-    return data
+    dataset["colour"] = np.select(conditions, choices)
+    return dataset
 
 
 # In[ ]:
