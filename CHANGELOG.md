@@ -5,6 +5,23 @@
 [Various enhancements](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/13) by @nmstreethran.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.05.0...2024.08.0).
 
+- fix LCOT calculation (multiply OPEX with distance)
+- add AC-DC loss to AEP calculation
+- fix redefined-outer-name in notebooks
+- update plots
+- generate PNG images for paper
+- fix some docstings
+- update docs/requirements.txt
+- add GitHub workflow for building Sphinx Docs to host on GitHub Pages
+- add amsmath, dollarmath to docs config
+- update installation instructions
+- update nbconvert command (use ClearOutputPreprocessor) and regenerate scripts
+- update .pylintrc - disable pointless-statement, line-too-long
+- update .gitignore
+- update matplotlibrc
+- update pyproject.toml
+- update .vscode/tasks.json
+
 ## [2024.05.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.05.0)
 
 [Various enhancements](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/12) by @nmstreethran.
