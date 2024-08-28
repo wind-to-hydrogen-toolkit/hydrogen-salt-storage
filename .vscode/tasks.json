@@ -60,7 +60,7 @@
             }
         },
         {
-            "label": "pylint-scripts",
+            "label": "pylint-functions",
             "type": "shell",
             "command": "source .venv/bin/activate && pylint h2ss/*.py tests/*.py",
             "problemMatcher": [],
