@@ -7,8 +7,11 @@
 
 - fix LCOT calculation (multiply OPEX with distance)
 - add AC-DC loss to AEP calculation
+- add distance to shore calculations
 - fix redefined-outer-name in notebooks
+- use subprocess.run instead of os.system
 - update plots
+- update leaflet map zoom
 - generate PNG images for paper
 - fix some docstings
 - update docs/requirements.txt
