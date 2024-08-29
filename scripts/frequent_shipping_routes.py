@@ -6,6 +6,9 @@
 # - <https://data.gov.ie/dataset/frequently-used-routes-300-gross-tonnes-and-above1>
 # - <https://data-housinggovie.opendata.arcgis.com/maps/housinggovie::frequently-used-routes-300-gross-tonnes-and-above>
 
+# In[ ]:
+
+
 import os
 from zipfile import ZipFile
 
@@ -13,6 +16,9 @@ import contextily as cx
 import matplotlib.pyplot as plt
 
 from h2ss import data as rd
+
+# In[ ]:
+
 
 # base data download directory
 DATA_DIR = os.path.join("data", "shipping")
@@ -30,32 +36,82 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
+# In[ ]:
+
+
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
+
+
+# In[ ]:
+
 
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
 
+
+# In[ ]:
+
+
 ZipFile(DATA_FILE).namelist()
+
+
+# In[ ]:
+
 
 data = rd.read_shapefile_from_zip(data_path=DATA_FILE)
 
+
+# In[ ]:
+
+
 data.shape
+
+
+# In[ ]:
+
 
 data.head()
 
+
+# In[ ]:
+
+
 data.crs
+
+
+# In[ ]:
+
 
 data = data.sort_values("weight", ascending=False)
 
+
+# In[ ]:
+
+
 data.weight.unique()
+
+
+# In[ ]:
+
 
 data.key_.unique()
 
+
+# In[ ]:
+
+
 data["weight"] = data["weight"].astype(str)
 
+
+# In[ ]:
+
+
 data["legend"] = data.weight + ": " + data.key_
+
+
+# In[ ]:
+
 
 ax = data.plot(
     figsize=(7.5, 7.5),

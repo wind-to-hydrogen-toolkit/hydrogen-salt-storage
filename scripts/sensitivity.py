@@ -3,6 +3,9 @@
 
 # # Sensitivity analysis
 
+# In[ ]:
+
+
 import os
 from itertools import product
 
@@ -13,8 +16,14 @@ import seaborn as sns
 
 from h2ss import compare
 
+# In[ ]:
+
+
 cavern_diameter = np.arange(45, 106, step=5)
 cavern_height = np.arange(80, 321, step=20)
+
+
+# In[ ]:
 
 
 def generate_sensitivity_data(diameter, height):
@@ -34,7 +43,14 @@ def generate_sensitivity_data(diameter, height):
             print(f"{filename} exists!")
 
 
+# In[ ]:
+
+
 generate_sensitivity_data(cavern_diameter, cavern_height)
+
+
+# In[ ]:
+
 
 filelist = []
 for cd, ch in product(cavern_diameter, cavern_height):
@@ -42,16 +58,40 @@ for cd, ch in product(cavern_diameter, cavern_height):
         os.path.join("data", "sensitivity", f"sensitivity_d{cd}_h{ch}.csv")
     )
 
+
+# In[ ]:
+
+
 cdf = pd.concat((pd.read_csv(f) for f in filelist), ignore_index=True)
+
+
+# In[ ]:
+
 
 cdf.drop(columns=["Unnamed: 0"], inplace=True)
 
+
+# In[ ]:
+
+
 cdf["cavern_height"] = cdf["cavern_height"].astype(int)
+
+
+# In[ ]:
+
 
 cdf.describe()
 
+
+# In[ ]:
+
+
 # cavern height-to-diameter-ratio
 pd.Series((cdf["cavern_height"] / cdf["cavern_diameter"]).unique()).describe()
+
+
+# In[ ]:
+
 
 ax = sns.scatterplot(
     data=cdf,
@@ -65,9 +105,17 @@ ax = sns.scatterplot(
 sns.despine()
 plt.show()
 
+
+# In[ ]:
+
+
 len(cdf["cavern_diameter"].unique()) == len(cdf["cavern_height"].unique())
 
+
 # ## Number of caverns and total capacity
+
+# In[ ]:
+
 
 f, ax = plt.subplots(1, 2, figsize=(14, 7), sharey=True)
 
@@ -127,7 +175,11 @@ plt.tight_layout()
 # )
 plt.show()
 
+
 # ## Mean capacity
+
+# In[ ]:
+
 
 data = (
     cdf.groupby(["cavern_height", "cavern_diameter"])
@@ -157,29 +209,69 @@ plt.title("Mean capacity [GWh]")
 plt.tight_layout()
 plt.show()
 
+
 # ## Base case
+
+# In[ ]:
+
 
 base = cdf[
     (cdf["cavern_diameter"] == 85) & (cdf["cavern_height"] == 120)
 ].reset_index(drop=True)
 
+
+# In[ ]:
+
+
 base.describe()[["capacity"]]
+
+
+# In[ ]:
+
 
 base_mean = base[["capacity"]].mean().values[0]
 
+
+# In[ ]:
+
+
 base_sum = base[["capacity"]].sum().values[0]
+
+
+# In[ ]:
+
 
 base_count = base[["capacity"]].count().values[0]
 
+
+# In[ ]:
+
+
 print(f"{base_mean:.3f}")
+
+
+# In[ ]:
+
 
 print(f"{base_sum:.3f}")
 
+
+# In[ ]:
+
+
 base_count
+
 
 # ## Base diameter, varying height
 
+# In[ ]:
+
+
 dd = cdf[(cdf["cavern_diameter"] == 85)].reset_index(drop=True)
+
+
+# In[ ]:
+
 
 dd_mean = (
     pd.DataFrame(dd.groupby("cavern_height").mean()["capacity"] - base_mean)
@@ -187,11 +279,19 @@ dd_mean = (
     * 100
 ).reset_index()
 
+
+# In[ ]:
+
+
 dd_sum = (
     pd.DataFrame(dd.groupby("cavern_height").sum()["capacity"] - base_sum)
     / base_sum
     * 100
 ).reset_index()
+
+
+# In[ ]:
+
 
 dd_count = (
     pd.DataFrame(dd.groupby("cavern_height").count()["capacity"] - base_count)
@@ -199,9 +299,17 @@ dd_count = (
     * 100
 ).reset_index()
 
+
 # ## Base height, varying diameter
 
+# In[ ]:
+
+
 dh = cdf[(cdf["cavern_height"] == 120)].reset_index(drop=True)
+
+
+# In[ ]:
+
 
 dh_mean = (
     pd.DataFrame(dh.groupby("cavern_diameter").mean()["capacity"] - base_mean)
@@ -209,11 +317,19 @@ dh_mean = (
     * 100
 ).reset_index()
 
+
+# In[ ]:
+
+
 dh_sum = (
     pd.DataFrame(dh.groupby("cavern_diameter").sum()["capacity"] - base_sum)
     / base_sum
     * 100
 ).reset_index()
+
+
+# In[ ]:
+
 
 dh_count = (
     pd.DataFrame(
@@ -223,12 +339,20 @@ dh_count = (
     * 100
 ).reset_index()
 
+
 # ## Combined plots
+
+# In[ ]:
+
 
 dh_sum["type"] = "Total capacity"
 dh_count["type"] = "Number of caverns"
 dd_sum["type"] = "Total capacity"
 dd_count["type"] = "Number of caverns"
+
+
+# In[ ]:
+
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 sns.barplot(
@@ -257,25 +381,31 @@ ax[1].axvline("120", color="darkslategrey", linewidth=1, linestyle="dashed")
 ax[0].set_xlabel("Cavern diameter [m]")
 ax[1].set_xlabel("Cavern height [m]")
 ax[0].set_ylabel("Difference [%]")
-ax[1].legend(title=None, fontsize=11)
+ax[1].legend(title=None, fontsize=12)
 ax[1].tick_params(axis="y", left=False)
 
 sns.despine()
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_sensitivity.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_9.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()
 
 
-def colour_label(data):
+# In[ ]:
+
+
+def colour_label(dataset):
     "Use different colours for negative and positive values"
-    conditions = [(data["capacity"] < 0), (data["capacity"] >= 0)]
+    conditions = [(dataset["capacity"] < 0), (dataset["capacity"] >= 0)]
     choices = ["N", "P"]
-    data["colour"] = np.select(conditions, choices)
-    return data
+    dataset["colour"] = np.select(conditions, choices)
+    return dataset
+
+
+# In[ ]:
 
 
 f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)

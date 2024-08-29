@@ -6,6 +6,9 @@
 # - <https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.2171>
 # - <https://data.gov.ie/dataset/exploration-wells-in-the-irish-offshore>
 
+# In[ ]:
+
+
 import os
 from zipfile import ZipFile
 
@@ -14,10 +17,15 @@ import matplotlib.pyplot as plt
 
 from h2ss import data as rd
 
+# In[ ]:
+
+
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
+
+
+# In[ ]:
+
 
 # base data download directory
 DATA_DIR = os.path.join("data", "exploration-wells")
@@ -31,17 +39,45 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
+# In[ ]:
+
+
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
+
+
+# In[ ]:
+
 
 ZipFile(DATA_FILE).namelist()
 
+
+# In[ ]:
+
+
 wells = rd.read_shapefile_from_zip(data_path=DATA_FILE)
+
+
+# In[ ]:
+
 
 wells.shape
 
+
+# In[ ]:
+
+
 wells.head()
 
+
+# In[ ]:
+
+
 wells.crs
+
+
+# In[ ]:
+
 
 ax = wells.to_crs(3857).plot(
     column="AREA",

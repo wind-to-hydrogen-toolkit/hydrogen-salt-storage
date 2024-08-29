@@ -5,6 +5,9 @@
 #
 # <https://data.marine.ie/geonetwork/srv/eng/catalog.search#/metadata/ie.marine.data:dataset.5131>
 
+# In[ ]:
+
+
 import os
 from zipfile import ZipFile
 
@@ -13,10 +16,15 @@ import matplotlib.pyplot as plt
 
 from h2ss import data as rd
 
+# In[ ]:
+
+
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
+
+
+# In[ ]:
+
 
 # base data download directory
 DATA_DIR = os.path.join("data", "shipwrecks")
@@ -33,17 +41,45 @@ DATA_FILE = os.path.join(DATA_DIR, FILE_NAME)
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
+# In[ ]:
+
+
 rd.download_data(url=URL, data_dir=DATA_DIR, file_name=FILE_NAME)
+
+
+# In[ ]:
+
 
 ZipFile(DATA_FILE).namelist()
 
+
+# In[ ]:
+
+
 data = rd.read_shapefile_from_zip(data_path=os.path.join(DATA_FILE))
+
+
+# In[ ]:
+
 
 data.head()
 
+
+# In[ ]:
+
+
 data.shape
 
+
+# In[ ]:
+
+
 data.crs
+
+
+# In[ ]:
+
 
 ax = data.to_crs(3857).plot(
     figsize=(7.5, 7.5),

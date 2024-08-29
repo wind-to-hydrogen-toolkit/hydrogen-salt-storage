@@ -3,6 +3,9 @@
 
 # # Wind farm optimisation
 
+# In[ ]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -11,6 +14,7 @@ import geopandas as gpd
 import mapclassify as mc
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib import patheffects
@@ -22,17 +26,28 @@ from h2ss import data as rd
 from h2ss import functions as fns
 from h2ss import optimisation as opt
 
+# In[ ]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
 # ## Halite data
+
+# In[ ]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
 # ## Constraints
+
+# In[ ]:
+
 
 # exploration wells
 _, wells_b = fns.constraint_exploration_well(
@@ -72,22 +87,38 @@ _, cables_b = fns.constraint_subsea_cables(
     dat_extent=extent,
 )
 
+
+# In[ ]:
+
+
 # distance from salt formation edge
 edge_buffer = fns.constraint_halite_edge(dat_xr=ds)
 
+
 # ## Zones of interest
+
+# In[ ]:
+
 
 zones, zds = fns.zones_of_interest(
     dat_xr=ds,
     constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
+
 # ## Generate caverns
+
+# In[ ]:
+
 
 caverns = fns.generate_caverns_hexagonal_grid(
     zones_df=zones,
     dat_extent=extent,
 )
+
+
+# In[ ]:
+
 
 caverns = fns.cavern_dataframe(
     dat_zone=zds,
@@ -95,12 +126,20 @@ caverns = fns.cavern_dataframe(
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
 )
 
+
+# In[ ]:
+
+
 # label caverns by depth and heights
 caverns = fns.label_caverns(
     cavern_df=caverns,
     heights=[120],
     depths={"min": 500, "min_opt": 1000, "max_opt": 1500, "max": 2000},
 )
+
+
+# In[ ]:
+
 
 caverns, _ = fns.generate_caverns_with_constraints(
     cavern_df=caverns,
@@ -114,7 +153,11 @@ caverns, _ = fns.generate_caverns_with_constraints(
     },
 )
 
+
 # ## Capacity
+
+# In[ ]:
+
 
 caverns["cavern_total_volume"] = cap.cavern_volume(
     height=caverns["cavern_height"]
@@ -155,7 +198,11 @@ caverns["capacity"] = cap.energy_storage_capacity(
     m_working=caverns["working_mass"]
 )
 
+
 # ## Power curve [MW] and Weibull wind speed distribution
+
+# In[ ]:
+
 
 # extract data for wind farms at 150 m
 weibull_wf_df = fns.read_weibull_data(
@@ -167,9 +214,21 @@ weibull_wf_df = fns.read_weibull_data(
     ),
 )
 
+
+# In[ ]:
+
+
 weibull_powercurve = opt.weibull_distribution(weibull_wf_data=weibull_wf_df)
 
+
+# In[ ]:
+
+
 weibull_powercurve.head()
+
+
+# In[ ]:
+
 
 ax = weibull_powercurve.plot(
     x="wind_speed",
@@ -187,9 +246,13 @@ ax.xaxis.grid(True, linewidth=0.25)
 ax.yaxis.grid(True, linewidth=0.25)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_powercurve.jpg"), format="jpg", dpi=600
+#     os.path.join("graphics", "Figure_6.png"), format="png", dpi=600
 # )
 plt.show()
+
+
+# In[ ]:
+
 
 plt.figure(figsize=(10, 5.5))
 ax = sns.lineplot(
@@ -219,69 +282,129 @@ plt.tight_layout()
 # )
 plt.show()
 
+
 # ## Number of reference wind turbines
+
+# In[ ]:
+
 
 # number of 15 MW turbines, rounded down to the nearest integer
 weibull_wf_df["n_turbines"] = opt.number_of_turbines(
     owf_cap=weibull_wf_df["cap"]
 )
 
+
 # ## Annual energy production [MWh]
+
+# In[ ]:
+
 
 weibull_wf_df = opt.annual_energy_production(weibull_wf_data=weibull_wf_df)
 
+
 # ## Annual hydrogen production [kg]
+
+# In[ ]:
+
 
 weibull_wf_df["AHP"] = opt.annual_hydrogen_production(aep=weibull_wf_df["AEP"])
 
+
 # ## AHP as a proportion of the total working mass
+
+# In[ ]:
+
 
 weibull_wf_df["AHP_frac"] = (
     weibull_wf_df["AHP"] / caverns[["working_mass"]].sum().iloc[0]
 )
 
+
 # ## AHP converted to storage demand [GWh]
+
+# In[ ]:
+
 
 weibull_wf_df["demand"] = cap.energy_storage_capacity(
     m_working=weibull_wf_df["AHP"]
 )
 
+
 # ## Number of caverns required based on cumulative working mass and AHP
+
+# In[ ]:
+
 
 compare.calculate_number_of_caverns(
     cavern_df=caverns, weibull_wf_data=weibull_wf_df
 )
 
+
 # ## Transmission distance [km]
+
+# In[ ]:
+
 
 caverns, injection_point = opt.transmission_distance(
     cavern_df=caverns, wf_data=wind_farms
 )
 
+
 # ## Electrolyser capacity [MW]
+
+# In[ ]:
+
 
 weibull_wf_df["E_cap"] = opt.electrolyser_capacity(
     n_turbines=weibull_wf_df["n_turbines"]
 )
 
+
 # ## CAPEX for pipeline [€ km⁻¹]
+
+# In[ ]:
+
 
 weibull_wf_df["CAPEX"] = opt.capex_pipeline(e_cap=weibull_wf_df["E_cap"])
 
+
+# In[ ]:
+
+
 weibull_wf_df
+
+
+# In[ ]:
+
 
 # totals
 weibull_wf_df[
     ["cap", "n_turbines", "AEP", "AHP", "AHP_frac", "demand", "E_cap", "CAPEX"]
 ].sum()
 
+
+# In[ ]:
+
+
 compare.electricity_demand_ie(data=weibull_wf_df["demand"])
+
+
+# In[ ]:
+
 
 compare.hydrogen_demand_ie(data=weibull_wf_df["demand"])
 
+
 # ## LCOT for pipeline [€ kg⁻¹]
 
+# In[ ]:
+
+
 caverns = opt.lcot_pipeline(weibull_wf_data=weibull_wf_df, cavern_df=caverns)
+
+
+# In[ ]:
+
 
 caverns[
     [
@@ -294,55 +417,72 @@ caverns[
     + list(caverns.filter(like="LCOT_"))
 ].describe()
 
-caverns[list(caverns.filter(like="LCOT_"))].describe().mean(axis=1)
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
-sns.boxplot(
-    caverns.filter(like="dist_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[0],
-    legend=False,
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[0].set_ylabel("Transmission distance [km]")
-axes[0].tick_params(axis="x", bottom=False)
-sns.boxplot(
-    caverns.filter(like="LCOT_")
-    .set_axis(list(wind_farms["name"]), axis=1)
-    .melt(),
-    y="value",
-    hue="variable",
-    palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
-    width=0.35,
-    ax=axes[1],
-    linecolor="black",
-    linewidth=1.1,
-    gap=0.15,
-)
-axes[1].set_ylabel("Pipeline LCOT [€ kg⁻¹]")
-axes[1].legend(loc="lower right")
-axes[1].tick_params(axis="x", bottom=False)
-axes[1].yaxis.grid(True, linewidth=0.25)
-axes[0].yaxis.grid(True, linewidth=0.25)
+# In[ ]:
+
+
+pd.Series(caverns[list(caverns.filter(like="dist_"))].values.flat).describe()
+
+
+# In[ ]:
+
+
+pd.Series(caverns[list(caverns.filter(like="LCOT_"))].values.flat).describe()
+
+
+# In[ ]:
+
+
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.5))
+for n, col, lab, show_legend in zip(
+    [0, 1],
+    ["dist_", "LCOT_"],
+    ["Transmission distance [km]", "Pipeline LCOT [€ kg⁻¹]"],
+    [False, True],
+):
+    sns.boxplot(
+        caverns.filter(like=col)
+        .set_axis(list(wind_farms["name"]), axis=1)
+        .melt(),
+        y="value",
+        hue="variable",
+        palette=sns.color_palette(["tab:red", "tab:gray", "tab:blue"]),
+        width=0.35,
+        ax=axes[n],
+        legend=show_legend,
+        linecolor="black",
+        linewidth=1.1,
+        gap=0.15,
+        showmeans=True,
+        meanprops={
+            "marker": "d",
+            "markeredgecolor": "black",
+            "markerfacecolor": "none",
+        },
+    )
+    axes[n].set_ylabel(lab)
+    axes[n].tick_params(axis="x", bottom=False)
+    axes[n].yaxis.grid(True, linewidth=0.25)
+axes[1].legend(loc="lower right", fontsize=11.25)
 sns.despine(bottom=True)
 plt.tight_layout()
 # plt.savefig(
-#     os.path.join("graphics", "fig_box_transmission.jpg"),
-#     format="jpg",
+#     os.path.join("graphics", "Figure_10.png"),
+#     format="png",
 #     dpi=600,
 # )
 plt.show()
 
+
 # ## Maps
 
+# In[ ]:
+
+
 shape = rd.halite_shape(dat_xr=ds).buffer(1000).buffer(-1000)
+
+
+# In[ ]:
 
 
 def plot_map_facet(
@@ -430,16 +570,23 @@ def plot_map_facet(
 
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_map_transmission.jpg"),
-    #     format="jpg", dpi=600
+    #     os.path.join("graphics", "Figure_11.png"),
+    #     format="png",
+    #     dpi=600,
     # )
     plt.show()
+
+
+# In[ ]:
 
 
 plot_map_facet(
     caverns,
     list(mc.Quantiles(caverns[list(caverns.filter(like="LCOT_"))], k=6).bins),
 )
+
+
+# In[ ]:
 
 
 def plot_map_extent(cavern_df):
@@ -460,7 +607,7 @@ def plot_map_extent(cavern_df):
     wind_farms.plot(
         ax=ax2, facecolor="none", hatch="///", edgecolor="royalblue"
     )
-    plt.xlim(xmin_ - 19000, xmax_ + 1500)
+    plt.xlim(xmin_ - 25000, xmax_ + 9500)
     plt.ylim(ymin_ - 3000, ymax_ + 3000)
     injection_point.plot(ax=ax2, marker="*", color="darkslategrey")
     basemap = cx.providers.CartoDB.VoyagerNoLabels
@@ -470,13 +617,13 @@ def plot_map_extent(cavern_df):
         source=basemap,
         attribution=False,
     )
-    ax2.text(xmin_ - 18500, ymin_ - 2400, basemap["attribution"], fontsize=7.5)
+    ax2.text(xmin_ - 24250, ymin_ - 2150, basemap["attribution"], fontsize=9)
     map_labels = zip(
         zip(wind_farms.centroid.x, wind_farms.centroid.y), wind_farms["name"]
     )
-    for xy, lab in map_labels:
+    for xy, lab2 in map_labels:
         ax2.annotate(
-            text=lab,
+            text=lab2,
             xy=xy,
             path_effects=[
                 patheffects.withStroke(linewidth=2.5, foreground="white")
@@ -509,11 +656,14 @@ def plot_map_extent(cavern_df):
     )
     plt.tight_layout()
     # plt.savefig(
-    #     os.path.join("graphics", "fig_transmission_map_inset.jpg"),
-    #     format="jpg",
+    #     os.path.join("graphics", "Figure_11_inset.png"),
+    #     format="png",
     #     dpi=600,
     # )
     plt.show()
+
+
+# In[ ]:
 
 
 plot_map_extent(caverns)

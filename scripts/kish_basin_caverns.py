@@ -3,6 +3,9 @@
 
 # # Cavern generation
 
+# In[ ]:
+
+
 import os
 
 import cartopy.crs as ccrs
@@ -13,22 +16,34 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from h2ss import data as rd
 from h2ss import functions as fns
 
+# In[ ]:
+
+
 # basemap cache directory
 cx.set_cache_dir(os.path.join("data", "basemaps"))
 
+
+# In[ ]:
+
+
 plt.rcParams["xtick.major.size"] = 0
 plt.rcParams["ytick.major.size"] = 0
-plt.rcParams["xtick.minor.size"] = 0
-plt.rcParams["ytick.minor.size"] = 0
+
 
 # ## Read data layers
+
+# In[ ]:
+
 
 ds, extent = rd.kish_basin_data_depth_adjusted(
     dat_path=os.path.join("data", "kish-basin"),
     bathymetry_path=os.path.join("data", "bathymetry"),
 )
 
+
 # ## Zones of interest
+
+# In[ ]:
 
 
 def plot_zones_map(zdf, dat_extent, dat_crs):
@@ -48,15 +63,25 @@ def plot_zones_map(zdf, dat_extent, dat_crs):
     plt.show()
 
 
+# In[ ]:
+
+
 # height = 120 m, 500 m <= depth <= 2,000 m
 zones, _ = fns.zones_of_interest(
     dat_xr=ds,
     constraints={"net_height": 120, "min_depth": 500, "max_depth": 2000},
 )
 
+
+# In[ ]:
+
+
 plot_zones_map(zones, extent, rd.CRS)
 
+
 # ## Generate potential salt cavern locations
+
+# In[ ]:
 
 
 def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
@@ -125,26 +150,61 @@ def plot_map(dat_xr, dat_extent, dat_crs, cavern_df, var, stat):
 
 # ### Cavern calculations in a regular square grid
 
+# In[ ]:
+
+
 caverns = fns.generate_caverns_square_grid(dat_extent=extent, zones_df=zones)
+
+
+# In[ ]:
+
 
 len_square = len(caverns)
 
+
+# In[ ]:
+
+
 len_square
+
+
+# In[ ]:
+
 
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
 
+
 # ### Cavern calculations in a regular hexagonal grid
+
+# In[ ]:
+
 
 caverns = fns.generate_caverns_hexagonal_grid(
     dat_extent=extent,
     zones_df=zones,
 )
 
+
+# In[ ]:
+
+
 len_hex = len(caverns)
+
+
+# In[ ]:
+
 
 len_hex
 
+
+# In[ ]:
+
+
 plot_map(ds, extent, rd.CRS, caverns, "Thickness", "max")
+
+
+# In[ ]:
+
 
 print(
     "Percentage increase in the number of caverns when using a regular "

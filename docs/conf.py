@@ -33,6 +33,12 @@ nb_execution_mode = "off"
 
 viewcode_line_numbers = True
 
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+myst_enable_extensions = [
+    "amsmath",
+    "dollarmath",
+]
+
 # templates_path = ["_templates"]
 
 exclude_patterns = [
@@ -69,10 +75,6 @@ html_theme_options = {
         }
     ],
     "navbar_align": "right",
-    "secondary_sidebar_items": {
-        "datasets": [],
-        "map": [],
-    },
 }
 
 html_sidebars = {

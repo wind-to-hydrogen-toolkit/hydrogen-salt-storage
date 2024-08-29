@@ -153,7 +153,7 @@ def plot_interactive_map():
         tiles="cartodbvoyager",
         control_scale=True,
         location=[np.mean((miny, maxy)), np.mean((minx, maxx))],
-        zoom_start=11,
+        zoom_start=10,
         min_lat=miny,
         max_lat=maxy,
         min_lon=minx,

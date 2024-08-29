@@ -1,5 +1,7 @@
-myst-nb
-pydata-sphinx-theme
+folium
 geocube
+myst-nb
 pooch
+pydata-sphinx-theme
 pyfluids
+seaborn

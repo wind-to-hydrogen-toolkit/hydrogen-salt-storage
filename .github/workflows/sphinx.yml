@@ -1,0 +1,47 @@
+# https://www.sphinx-doc.org/en/master/tutorial/deploying.html
+name: 'Sphinx: Render docs'
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'docs/**'
+      - 'h2ss/**'
+      - 'tests/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # permissions:
+    #   contents: write
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: docs/requirements.txt
+    - name: Install setup dependencies
+      run: python -m pip install --upgrade pip setuptools wheel
+    - name: Install docs dependencies
+      run: python -m pip install -r docs/requirements.txt
+    - name: Make HTML
+      run: cd docs && make html
+    # - name: Build HTML
+    #   uses: ammaraskar/sphinx-action@master
+    #   with:
+    #     pre-build-command: 'python -m pip install --upgrade pip setuptools wheel'
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-docs
+        path: docs/_build/html/
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/_build/html

@@ -226,7 +226,7 @@ def bathymetry_layer(dat_extent, bathymetry_path):
     Parameters
     ----------
     dat_extent : geopandas.GeoSeries
-        Extent of the Kish Basin data
+        Extent of the data
     bathymetry_path : str
         Path to the bathymetry netCDF file
 
@@ -239,7 +239,7 @@ def bathymetry_layer(dat_extent, bathymetry_path):
         os.path.join(bathymetry_path, "D4_2022.nc"), decode_coords="all"
     )
     bath = bath.chunk({"lat": 1000, "lon": 1000, "cdi_index_count": 1000})
-    bath = bath.rio.reproject(CRS).rio.clip(dat_extent.buffer(3000))
+    bath = bath.rio.reproject(CRS).rio.clip(dat_extent.to_crs(CRS))
     return bath
 
 

@@ -259,7 +259,9 @@ def number_of_turbines(owf_cap, wt_power=REF_RATED_POWER):
     return (owf_cap / wt_power).astype(int)
 
 
-def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
+def annual_energy_production_function(
+    n_turbines, k, c, w_loss=0.1, acdc_loss=0.982
+):
     """Annual energy production of the wind farm.
 
     Parameters
@@ -272,6 +274,8 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
         Scale (Weibull distribution parameter) [m s⁻¹]
     w_loss : float
         Wake loss
+    acdc_loss : float
+        AC-DC conversion losses
 
     Returns
     -------
@@ -286,12 +290,13 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
     the wind farm, :math:`w` is the wake loss, which is assumed to be a
     constant value of 0.1, :math:`v_i` and :math:`v_o` [m s⁻¹] are the cut-in
     and cut-out speeds of the wind turbine, respectively, :math:`P(v)` [MW] is
-    the wind turbine power output, and :math:`f(v)` [s m⁻¹] is the Weibull
-    probability distribution function.
+    the wind turbine power output, :math:`f(v)` [s m⁻¹] is the Weibull
+    probability distribution function, and :math:`\\varepsilon` is the
+    AC-DC conversion loss.
 
     .. math::
         E_{annual} = 365 \\times 24 \\times n \\times
-        \\left( 1 - w \\right) \\times
+        \\left( 1 - w \\right) \\times \\varepsilon \\times
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -304,7 +309,7 @@ def annual_energy_production_function(n_turbines, k, c, w_loss=0.1):
         limit=100,  # an upper bound on the number of subintervals used
         epsabs=1.49e-6,  # absolute error tolerance
     )
-    aep = 365 * 24 * n_turbines * (1 - w_loss) * integration[0]
+    aep = 365 * 24 * n_turbines * (1 - w_loss) * acdc_loss * integration[0]
     return aep, integration[0], integration[1]
 
 
@@ -342,7 +347,7 @@ def annual_energy_production(weibull_wf_data):
     return weibull_wf_data
 
 
-def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003):
+def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003053):
     """Annual hydrogen production from the wind farm's energy generation.
 
     Parameters
@@ -371,7 +376,7 @@ def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003):
     See [#HydrogenTools]_ for the heating values.
 
     .. math::
-        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\, \\eta} +
+        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\times \\eta} +
         E_{plant}}
 
     where :math:`m_{annual}` is the annual hydrogen production [kg],
@@ -617,8 +622,7 @@ def lcot_pipeline_function(
     ahp : float
         Annual hydrogen production [kg]
     opex_ratio : float
-        Ratio of the operational expenditure (OPEX) to the CAPEX; the OPEX is
-        calculated as a percentage of the CAPEX
+        Ratio of the operational expenditure (OPEX) to the CAPEX
     discount_rate : float
         Discount rate
     lifetime : int
@@ -631,6 +635,7 @@ def lcot_pipeline_function(
 
     Notes
     -----
+    The OPEX is calculated as a percentage of the CAPEX.
     See the introduction of Section 3, Eqn. (1) and (2), and Section 3.5, Eqn.
     (22) of [#Dinh24b]_; see Tables 2 and 3 for the assumptions and constants
     used.
@@ -642,14 +647,14 @@ def lcot_pipeline_function(
     .. math::
         OPEX = CAPEX \\cdot F_{OPEX}
     .. math::
-        LCOT = \\frac{CAPEX \\cdot d + \\sum_{l=0}^{L}
-        \\frac{OPEX}{{(1 + DR)}^l}}
-        {\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
+        LCOT = \\frac{\\left( CAPEX + \\displaystyle\\sum_{l=0}^{L}
+        \\frac{OPEX}{{(1 + DR)}^l} \\right) d}
+        {\\displaystyle\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
     :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline [€ km⁻¹],
     :math:`d` is the pipeline transmission distance [km], :math:`OPEX` is the
-    OPEX of the pipeline [€ kg⁻¹], :math:`DR` is the discount rate,
+    OPEX of the pipeline [€ km⁻¹], :math:`DR` is the discount rate,
     :math:`AHP` is the annual hydrogen production [kg], :math:`L` is the
     lifetime of the pipeline [year], and :math:`F_{OPEX}` is the ratio of the
     OPEX to the CAPEX.
@@ -658,7 +663,7 @@ def lcot_pipeline_function(
         1 / np.power((1 + discount_rate), year) for year in range(lifetime + 1)
     )
     opex = capex * opex_ratio
-    return (capex * d_transmission + opex * f) / (ahp * f)
+    return (capex + opex * f) * d_transmission / (ahp * f)
 
 
 def lcot_pipeline(weibull_wf_data, cavern_df):
@@ -766,7 +771,7 @@ def power_coefficient(v):
         {\\rho_{air} \\cdot A \\cdot v^3}
 
     where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
-    the power contained in the wind resource [MW]:math:`\\rho_{air}` is the
+    the power contained in the wind resource [MW], :math:`\\rho_{air}` is the
     air density [kg m⁻³], :math:`A` is the rotor swept area [m²], :math:`v` is
     the wind speed [m s⁻¹], and :math:`C_p` is the power coefficient of the
     wind turbine.
