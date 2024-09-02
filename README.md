@@ -2,6 +2,9 @@
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
+- Repository: <https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage>
+- Preprint: <>
+
 ## Acknowledgements
 
 This research was carried out as part of the [H-Wind](https://www.marei.ie/project/h-wind) and [HYSS](https://hyss.ie/) projects.
