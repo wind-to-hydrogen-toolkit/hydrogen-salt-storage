@@ -1,9 +1,9 @@
 # Changelog
 
-## [2024.08.1](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.08.1)
+## [2024.09.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.09.0)
 
 [Prepare for public release](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/13) by @nmstreethran.
-[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.08.0...2024.08.1).
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.08.0...2024.09.0).
 
 - update docs workflow and link
 - update project and funding info
