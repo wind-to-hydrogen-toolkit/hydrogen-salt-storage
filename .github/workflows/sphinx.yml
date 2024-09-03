@@ -3,14 +3,15 @@
 # https://github.com/actions/deploy-pages
 name: 'Sphinx: Render docs'
 
-on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'docs/**'
-      - 'h2ss/**'
-      - 'tests/**'
+# on:
+#   push:
+#     branches:
+#       - 'main'
+#     paths:
+#       - 'docs/**'
+#       - 'h2ss/**'
+#       - 'tests/**'
+on: push
 
 jobs:
   build:
@@ -41,6 +42,7 @@ jobs:
       with:
         name: html-docs
         path: docs/_build/html/
+        retention-days: 5
     # - name: Deploy
     #   uses: peaceiris/actions-gh-pages@v4
     #   if: github.ref == 'refs/heads/main'
