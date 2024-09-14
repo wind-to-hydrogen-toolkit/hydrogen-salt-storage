@@ -11,6 +11,7 @@ on:
       - 'docs/**'
       - 'h2ss/**'
       - 'tests/**'
+      - '.github/workflows/sphinx.yml'
 
 jobs:
   build:
