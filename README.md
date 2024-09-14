@@ -4,6 +4,7 @@ Optimising production and long-term bulk storage of hydrogen from offshore wind 
 
 - Repository: <https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage>
 - Preprint: <>
+- Documentation: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>
 
 ## Acknowledgements
 
