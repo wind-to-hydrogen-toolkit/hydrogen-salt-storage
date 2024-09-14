@@ -37,7 +37,8 @@ jobs:
     #   with:
     #     pre-build-command: 'python -m pip install --upgrade pip setuptools wheel'
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+    #   uses: actions/upload-artifact@v4
+      uses: actions/upload-pages-artifact@v3
       with:
         name: github-pages
         path: docs/_build/html/
