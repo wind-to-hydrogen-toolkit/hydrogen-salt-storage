@@ -2,9 +2,15 @@
 
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
+- Repository: <https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage>
+- Preprint: <>
+- Documentation: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>
+
 ## Acknowledgements
 
-The [H-Wind](https://www.marei.ie/project/h-wind) project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
+This research was carried out as part of the [H-Wind](https://www.marei.ie/project/h-wind) and [HYSS](https://hyss.ie/) projects.
+The H-Wind project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
+The HYSS project was supported by a grant from [Sustainable Energy Authority of Ireland (SEAI)](https://www.seai.ie/) and [Geological Survey Ireland](https://www.gsi.ie/) under the SEAI Research, Development & Demonstration Funding Programme 2021, [Grant No. 21/RDD/725](https://www.seai.ie/seai-research/research-database/research-projects/details/hydrogen-salt-storage-assessment-hyss).
 
 ## Installation
 
@@ -45,7 +51,7 @@ python -m pip install https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-
 
 ## Documentation
 
-Documentation is available at: <https://wind-to-hydrogen-toolkit.gitlab.io/hydrogen-salt-storage>.
+Documentation is available at: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>.
 
 To build the documentation locally:
 

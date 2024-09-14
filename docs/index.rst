@@ -9,13 +9,14 @@ Storage of hydrogen from offshore wind in salt caverns
 Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
 
 Source code is available on GitHub: https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage.
+A preprint has been published at:.
 
 Acknowledgements
 ----------------
 
-The `H-Wind <https://www.marei.ie/project/h-wind/>`_ project was supported by a research grant from `Science Foundation Ireland (SFI) <https://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the industry consortium members: `DP Energy <https://dpenergy.com/>`_, `Equinor <https://www.equinor.com/>`_, `ESB <https://esb.ie/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
-
-.. image:: https://raw.githubusercontent.com/wind-to-hydrogen-toolkit/.github/main/images/logos-hwind.png
+This research was carried out as part of the `H-Wind <https://www.marei.ie/project/h-wind/>`_ and `HYSS <https://hyss.ie/>`_ projects.
+The H-Wind project was supported by a research grant from `Science Foundation Ireland (SFI) <https://www.sfi.ie/>`_ under Grant No. 12/RC/2302 – P2 and by the industry consortium members: `DP Energy <https://dpenergy.com/>`_, `Equinor <https://www.equinor.com/>`_, `ESB <https://esb.ie/>`_, and `Gas Networks Ireland <https://www.gasnetworks.ie/>`_.
+The HYSS project was supported by a grant from `Sustainable Energy Authority of Ireland (SEAI) <https://www.seai.ie/>`_ and `Geological Survey Ireland <https://www.gsi.ie/>`_ under the SEAI Research, Development & Demonstration Funding Programme 2021, `Grant No. 21/RDD/725 <https://www.seai.ie/seai-research/research-database/research-projects/details/hydrogen-salt-storage-assessment-hyss>`_.
 
 Contents
 --------
