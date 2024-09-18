@@ -1,9 +1,7 @@
-# Storage of hydrogen from offshore wind in salt caverns
-
-Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
+# Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
 
 - Repository: <https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage>
-- Preprint: <>
+- Preprint: <https://doi.org/10.2139/ssrn.4960296>
 - Documentation: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>
 
 ## Acknowledgements

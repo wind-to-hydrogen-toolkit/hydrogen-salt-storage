@@ -3,13 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Storage of hydrogen from offshore wind in salt caverns
-======================================================
-
-Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea.
+Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
+================================================================================================================
 
 Source code is available on GitHub: https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage.
-A preprint has been published at:.
+A preprint has been published at: https://doi.org/10.2139/ssrn.4960296.
 
 Acknowledgements
 ----------------
