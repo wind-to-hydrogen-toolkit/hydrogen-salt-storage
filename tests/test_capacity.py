@@ -99,10 +99,10 @@ def test_density_hydrogen_gas():
     been set such that the default units are SI units.
 
     .. math::
-        \\rho = \\frac{P \\cdot M}{Z \\cdot R \\cdot T}
+        \\rho = \\frac{p \\, M}{Z \\, R \\, T}
 
     where :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is
-    the universal gas constant [J K⁻¹ mol⁻¹], :math:`P` is the pressure [Pa],
+    the universal gas constant [J K⁻¹ mol⁻¹], :math:`p` is the pressure [Pa],
     :math:`T` is the temperature [K], and :math:`\\rho` is the hydrogen gas
     density [kg m⁻³].
     """

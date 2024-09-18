@@ -147,7 +147,7 @@ def weibull_probability_distribution(v, k, c):
 
     .. math::
         f(v) = \\frac{k}{C} \\, \\left( \\frac{v}{C} \\right)^{k - 1}
-        \\cdot \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
+        \\, \\exp \\left( -\\left( \\frac{v}{C} \\right)^k \\right)
 
     See also [#Pryor18]_, Eqn. (2).
     """
@@ -295,8 +295,8 @@ def annual_energy_production_function(
     AC-DC conversion loss.
 
     .. math::
-        E_{annual} = 365 \\times 24 \\times n \\times
-        \\left( 1 - w \\right) \\times \\varepsilon \\times
+        E_{annual} = 365 \\times 24 \\times n \\,
+        \\left( 1 - w \\right) \\, \\varepsilon \\,
         \\int\\limits_{v_i}^{v_o} P(v) \\, f(v) \\,\\mathrm{d}v
 
     In the function's implementation, both the limit and absolute error
@@ -376,7 +376,7 @@ def annual_hydrogen_production(aep, eta_conv=0.7, e_pcl=0.003053):
     See [#HydrogenTools]_ for the heating values.
 
     .. math::
-        m_{annual} = \\frac{E_{annual}}{\\frac{LHV}{3,600 \\times \\eta} +
+        m_{annual} = \\dfrac{E_{annual}}{\\dfrac{LHV}{3,600 \\, \\eta} +
         E_{plant}}
 
     where :math:`m_{annual}` is the annual hydrogen production [kg],
@@ -500,7 +500,7 @@ def electrolyser_capacity(
     :math:`F_{electrolyser}`.
 
     .. math::
-        P_{electrolyser} = \\left\\lfloor n \\cdot P_{rated} \\cdot
+        P_{electrolyser} = \\left\\lfloor n \\, P_{rated} \\,
         F_{electrolyser} \\right\\rfloor
     """
     return (n_turbines * wt_power * cap_ratio).astype(int)
@@ -588,9 +588,9 @@ def capex_pipeline(e_cap, p_rate=0.0055, pressure=100e5, temperature=10, u=15):
 
     .. math::
         CAPEX = 2,000 \\, \\left( 16,000 \\, \\frac{P_{electrolyser}
-        \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2} \\cdot \\pi} + 1,197.2 \\,
-        \\sqrt{\\frac{P_{electrolyser} \\cdot EPR}{\\rho_{H_2} \\cdot v_{H_2}
-        \\cdot \\pi}} + 329 \\right)
+        \\times EPR}{\\rho_{H_2} \\, v_{H_2} \\, \\pi} + 1,197.2 \\,
+        \\sqrt{\\frac{P_{electrolyser} \\times EPR}{\\rho_{H_2} \\, v_{H_2}
+        \\, \\pi}} + 329 \\right)
 
     where :math:`CAPEX` is the CAPEX of the pipeline per km of pipeline
     [€ km⁻¹], :math:`P_{electrolyser}` is the electrolyser capacity [MW],
@@ -645,10 +645,10 @@ def lcot_pipeline_function(
         components}}
         {\\mathrm{lifetime\\ hydrogen\\ transported}}
     .. math::
-        OPEX = CAPEX \\cdot F_{OPEX}
+        OPEX = CAPEX \\times F_{OPEX}
     .. math::
         LCOT = \\frac{\\left( CAPEX + \\displaystyle\\sum_{l=0}^{L}
-        \\frac{OPEX}{{(1 + DR)}^l} \\right) d}
+        \\frac{OPEX}{{(1 + DR)}^l} \\right) \\, d}
         {\\displaystyle\\sum_{l=0}^{L} \\frac{AHP}{{(1 + DR)}^l}}
 
     where :math:`LCOT` is the LCOT of hydrogen in pipelines [€ kg⁻¹],
@@ -710,7 +710,7 @@ def rotor_area(diameter=REF_DIAMETER):
     Notes
     -----
     .. math::
-        A = \\frac{\\pi \\cdot D^2}{4}
+        A = \\frac{\\pi \\, D^2}{4}
 
     where :math:`A` is the wind turbine rotor swept area [m²] and :math:`D` is
     the rotor diameter [m].
@@ -738,8 +738,7 @@ def power_wind_resource(v, rho=1.225, diameter=REF_DIAMETER):
     Notes
     -----
     .. math::
-        P_{wind} = \\frac{1}{2} \\,
-        \\frac{\\rho_{air} \\cdot A \\cdot v^3}{10^6}
+        P_{wind} = \\frac{\\rho_{air} \\, A \\, v^3}{2 \\times 10^6}
 
     where :math:`P_{wind}` is the power contained in the wind resource [MW],
     :math:`\\rho_{air}` is the air density [kg m⁻³], :math:`A` is the rotor
@@ -767,8 +766,8 @@ def power_coefficient(v):
     turbine [#Musial19]_.
 
     .. math::
-        C_p = \\frac{P}{P_{wind}} = 2 \\, \\frac{P \\times 10^6}
-        {\\rho_{air} \\cdot A \\cdot v^3}
+        C_p = \\frac{P}{P_{wind}} = \\frac{P \\times 2 \\times 10^6}
+        {\\rho_{air} \\, A \\, v^3}
 
     where :math:`P` is the wind turbine power output [MW], :math:`P_{wind}` is
     the power contained in the wind resource [MW], :math:`\\rho_{air}` is the

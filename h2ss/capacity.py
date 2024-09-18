@@ -90,14 +90,14 @@ def cavern_volume(height, diameter=fns.CAVERN_DIAMETER, theta=20):
     where :math:`\\theta` [°] is the cavern roof angle.
 
     .. math::
-        V_{bulk} = \\pi \\cdot r^2 \\cdot h
-        - \\frac{4}{3} \\, \\pi \\cdot r^2 \\cdot h_{cone}
+        V_{bulk} = \\pi \\, r^2 \\, h
+        - \\frac{4}{3} \\, \\pi \\, r^2 \\, h_{cone}
     .. math::
-        V_{bulk} = \\pi \\cdot r^2
+        V_{bulk} = \\pi \\, r^2
         \\left(h - \\frac{4}{3} \\, h_{cone}\\right)
     .. math::
-        V_{bulk} = \\pi \\cdot r^2 \\left(h - \\frac{4}{3} \\,
-        r \\cdot \\tan(\\theta)\\right)
+        V_{bulk} = \\pi \\, r^2 \\left(h - \\frac{4}{3} \\,
+        r \\, \\tan(\\theta)\\right)
     """
     r = diameter / 2
     v_cavern = (
@@ -218,8 +218,8 @@ def pressure_operating(
     Notes
     -----
     .. math::
-        p_{casing} = (\\rho_{water} \\cdot t_{water} + \\rho_{overburden}
-        \\cdot t_{overburden} + \\rho_{salt} \\cdot t_{salt}) \\, g
+        p_{casing} = (\\rho_{water} \\, t_{water} + \\rho_{overburden}
+        \\, t_{overburden} + \\rho_{salt} \\, t_{salt}) \\, g
     .. math::
         p_{H_2min} = 0.3 \\, p_{casing}
     .. math::
@@ -283,7 +283,7 @@ def density_hydrogen_gas(p_operating_min, p_operating_max, t_mid_point):
     the following equation.
 
     .. math::
-        \\rho = \\frac{p \\cdot M}{Z \\cdot R \\cdot T}
+        \\rho = \\frac{p \\, M}{Z \\, R \\, T}
 
     where :math:`M` is the molar mass of hydrogen gas [kg mol⁻¹], :math:`R` is
     the universal gas constant [J K⁻¹ mol⁻¹], :math:`p` is the pressure [Pa],
@@ -328,9 +328,9 @@ def mass_hydrogen_working(rho_h2_min, rho_h2_max, v_cavern):
     cushion gas requirement.
 
     .. math::
-        m_{min} = \\rho_{H_2min} \\cdot V_{cavern}
+        m_{min} = \\rho_{H_2min} \\, V_{cavern}
     .. math::
-        m_{max} = \\rho_{H_2max} \\cdot V_{cavern}
+        m_{max} = \\rho_{H_2max} \\, V_{cavern}
     .. math::
         m_{working} = m_{max} - m_{min}
 
@@ -369,6 +369,6 @@ def energy_storage_capacity(m_working):
     lower heating value of hydrogen, :math:`LHV` [MJ kg⁻¹].
 
     .. math::
-        E_{cavern} = m_{working} \\, \\frac{LHV}{3,600,000}
+        E_{cavern} = \\frac{m_{working} \\times LHV}{3,600,000}
     """
     return m_working * 119.96 / 3.6e6

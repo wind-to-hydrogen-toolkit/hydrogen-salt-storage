@@ -1,9 +1,9 @@
 """hydrogen-salt-storage (h2ss)
 
-Optimising green hydrogen storage in man-made submarine salt caverns
+Optimising production and long-term bulk storage of hydrogen from offshore
+wind in salt caverns in the Irish Sea
 
 https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
-https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage
 """
 
 __author__ = """Nithiya Streethran"""
