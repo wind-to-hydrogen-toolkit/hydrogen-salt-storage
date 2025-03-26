@@ -11,7 +11,7 @@ sys.path.append("..")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "hydrogen-salt-storage"
-copyright = "2023-2024, Nithiya Streethran"
+copyright = "2023-2025, Nithiya Streethran"
 author = "Nithiya Streethran"
 
 github_url = f"https://github.com/wind-to-hydrogen-toolkit/{project}"
@@ -55,6 +55,8 @@ exclude_patterns = [
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+html_title = project
 
 html_theme = "pydata_sphinx_theme"
 

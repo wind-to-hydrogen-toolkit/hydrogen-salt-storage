@@ -49,8 +49,6 @@ python -m pip install https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-
 
 ## Documentation
 
-Documentation is available at: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>.
-
 To build the documentation locally:
 
 ```sh
@@ -65,7 +63,7 @@ cd docs && make clean html
 
 ## Licence
 
-Copyright 2023-2024 N. Streethran
+Copyright 2023-2025 N. Streethran
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

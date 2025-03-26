@@ -9,4 +9,4 @@ https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage
 __author__ = """Nithiya Streethran"""
 __email__ = "nmstreethran@gmail.com"
 __version__ = "2024.09.0"
-__copyright__ = "Copyright (C) 2023-2024 N. Streethran"
+__copyright__ = "Copyright (C) 2023-2025 N. Streethran"
