@@ -32,15 +32,6 @@
             }
         },
         {
-            "label": "black-isort",
-            "type": "shell",
-            "command": "source .venv/bin/activate && black **/*.py docs/notebooks/*.ipynb && isort **/*.py",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build"
-            }
-        },
-        {
             "label": "sanitise-notebooks",
             "type": "shell",
             "command": "source .venv/bin/activate && jupyter nbconvert --sanitize-html --to notebook --inplace docs/notebooks/*.ipynb",
@@ -60,27 +51,9 @@
             }
         },
         {
-            "label": "pylint-functions",
+            "label": "ruff",
             "type": "shell",
-            "command": "source .venv/bin/activate && pylint h2ss/*.py tests/*.py",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
-            }
-        },
-        {
-            "label": "pylint-notebooks",
-            "type": "shell",
-            "command": "source .venv/bin/activate && pylint scripts/*.py --output data/pylint-notebooks.txt",
-            "problemMatcher": [],
-            "group": {
-                "kind": "test"
-            }
-        },
-        {
-            "label": "flake8",
-            "type": "shell",
-            "command": "source .venv/bin/activate && flake8 **/*.py",
+            "command": "source .venv/bin/activate && ruff check --select I --fix && ruff format",
             "problemMatcher": [],
             "group": {
                 "kind": "test"

@@ -46,9 +46,7 @@ notebooks = [
   "statsmodels",
 ]
 test = [
-  "black[jupyter]",
-  "flake8",
-  "pylint",
+  "ruff",
   "pytest-cov",
 ]
 
@@ -60,7 +58,7 @@ Documentation = "https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storag
 Repository = "https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage.git"
 Issues = "https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/issues"
 
-[tool.black]
+[tool.ruff]
 line-length = 79
 
 [tool.pyfluids]

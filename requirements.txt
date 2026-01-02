@@ -1,8 +1,6 @@
-black[jupyter]
 cartopy
 contextily
 dask
-flake8
 folium
 geocube
 jupyterlab
@@ -13,7 +11,7 @@ netcdf4
 pooch
 pydata-sphinx-theme
 pyfluids
-pylint
 pytest-cov
+ruff
 seaborn
 statsmodels
