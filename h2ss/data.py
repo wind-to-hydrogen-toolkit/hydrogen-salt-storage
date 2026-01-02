@@ -1,6 +1,4 @@
-"""Functions to download and read data.
-
-"""
+"""Functions to download and read data."""
 
 import glob
 import os

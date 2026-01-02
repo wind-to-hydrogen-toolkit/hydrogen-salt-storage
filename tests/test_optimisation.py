@@ -1,6 +1,4 @@
-"""test ``h2ss.optimisation`` functions.
-
-"""
+"""test ``h2ss.optimisation`` functions."""
 
 import geopandas as gpd
 import numpy as np

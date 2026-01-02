@@ -9,8 +9,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from branca.element import MacroElement
-from folium.plugins import (Fullscreen, GroupedLayerControl, MeasureControl,
-                            MousePosition, StripePattern)
+from folium.plugins import (
+    Fullscreen,
+    GroupedLayerControl,
+    MeasureControl,
+    MousePosition,
+    StripePattern,
+)
 from jinja2 import Template
 
 from h2ss import compare
