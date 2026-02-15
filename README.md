@@ -1,13 +1,14 @@
 # Optimising production and long-term bulk storage of hydrogen from offshore wind in salt caverns in the Irish Sea
 
+✨ Streethran, N., Byrne, K., White, J., O'Neill, N., and Leahy, P. (2026). 'Optimising production and long-term bulk storage of hydrogen from offshore wind in subsurface salt caverns', *Journal of Energy Storage*, 153, p. 120988. Available at: https://doi.org/10.1016/j.est.2026.120988.
+
 - Repository: <https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage>
-- Preprint: <https://doi.org/10.2139/ssrn.4960296>
 - Documentation: <https://wind-to-hydrogen-toolkit.github.io/hydrogen-salt-storage>
 
 ## Acknowledgements
 
 This research was carried out as part of the [H-Wind](https://www.marei.ie/project/h-wind) and [HYSS](https://hyss.ie/) projects.
-The H-Wind project was supported by a research grant from [Science Foundation Ireland (SFI)](https://www.sfi.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
+The H-Wind project was supported by a research grant from [Taighde Éireann – Research Ireland](https://www.researchireland.ie/) under Grant No. 12/RC/2302 – P2 and by the industry consortium members: [DP Energy](https://dpenergy.com/), [Equinor](https://www.equinor.com/), [ESB](https://esb.ie/), and [Gas Networks Ireland](https://www.gasnetworks.ie/).
 The HYSS project was supported by a grant from [Sustainable Energy Authority of Ireland (SEAI)](https://www.seai.ie/) and [Geological Survey Ireland](https://www.gsi.ie/) under the SEAI Research, Development & Demonstration Funding Programme 2021, [Grant No. 21/RDD/725](https://www.seai.ie/seai-research/research-database/research-projects/details/hydrogen-salt-storage-assessment-hyss).
 
 ## Installation
@@ -63,7 +64,7 @@ cd docs && make clean html
 
 ## Licence
 
-Copyright 2023-2025 N. Streethran
+Copyright 2023-2026 N. Streethran
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

@@ -1,8 +1,20 @@
 # Changelog
 
+## [2026.02.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2026.02.0)
+
+Post publication update by @nmstreethran.
+[**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.09.0...2026.02.0).
+
+- add reference to published paper
+- update map legend classes
+- lint and format scripts and notebooks using ruff
+- using dependabot
+- change Science Foundation Ireland (SFI) to Research Ireland
+- update copyright years
+
 ## [2024.09.0](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/tree/2024.09.0)
 
-[Prepare for public release](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/13) by @nmstreethran.
+[Prepare for public release](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/pull/14) by @nmstreethran.
 [**Full Changelog**](https://github.com/wind-to-hydrogen-toolkit/hydrogen-salt-storage/compare/2024.08.0...2024.09.0).
 
 - update docs workflow and link - host on GitHub Pages

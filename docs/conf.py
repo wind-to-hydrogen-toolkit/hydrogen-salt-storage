@@ -11,7 +11,7 @@ sys.path.append("..")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "hydrogen-salt-storage"
-copyright = "2023-2025, Nithiya Streethran"
+copyright = "2023-2026, Nithiya Streethran"
 author = "Nithiya Streethran"
 
 github_url = f"https://github.com/wind-to-hydrogen-toolkit/{project}"
