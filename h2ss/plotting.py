@@ -155,7 +155,7 @@ def plot_interactive_map():
 
     minx, miny, maxx, maxy = shape.to_crs(4326).bounds.values[0]
     m = folium.Map(
-        tiles="cartodbvoyager",
+        # tiles="cartodbvoyager",
         control_scale=True,
         location=[np.mean((miny, maxy)), np.mean((minx, maxx))],
         zoom_start=10,

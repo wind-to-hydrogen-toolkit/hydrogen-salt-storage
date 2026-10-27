@@ -160,7 +160,9 @@ def read_dat_file(dat_path):
         #     zvar.replace(" ", "")
         # ].assign_attrs(units=unit, long_name=zvar)
 
-    xds = xr.combine_by_coords(xds_.values(), combine_attrs="override")
+    xds = xr.combine_by_coords(
+        xds_.values(), combine_attrs="override", compat="no_conflicts"
+    )
 
     # # keep only points corresponding to zones of interest in the dataframe
     # zones = gdf.loc[gdf["data"].str.contains("Zone")]
